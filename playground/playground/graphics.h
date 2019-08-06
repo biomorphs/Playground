@@ -36,8 +36,10 @@ public:
 private:
 	struct Quad;
 	class RenderPass2D;
+	class TextureArray;
 	std::vector<Quad> m_quads;
 	std::unique_ptr<RenderPass2D> m_renderPass;
+	std::unique_ptr<TextureArray> m_textures;
 	DebugGui::DebugGuiSystem* m_debugGui = nullptr;
 	SDE::ScriptSystem* m_scriptSystem = nullptr;
 	SDE::RenderSystem* m_renderSystem = nullptr;
