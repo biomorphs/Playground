@@ -25,7 +25,7 @@ namespace SDE
 
 		bool PreInit(Core::ISystemEnumerator& systemEnumerator);
 		bool Tick();
-		void Shutdown();
+		void PostShutdown();
 
 		sol::state& Globals() { return *m_globalState; }
 		

@@ -200,6 +200,11 @@
   <ItemGroup>
     <ClInclude Include="playground.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\data\config.lua" />
+    <None Include="..\data\learnlua.lua" />
+    <None Include="..\data\playground.lua" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

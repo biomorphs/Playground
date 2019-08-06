@@ -82,6 +82,11 @@ namespace DebugGui
 		return ImGui::DragFloat4(label, glm::value_ptr(v), step, min, max);
 	}
 
+	bool DebugGuiSystem::TextInput(const char* label, char* textBuffer, size_t bufferSize)
+	{
+		return ImGui::InputText(label, textBuffer, bufferSize);
+	}
+
 	bool DebugGuiSystem::Button(const char* txt)
 	{
 		return ImGui::Button(txt);

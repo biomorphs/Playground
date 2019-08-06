@@ -38,6 +38,7 @@ namespace DebugGui
 		void BeginWindow(bool& windowOpen, const char* windowName, glm::vec2 size=glm::vec2(-1.f));
 		void EndWindow();
 		void Text(const char* txt);
+		bool TextInput(const char* label, char* textBuffer, size_t bufferSize);
 		bool Button(const char* txt);
 		void Separator();
 		void Image(Render::Texture& src, glm::vec2 size, glm::vec2 uv0 = glm::vec2(0.0f,0.0f), glm::vec2 uv1 = glm::vec2(1.0f,1.0f));

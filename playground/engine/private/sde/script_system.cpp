@@ -77,7 +77,7 @@ namespace SDE
 		return true;
 	}
 
-	void ScriptSystem::Shutdown()
+	void ScriptSystem::PostShutdown()
 	{
 		m_globalState = nullptr;
 	}
