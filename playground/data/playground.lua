@@ -12,7 +12,7 @@ function Playground:Init()
 end
 
 r=0
-g=0
+g=1
 b=0
 a=1
 y = 0
@@ -30,19 +30,15 @@ function Playground:Tick()
 	if b > 1.0 then
 		b = 0.0
 	end
-	Graphics.DrawQuad(0,0,100,100,r,g,b,a)
-	for i=0, 720, 100 do 
-		Graphics.DrawQuad(i,200,80,80,r,g,b,a)
-	end
 
-	y = y + Playground.DeltaTime * 200
+    y = y + Playground.DeltaTime * 200
 	if y > 700 then 
 		y = 0
 	end
-	for i=0, 1280, 10 do 
-		Graphics.DrawQuad(i,y,8,20,1-r,1-g,1-b,a)
-		Graphics.DrawQuad(i,y-30,8,20,1-r,1-g,1-b,a)
-		Graphics.DrawQuad(i,y-60,8,20,1-r,1-g,1-b,a)
+	for i=0, 1280, 5 do 
+		for yoff = 0, 720, 5 do 
+			Graphics.DrawQuad(i,y+yoff,4,4,r,g,b,a)
+		end
 	end
 end
 

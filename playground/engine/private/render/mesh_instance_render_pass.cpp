@@ -33,38 +33,6 @@ namespace Render
 		d.SetScissorEnabled(m_renderState.m_scissorEnabled);
 	}
 
-	void MeshInstanceRenderPass::ApplyUniforms(Device& d, const ShaderProgram& p, const UniformBuffer& uniforms)
-	{
-		for (const auto& it : uniforms.Vec4Values())
-		{
-			// Find the uniform handle in the program
-			auto uniformHandle = p.GetUniformHandle(it.first);
-			d.SetUniformValue(uniformHandle, it.second);
-		}
-
-		for (const auto& it : uniforms.Mat4Values())
-		{
-			// Find the uniform handle in the program
-			auto uniformHandle = p.GetUniformHandle(it.first);
-			d.SetUniformValue(uniformHandle, it.second);
-		}
-
-		uint32_t textureUnit = 0;
-		for (const auto& it : uniforms.Samplers())
-		{
-			// Find the uniform handle in the program
-			auto uniformHandle = p.GetUniformHandle(it.first);
-			d.SetSampler(uniformHandle, it.second, textureUnit++);
-		}
-
-		for (const auto& it : uniforms.ArraySamplers())
-		{
-			// Find the uniform handle in the program
-			auto uniformHandle = p.GetUniformHandle(it.first);
-			d.SetArraySampler(uniformHandle, it.second, textureUnit++);
-		}
-	}
-
 	void MeshInstanceRenderPass::AddInstance(const Mesh* mesh)
 	{
 		m_instances.AddInstance(mesh, 0, (uint32_t)mesh->GetChunks().size());
@@ -107,11 +75,11 @@ namespace Render
 			if (theMaterial != currentMaterial)
 			{
 				currentMaterial = theMaterial;
-				ApplyUniforms(device, *currentProgram, theMaterial->GetUniforms());
+				device.SetUniforms(*currentProgram, theMaterial->GetUniforms());
 			}
 
 			// apply instance uniforms
-			ApplyUniforms(device, *currentProgram, it.GetUniforms());
+			device.SetUniforms(*currentProgram, it.GetUniforms());
 
 			if (theMesh != currentMesh)
 			{

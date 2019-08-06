@@ -8,9 +8,11 @@ Matt Hoyle
 #include "utils.h"
 #include "vertex_array.h"
 #include "shader_program.h"
+#include "render_buffer.h"
 #include <SDL.h>
 #include <glew.h>
 #include "math/glm_headers.h"
+#include "uniform_buffer.h"
 
 namespace Render
 {
@@ -209,11 +211,46 @@ namespace Render
 		SDE_RENDER_PROCESS_GL_ERRORS("glUseProgram");
 	}
 
+	// vectorcount used to pass matrices (4x4 mat = 4 components, 4 vectorcount)
+	void Device::BindInstanceBuffer(const VertexArray& srcArray, const RenderBuffer& buffer, int vertexLayoutSlot, int components, size_t offset, size_t vectorCount)
+	{
+		SDE_ASSERT(buffer.GetHandle() != 0);
+		SDE_ASSERT(components <= 4);
+
+		BindVertexArray(srcArray);
+
+		glBindBuffer(GL_ARRAY_BUFFER, buffer.GetHandle());		// bind the vbo
+		SDE_RENDER_PROCESS_GL_ERRORS("glBindBuffer");
+
+		glEnableVertexAttribArray(vertexLayoutSlot);			//enable the slot
+		SDE_RENDER_PROCESS_GL_ERRORS("glEnableVertexAttribArray");
+
+		// send the data (we have to send it 4 components at a time)
+		// always float, never normalised
+		glVertexAttribPointer(vertexLayoutSlot, components, GL_FLOAT, GL_FALSE, components * sizeof(float) * vectorCount, (void*)offset);
+		SDE_RENDER_PROCESS_GL_ERRORS("glVertexAttribPointer");
+
+		glVertexAttribDivisor(vertexLayoutSlot, 1);
+		SDE_RENDER_PROCESS_GL_ERRORS("glVertexAttribDivisor");
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		SDE_RENDER_PROCESS_GL_ERRORS("glBindBuffer");
+	}
+
 	void Device::BindVertexArray(const VertexArray& srcArray)
 	{
 		SDE_ASSERT(srcArray.GetHandle() != 0);
 		glBindVertexArray(srcArray.GetHandle());
 		SDE_RENDER_PROCESS_GL_ERRORS("glBindVertexArray");
+	}
+
+	void Device::DrawPrimitivesInstanced(PrimitiveType primitive, uint32_t vertexStart, uint32_t vertexCount, uint32_t instanceCount)
+	{
+		auto primitiveType = TranslatePrimitiveType(primitive);
+		SDE_ASSERT(primitiveType != -1);
+
+		glDrawArraysInstanced(primitiveType, vertexStart, vertexCount, instanceCount);
+		SDE_RENDER_PROCESS_GL_ERRORS("glDrawArraysInstanced");
 	}
 
 	void Device::DrawPrimitives(PrimitiveType primitive, uint32_t vertexStart, uint32_t vertexCount)
@@ -223,5 +260,37 @@ namespace Render
 
 		glDrawArrays(primitiveType, vertexStart, vertexCount);
 		SDE_RENDER_PROCESS_GL_ERRORS("glDrawArrays");
+	}
+
+	void Device::SetUniforms(const ShaderProgram& p, const UniformBuffer& uniforms)
+	{
+		for (const auto& it : uniforms.Vec4Values())
+		{
+			// Find the uniform handle in the program
+			auto uniformHandle = p.GetUniformHandle(it.first);
+			SetUniformValue(uniformHandle, it.second);
+		}
+
+		for (const auto& it : uniforms.Mat4Values())
+		{
+			// Find the uniform handle in the program
+			auto uniformHandle = p.GetUniformHandle(it.first);
+			SetUniformValue(uniformHandle, it.second);
+		}
+
+		uint32_t textureUnit = 0;
+		for (const auto& it : uniforms.Samplers())
+		{
+			// Find the uniform handle in the program
+			auto uniformHandle = p.GetUniformHandle(it.first);
+			SetSampler(uniformHandle, it.second, textureUnit++);
+		}
+
+		for (const auto& it : uniforms.ArraySamplers())
+		{
+			// Find the uniform handle in the program
+			auto uniformHandle = p.GetUniformHandle(it.first);
+			SetArraySampler(uniformHandle, it.second, textureUnit++);
+		}
 	}
 }

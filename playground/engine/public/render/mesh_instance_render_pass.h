@@ -50,7 +50,6 @@ namespace Render
 
 	private:
 		void ApplyRenderState(Device& d);
-		void ApplyUniforms(Device& d, const ShaderProgram& p, const UniformBuffer& uniforms);
 
 		RenderState m_renderState;
 		InstanceQueue m_instances;

@@ -32,7 +32,7 @@ public:
 	virtual bool PostInit();
 	virtual bool Tick();
 	virtual void Shutdown();
-	void DrawQuad(glm::vec2 pos, glm::vec2 size, glm::vec4 colour);
+	void DrawQuad(glm::vec2 pos, glm::vec2 size, glm::vec4 colour, const struct TextureHandle& th);
 private:
 	struct Quad;
 	class RenderPass2D;

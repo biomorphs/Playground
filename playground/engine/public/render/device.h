@@ -13,6 +13,8 @@ namespace Render
 	class Texture;
 	class VertexArray;
 	class ShaderProgram;
+	class UniformBuffer;
+	class RenderBuffer;
 
 	enum class PrimitiveType : uint32_t
 	{
@@ -40,7 +42,10 @@ namespace Render
 		void SetArraySampler(uint32_t uniformHandle, uint32_t textureHandle, uint32_t textureUnit);
 		void BindShaderProgram(const ShaderProgram& program);
 		void BindVertexArray(const VertexArray& srcArray);
+		void BindInstanceBuffer(const VertexArray& srcArray, const RenderBuffer& buffer, int vertexLayoutSlot, int components, size_t offset = 0, size_t vectorCount=1);
 		void DrawPrimitives(PrimitiveType primitive, uint32_t vertexStart, uint32_t vertexCount);
+		void DrawPrimitivesInstanced(PrimitiveType primitive, uint32_t vertexStart, uint32_t vertexCount, uint32_t instanceCount);
+		void SetUniforms(const ShaderProgram& p, const UniformBuffer& uniforms);
 	private:
 		uint32_t TranslatePrimitiveType(PrimitiveType type) const;
 
