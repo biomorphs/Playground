@@ -206,6 +206,8 @@
     <None Include="..\data\config.lua" />
     <None Include="..\data\learnlua.lua" />
     <None Include="..\data\playground.lua" />
+    <None Include="..\data\quad.fs" />
+    <None Include="..\data\quad.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

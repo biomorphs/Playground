@@ -9,17 +9,11 @@ function Playground:Init()
 	print("Init!")
 end
 
-clr_r = 0
-clr_g = 0
-clr_b = 0
-
 function Playground:Tick()
-	print(Playground.DeltaTime)
-
-	clr_r = clr_r + Playground.DeltaTime
-	clr_g = clr_g + Playground.DeltaTime * 0.2
-	clr_b = clr_b + Playground.DeltaTime * 0.4
-	Graphics.SetClearColour(clr_r, clr_g, clr_b)
+	Graphics.DrawQuad(0,0,100,100,1,0,0,1)
+	for i=0, 720, 100 do 
+		Graphics.DrawQuad(i,200,80,80,1,0,0,1)
+	end
 end
 
 function Playground:Shutdown()

@@ -9,6 +9,7 @@ SDLEngine
 namespace Render
 {
 	Window::Window(const Properties& props)
+		: m_properties(props)
 	{
 		int windowPosX = SDL_WINDOWPOS_UNDEFINED;
 		int windowPosY = SDL_WINDOWPOS_UNDEFINED;

@@ -46,8 +46,10 @@ namespace Render
 		void Hide();
 
 		SDL_Window* GetWindowHandle();
+		inline const Properties& GetProperties() { return m_properties; }
 
 	private:
 		SDL_Window* m_windowHandle;
+		Properties m_properties;
 	};
 }
