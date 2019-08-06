@@ -8,6 +8,7 @@
 #include "input/input_system.h"
 #include "core/system_registrar.h"
 #include "playground.h"
+#include "graphics.h"
 
 class SystemRegistration : public Engine::IAppSystemRegistrar
 {
@@ -21,6 +22,7 @@ public:
 		systemManager.RegisterSystem("Config", new SDE::ConfigSystem());
 		systemManager.RegisterSystem("DebugGui", new DebugGui::DebugGuiSystem());
 		systemManager.RegisterSystem("Playground", new Playground());
+		systemManager.RegisterSystem("Graphics", new Graphics());
 		systemManager.RegisterSystem("Render", new SDE::RenderSystem());
 	}
 };
