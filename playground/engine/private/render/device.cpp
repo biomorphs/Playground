@@ -244,12 +244,12 @@ namespace Render
 		SDE_RENDER_PROCESS_GL_ERRORS("glBindVertexArray");
 	}
 
-	void Device::DrawPrimitivesInstanced(PrimitiveType primitive, uint32_t vertexStart, uint32_t vertexCount, uint32_t instanceCount)
+	void Device::DrawPrimitivesInstanced(PrimitiveType primitive, uint32_t vertexStart, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstInstance)
 	{
 		auto primitiveType = TranslatePrimitiveType(primitive);
 		SDE_ASSERT(primitiveType != -1);
 
-		glDrawArraysInstanced(primitiveType, vertexStart, vertexCount, instanceCount);
+		glDrawArraysInstancedBaseInstance(primitiveType, vertexStart, vertexCount, instanceCount, firstInstance);
 		SDE_RENDER_PROCESS_GL_ERRORS("glDrawArraysInstanced");
 	}
 
@@ -268,14 +268,16 @@ namespace Render
 		{
 			// Find the uniform handle in the program
 			auto uniformHandle = p.GetUniformHandle(it.first);
-			SetUniformValue(uniformHandle, it.second);
+			if(uniformHandle != -1)
+				SetUniformValue(uniformHandle, it.second);
 		}
 
 		for (const auto& it : uniforms.Mat4Values())
 		{
 			// Find the uniform handle in the program
 			auto uniformHandle = p.GetUniformHandle(it.first);
-			SetUniformValue(uniformHandle, it.second);
+			if (uniformHandle != -1)
+				SetUniformValue(uniformHandle, it.second);
 		}
 
 		uint32_t textureUnit = 0;
@@ -283,14 +285,16 @@ namespace Render
 		{
 			// Find the uniform handle in the program
 			auto uniformHandle = p.GetUniformHandle(it.first);
-			SetSampler(uniformHandle, it.second, textureUnit++);
+			if (uniformHandle != -1)
+				SetSampler(uniformHandle, it.second, textureUnit++);
 		}
 
 		for (const auto& it : uniforms.ArraySamplers())
 		{
 			// Find the uniform handle in the program
 			auto uniformHandle = p.GetUniformHandle(it.first);
-			SetArraySampler(uniformHandle, it.second, textureUnit++);
+			if (uniformHandle != -1)
+				SetArraySampler(uniformHandle, it.second, textureUnit++);
 		}
 	}
 }

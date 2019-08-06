@@ -4,41 +4,37 @@
 -- Shutdown
 
 Playground = {}
-local DragonTexture
+local Sprites = {}
+local MyTexture
+local Gravity = math.random() * -400
 
 function Playground:Init()
 	print("Init!")
-	DragonTexture = Graphics.LoadTexture("dragons.jpg")
+	MyTexture = Graphics.LoadTexture("blob.png")
+
+	for i=1,100 do
+		Sprites[i] = {}
+		Sprites[i].position = { math.random(0,1280), math.random(0,680) }
+		Sprites[i].size = math.random(8,64)
+		Sprites[i].colour = {math.random(),math.random(),math.random(),math.random()}
+		Sprites[i].velocity = {(-1.0 + (math.random() * 2.0)) * 100, math.random() * 200}
+	end
 end
 
-r=0
-g=1
-b=0
-a=1
-y = 0
-
 function Playground:Tick()
-	r = r + Playground.DeltaTime * 0.4;
-	if r > 1.0 then
-		r = 0.0
-	end
-	g = g + Playground.DeltaTime * 0.3;
-	if g > 1.0 then
-		g = 0.0
-	end
-	b = b + Playground.DeltaTime * 0.18;
-	if b > 1.0 then
-		b = 0.0
-	end
+	for i=1,#Sprites do
+		-- gravity
+		Sprites[i].velocity[2] = Sprites[i].velocity[2] + Gravity * Playground.DeltaTime
 
-    y = y + Playground.DeltaTime * 200
-	if y > 700 then 
-		y = 0
-	end
-	for i=0, 1280, 5 do 
-		for yoff = 0, 720, 5 do 
-			Graphics.DrawQuad(i,y+yoff,4,4,r,g,b,a)
-		end
+		-- update pos
+		Sprites[i].position[1] = Sprites[i].position[1] + Sprites[i].velocity[1] * Playground.DeltaTime
+		Sprites[i].position[2] = Sprites[i].position[2] + Sprites[i].velocity[2] * Playground.DeltaTime
+
+		Graphics.DrawTexturedQuad(
+		Sprites[i].position[1], Sprites[i].position[2], 
+		Sprites[i].size, Sprites[i].size, 
+		Sprites[i].colour[1], Sprites[i].colour[2], Sprites[i].colour[3], Sprites[i].colour[4],
+		MyTexture)
 	end
 end
 

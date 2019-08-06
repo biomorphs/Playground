@@ -9,7 +9,7 @@ Matt Hoyle
 namespace Render
 {
 	Texture::Texture()
-		: m_handle(0)
+		: m_handle(-1)
 	{
 	}
 
@@ -251,7 +251,7 @@ namespace Render
 
 	bool Texture::Update(const std::vector<TextureSource>& src)
 	{
-		SDE_RENDER_ASSERT(m_handle != 0);
+		SDE_RENDER_ASSERT(m_handle != -1);
 		SDE_ASSERT(src.size() > 0);
 		if (!ValidateSource(src))
 		{
@@ -295,7 +295,7 @@ namespace Render
 
 	bool Texture::Create(const std::vector<TextureSource>& src)
 	{
-		SDE_RENDER_ASSERT(m_handle == 0);
+		SDE_RENDER_ASSERT(m_handle == -1);
 		SDE_ASSERT(src.size() > 0);
 		if (!ValidateSource(src))
 		{
@@ -331,11 +331,11 @@ namespace Render
 
 	void Texture::Destroy()
 	{
-		if (m_handle != 0)
+		if (m_handle != -1)
 		{
 			glDeleteTextures(1, &m_handle);
 			SDE_RENDER_PROCESS_GL_ERRORS("glDeleteTextures");
-			m_handle = 0;
+			m_handle = -1;
 		}
 	}
 }

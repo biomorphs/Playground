@@ -17,36 +17,60 @@ Playground::~Playground()
 
 void Playground::InitScript()
 {
-	if (m_scriptSystem->Globals()["g_playground"] != nullptr)
+	try
 	{
-		sol::function initFn = m_scriptSystem->Globals()["g_playground"]["Init"];
-		initFn();
+		if (m_scriptSystem->Globals()["g_playground"] != nullptr)
+		{
+			sol::function initFn = m_scriptSystem->Globals()["g_playground"]["Init"];
+			initFn();
+		}
+		else
+		{
+			m_scriptErrorText = "Error: g_playground global not found";
+		}
 	}
-	else
+	catch (const sol::error& err)
 	{
-		m_scriptErrorText = "Error: g_playground global not found";
+		SDE_LOG("Lua Error - %s", err.what());
+		ShutdownScript();
 	}
 }
 
 void Playground::TickScript()
 {
-	m_scriptSystem->Globals()["Playground"].get_or_create<sol::table>();
-	m_scriptSystem->Globals()["Playground"]["DeltaTime"] = m_deltaTime;
-	if (m_scriptSystem->Globals()["g_playground"] != nullptr)
+	try
 	{
-		sol::function tickFn = m_scriptSystem->Globals()["g_playground"]["Tick"];
-		tickFn();
+		m_scriptSystem->Globals()["Playground"].get_or_create<sol::table>();
+		m_scriptSystem->Globals()["Playground"]["DeltaTime"] = m_deltaTime;
+		if (m_scriptSystem->Globals()["g_playground"] != nullptr)
+		{
+			sol::function tickFn = m_scriptSystem->Globals()["g_playground"]["Tick"];
+			tickFn();
+		}
 	}
+	catch (const sol::error& err)
+	{
+		SDE_LOG("Lua Error - %s", err.what());
+		ShutdownScript();
+	}
+	
 }
 
 void Playground::ShutdownScript()
 {
-	if (m_scriptSystem->Globals()["g_playground"] != nullptr)
+	try
 	{
-		sol::function shutdownFn = m_scriptSystem->Globals()["g_playground"]["Shutdown"];
-		shutdownFn();
+		if (m_scriptSystem->Globals()["g_playground"] != nullptr)
+		{
+			sol::function shutdownFn = m_scriptSystem->Globals()["g_playground"]["Shutdown"];
+			shutdownFn();
+		}
+		m_scriptSystem->Globals()["g_playground"] = nullptr;
 	}
-	m_scriptSystem->Globals()["g_playground"] = nullptr;
+	catch (const sol::error& err)
+	{
+		SDE_LOG("Lua Error - %s", err.what());
+	}
 }
 
 void Playground::ReloadScript()

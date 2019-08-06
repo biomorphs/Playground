@@ -17,19 +17,18 @@
 #include "stb_image.h"
 #include <sol.hpp>
 
+struct TextureHandle
+{
+	uint64_t m_index;
+	static TextureHandle Invalid() { return { (uint64_t)-1 }; };
+};
+
 struct Graphics::Quad
 {
 	glm::vec2 m_position;
 	glm::vec2 m_size;
 	glm::vec4 m_colour;
-};
-
-struct TextureHandle
-{
-	std::string m_name;
-	uint64_t m_index;	// -1 = invalid
-
-	static TextureHandle Invalid() { return { "invalid", (uint64_t)-1 }; };
+	TextureHandle m_texture;
 };
 
 const uint64_t c_maxQuads = 1024 * 128;
@@ -53,7 +52,12 @@ private:
 class Graphics::RenderPass2D : public Render::RenderPass
 {
 public:
-	RenderPass2D(SDE::RenderSystem* rs) : m_renderSystem(rs) { m_quads.reserve(1024); }
+	RenderPass2D(SDE::RenderSystem* rs, Graphics::TextureArray* ta)
+		: m_renderSystem(rs)
+		, m_textures(ta)
+	{ 
+		m_quads.reserve(c_maxQuads);
+	}
 	virtual ~RenderPass2D() = default;
 	void SetQuads(const std::vector<Graphics::Quad>& q) { m_quads = q; }
 
@@ -62,18 +66,20 @@ public:
 private:
 	void BuildQuadMesh();
 	void SetupQuadMaterial();
+	void BuildInstanceBuffers();
 	std::vector<Quad> m_quads;
 	std::unique_ptr<Render::Mesh> m_quadMesh;
 	std::unique_ptr<Render::Material> m_quadMaterial;
 	std::unique_ptr<Render::ShaderProgram> m_quadShaders;
 	SDE::RenderSystem* m_renderSystem;
+	Graphics::TextureArray* m_textures;
 	Render::RenderBuffer m_quadInstanceTransforms;
 	Render::RenderBuffer m_quadInstanceColours;
 };
 
 Graphics::Graphics()
 {
-	m_quads.reserve(1024);
+	m_quads.reserve(c_maxQuads);
 }
 
 Graphics::~Graphics()
@@ -82,7 +88,7 @@ Graphics::~Graphics()
 
 void Graphics::DrawQuad(glm::vec2 pos, glm::vec2 size, glm::vec4 colour, const TextureHandle& th)
 {
-	m_quads.push_back({ pos, size, colour });
+	m_quads.push_back({ pos, size, colour, th });
 }
 
 bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
@@ -94,31 +100,27 @@ bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
 	return true;
 }
 
-bool Graphics::Initialise()
-{
-	m_textures = std::make_unique<TextureArray>();
-
-	return true;
-}
-
 bool Graphics::PostInit()
 {
-	m_renderPass = std::make_unique<RenderPass2D>(m_renderSystem);
-	m_renderSystem->AddPass(*m_renderPass);
-
-	// load white texture in slot 0, all quads are textured!
+	// load white texture in slot 0
+	m_textures = std::make_unique<TextureArray>();
 	m_textures->LoadTexture("white.bmp");
 
+	m_renderPass = std::make_unique<RenderPass2D>(m_renderSystem, m_textures.get());
+	m_renderSystem->AddPass(*m_renderPass);
+
+	// tell lua what a texture handle is
 	auto texHandleScriptType = m_scriptSystem->Globals().new_usertype<TextureHandle>("TextureHandle",
 		sol::constructors<TextureHandle()>()
 		);
 
+	// expose Graphics namespace functions
 	m_scriptSystem->Globals()["Graphics"].get_or_create<sol::table>();
 	m_scriptSystem->Globals()["Graphics"]["SetClearColour"] = [this](float r, float g, float b) {
 		m_renderSystem->SetClearColour(glm::vec4(r, g, b, 1.0f));
 	};
 	m_scriptSystem->Globals()["Graphics"]["DrawQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a) {
-		DrawQuad({ px,py }, { sx,sy }, { r,g,b,a }, TextureHandle::Invalid());
+		DrawQuad({ px,py }, { sx,sy }, { r,g,b,a }, { 0 });
 	};
 	m_scriptSystem->Globals()["Graphics"]["DrawTexturedQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a, TextureHandle h) {
 		DrawQuad({ px,py }, { sx,sy }, { r,g,b,a }, h);
@@ -132,6 +134,7 @@ bool Graphics::PostInit()
 
 bool Graphics::Tick()
 {
+	m_debugGui->Image(*m_textures->GetTexture({ 0 }), { 256,256 });
 	m_renderPass->SetQuads(m_quads);
 	m_quads.clear();
 	return true;
@@ -186,29 +189,15 @@ void Graphics::RenderPass2D::SetupQuadMaterial()
 		SDE_LOG("Shader linkage failed - %s", errorText.c_str());
 	}
 	m_quadShaders->AddUniform("ProjectionMat");
+	m_quadShaders->AddUniform("MyTexture");
 
 	m_quadMaterial->SetShaderProgram(m_quadShaders.get());
 	m_quadMesh->SetMaterial(m_quadMaterial.get());
 }
 
-void Graphics::RenderPass2D::RenderAll(Render::Device& d)
+void Graphics::RenderPass2D::BuildInstanceBuffers()
 {
-	static bool s_firstFrame = true;
-	if (s_firstFrame)
-	{
-		BuildQuadMesh();
-		SetupQuadMaterial();
-		s_firstFrame = false;
-	}
-
-	if (m_quads.size() == 0)
-	{
-		return;
-	}
-
-	// We should sort the quads here!
-
-	// build the instance buffers - static to avoid constant allocations
+	//static to avoid constant allocations
 	static std::vector<glm::mat4> instanceTransforms;
 	instanceTransforms.reserve(c_maxQuads);
 	instanceTransforms.clear();
@@ -228,21 +217,43 @@ void Graphics::RenderPass2D::RenderAll(Render::Device& d)
 	// copy the instance buffers to gpu
 	m_quadInstanceTransforms.SetData(0, instanceTransforms.size() * sizeof(glm::mat4), instanceTransforms.data());
 	m_quadInstanceColours.SetData(0, instanceColours.size() * sizeof(glm::vec4), instanceColours.data());
+}
 
-	// set up shader uniforms
+void Graphics::RenderPass2D::RenderAll(Render::Device& d)
+{
+	static bool s_firstFrame = true;
+	if (s_firstFrame)
+	{
+		BuildQuadMesh();
+		SetupQuadMaterial();
+		s_firstFrame = false;
+	}
+
+	if (m_quads.size() == 0)
+	{
+		return;
+	}
+
+	// Sort the quads by texture to separate draw calls
+	std::sort(m_quads.begin(), m_quads.end(), [](const Quad& q1, const Quad& q2) -> bool {
+		return q1.m_texture.m_index < q2.m_texture.m_index;
+	});
+
+	BuildInstanceBuffers();
+
+	// global uniforms
 	const auto& windowProps = m_renderSystem->GetWindow()->GetProperties();
 	auto windowSize = glm::vec2(windowProps.m_sizeX, windowProps.m_sizeY);
 	auto projectionMat = glm::ortho(0.0f, windowSize.x, 0.0f, windowSize.y);
 	Render::UniformBuffer ub;
 	ub.SetValue("ProjectionMat", projectionMat);
 
-	// draw!
-	d.SetDepthState(true, true);		// enable z-test
+	// render state
+	d.SetDepthState(true, false);		// enable z-test
 	d.SetBackfaceCulling(true, true);	// backface culling, ccw order
-	d.SetBlending(false);
+	d.SetBlending(true);
 	d.SetScissorEnabled(false);
 	d.BindShaderProgram(*m_quadShaders);
-	d.SetUniforms(*m_quadShaders, ub);
 
 	// bind vertex array
 	d.BindVertexArray(m_quadMesh->GetVertexArray());
@@ -253,9 +264,29 @@ void Graphics::RenderPass2D::RenderAll(Render::Device& d)
 	d.BindInstanceBuffer(m_quadMesh->GetVertexArray(), m_quadInstanceTransforms, 3, 4, sizeof(float) * 8, 4);
 	d.BindInstanceBuffer(m_quadMesh->GetVertexArray(), m_quadInstanceTransforms, 4, 4, sizeof(float) * 12, 4);
 	d.BindInstanceBuffer(m_quadMesh->GetVertexArray(), m_quadInstanceColours, 5, 4, 0);
+	
+	// find the first and last quad with the same texture
+	auto firstQuad = m_quads.begin();
+	while (firstQuad != m_quads.end())
+	{
+		uint64_t texID = firstQuad->m_texture.m_index;
+		auto lastQuad = std::find_if(firstQuad, m_quads.end(), [texID](const Quad& q) -> bool {
+			return q.m_texture.m_index != texID;
+		});
 
-	const auto& meshChunk = m_quadMesh->GetChunks()[0];
-	d.DrawPrimitivesInstanced(meshChunk.m_primitiveType, meshChunk.m_firstVertex, meshChunk.m_vertexCount, (uint32_t)m_quads.size());
+		// use the texture or our in built white texture
+		TextureHandle texture = firstQuad->m_texture.m_index != (uint64_t)-1 ? firstQuad->m_texture : TextureHandle{0};
+		ub.SetSampler("MyTexture", m_textures->GetTexture(texture)->GetHandle());
+		d.SetUniforms(*m_quadShaders, ub);
+
+		// somehow only draw firstQuad-lastQuad instances
+		const auto& meshChunk = m_quadMesh->GetChunks()[0];
+		auto instanceCount = (uint32_t)(lastQuad - firstQuad);
+		uint32_t firstIndex = (uint32_t)(firstQuad - m_quads.begin());
+		d.DrawPrimitivesInstanced(meshChunk.m_primitiveType, meshChunk.m_firstVertex, meshChunk.m_vertexCount, instanceCount, firstIndex);
+
+		firstQuad = lastQuad;
+	}
 }
 
 TextureHandle Graphics::TextureArray::LoadTexture(const char* path)
@@ -264,7 +295,7 @@ TextureHandle Graphics::TextureArray::LoadTexture(const char* path)
 	{
 		if (m_textures[i].m_path == path)
 		{
-			return { path, i };
+			return { i };
 		}
 	}
 
@@ -273,11 +304,12 @@ TextureHandle Graphics::TextureArray::LoadTexture(const char* path)
 	unsigned char* loadedData = stbi_load(path, &w, &h, &components, 4);		// we always want rgba
 	if (loadedData == nullptr)
 	{
+		stbi_image_free(loadedData);
 		return TextureHandle::Invalid();
 	}
 
 	std::vector<uint8_t> rawDataBuffer;
-	rawDataBuffer.resize(w*h * 4);
+	rawDataBuffer.resize(w * h * 4);
 	memcpy(rawDataBuffer.data(), loadedData, w*h * 4);
 	stbi_image_free(loadedData);
 
@@ -291,8 +323,8 @@ TextureHandle Graphics::TextureArray::LoadTexture(const char* path)
 		return TextureHandle::Invalid();
 	}
 
-	m_textures.push_back({ newTex, path });
-	return { path, m_textures.size() - 1 };
+	m_textures.push_back({ std::move(newTex), path });
+	return { m_textures.size() - 1 };
 }
 
 Render::Texture* Graphics::TextureArray::GetTexture(const TextureHandle& h)

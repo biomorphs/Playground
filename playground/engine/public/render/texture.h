@@ -13,6 +13,12 @@ namespace Render
 	{
 	public:
 		Texture();
+		Texture(const Texture&) = delete;
+		Texture(Texture&& other) {
+			m_isArray = other.m_isArray;
+			m_handle = other.m_handle;
+			other.m_handle = -1;
+		}
 		~Texture();
 
 		bool Update(const std::vector<TextureSource>& src);
