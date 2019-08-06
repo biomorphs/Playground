@@ -28,7 +28,7 @@ namespace Render
 
 		inline void AddInstance(const Mesh* mesh, uint32_t startChunk, uint32_t endChunk, UniformBuffer&& uniforms)
 		{
-			m_instances.emplace_back(mesh, startChunk, endChunk, std::move(uniforms));
+			m_instances.push_back(MeshInstance(mesh, startChunk, endChunk, std::move(uniforms)));
 		}
 
 		inline void Clear()

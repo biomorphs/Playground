@@ -15,8 +15,10 @@ namespace Render
 	class UniformBuffer
 	{
 	public:
-		UniformBuffer() { }
-		~UniformBuffer() { }
+		UniformBuffer() = default;
+		~UniformBuffer() = default;
+		UniformBuffer(const UniformBuffer& other) = default;
+		UniformBuffer(UniformBuffer&& other) = default;
 
 		void SetValue(const char* name, const glm::vec4& value);
 		void SetValue(const char* name, const glm::mat4& value);

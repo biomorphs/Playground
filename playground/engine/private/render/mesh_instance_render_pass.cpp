@@ -35,14 +35,14 @@ namespace Render
 
 	void MeshInstanceRenderPass::ApplyUniforms(Device& d, const ShaderProgram& p, const UniformBuffer& uniforms)
 	{
-		for (auto& it : uniforms.Vec4Values())
+		for (const auto& it : uniforms.Vec4Values())
 		{
 			// Find the uniform handle in the program
 			auto uniformHandle = p.GetUniformHandle(it.first);
 			d.SetUniformValue(uniformHandle, it.second);
 		}
 
-		for (auto& it : uniforms.Mat4Values())
+		for (const auto& it : uniforms.Mat4Values())
 		{
 			// Find the uniform handle in the program
 			auto uniformHandle = p.GetUniformHandle(it.first);
@@ -50,14 +50,14 @@ namespace Render
 		}
 
 		uint32_t textureUnit = 0;
-		for (auto& it : uniforms.Samplers())
+		for (const auto& it : uniforms.Samplers())
 		{
 			// Find the uniform handle in the program
 			auto uniformHandle = p.GetUniformHandle(it.first);
 			d.SetSampler(uniformHandle, it.second, textureUnit++);
 		}
 
-		for (auto& it : uniforms.ArraySamplers())
+		for (const auto& it : uniforms.ArraySamplers())
 		{
 			// Find the uniform handle in the program
 			auto uniformHandle = p.GetUniformHandle(it.first);
@@ -88,7 +88,7 @@ namespace Render
 		const Material* currentMaterial = nullptr;
 
 		ApplyRenderState(device);	// Apply any global render state
-		for (auto it : m_instances)
+		for (const auto& it : m_instances)
 		{
 			const Mesh* theMesh = it.GetMesh();
 			if (theMesh == nullptr)
