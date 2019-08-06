@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="private">
+      <UniqueIdentifier>{13fed39c-86aa-4bf4-81ee-28fbad17a16d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="public">
+      <UniqueIdentifier>{b673c1e1-f67f-4084-a806-cc6c14d9ac1d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="public\render\window.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\device.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="private\render\utils.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\render_buffer.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\vertex_array.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\shader_binary.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\shader_program.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\mesh.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\material.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\mesh_builder.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\instance_queue.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\mesh_instance.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\render_pass.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\camera.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\dds_loader.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\texture_source.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\uniform_buffer.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\texture.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\mesh_instance_render_pass.h">
+      <Filter>public</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="private\render\window.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\device.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\render_buffer.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\vertex_array.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\shader_binary.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\shader_program.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\mesh.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\material.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\mesh_builder.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\dds_loader.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\uniform_buffer.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\texture.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\mesh_instance_render_pass.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="public\render\camera.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\render\texture_source.inl">
+      <Filter>public</Filter>
+    </None>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{d4656b9a-cf28-4719-b307-ba4fd577293b}</ProjectGuid>
+    <RootNamespace>core</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="props/build_configs.props" />
+  <Import Project="props/engine_lib_paths.props" />
+  <Import Project="props/library_build.props" />
+  <Import Project="props/shared_preprocessor.props" />
+  <PropertyGroup>
+    <IncludePath>$(SolutionDir)..\external\json-3.6.1\single_include;$(ProjectDir)public\;$(ProjectDir)public\core\;$(ProjectDir)private\core\;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="public\core\list.h" />
+    <ClInclude Include="public\core\object_pool.h" />
+    <ClInclude Include="public\core\run_length_encoding.h" />
+    <ClInclude Include="public\core\shortname.h" />
+    <ClInclude Include="public\core\string_hashing.h" />
+    <ClInclude Include="public\core\system.h" />
+    <ClInclude Include="public\core\system_enumerator.h" />
+    <ClInclude Include="public\core\system_manager.h" />
+    <ClInclude Include="public\core\system_registrar.h" />
+    <ClInclude Include="public\core\thread_pool.h" />
+    <ClInclude Include="public\core\timer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="private\core\run_length_encoding.cpp" />
+    <ClCompile Include="private\core\system_manager.cpp" />
+    <ClCompile Include="private\core\thread_pool.cpp" />
+    <ClCompile Include="private\core\timer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="public\core\list.inl" />
+    <None Include="public\core\object_pool.inl" />
+    <None Include="public\core\shortname.inl" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{66beea20-1158-4419-8f2e-94fb87b04fa5}</ProjectGuid>
+    <RootNamespace>debug_gui</RootNamespace>
+  </PropertyGroup>
+  <Import Project="props/build_configs.props" />
+  <Import Project="props/engine_lib_paths.props" />
+  <Import Project="props/library_build.props" />
+  <Import Project="props/shared_preprocessor.props" />
+  <PropertyGroup>
+    <IncludePath>$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)..\external\glew-1.12.0-win32\glew-1.12.0\include\GL;$(ProjectDir)..\external\imgui-1.69;$(ProjectDir)..\external\glm\;$(ProjectDir)public\;$(ProjectDir)public\debug_gui\;$(ProjectDir)private\debug_gui\;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile />
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <ShowIncludes>false</ShowIncludes>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\external\imgui-1.69\imgui\examples\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\external\imgui-1.69\imgui\examples\imgui_impl_sdl.h" />
+    <ClInclude Include="..\external\imgui-1.69\imgui\imconfig.h" />
+    <ClInclude Include="..\external\imgui-1.69\imgui\imgui.h" />
+    <ClInclude Include="..\external\imgui-1.69\imgui\imgui_internal.h" />
+    <ClInclude Include="..\external\imgui-1.69\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\external\imgui-1.69\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\external\imgui-1.69\imgui\imstb_truetype.h" />
+    <ClInclude Include="private\debug_gui\imgui_sdl_gl3_render.h" />
+    <ClInclude Include="public\debug_gui\debug_gui_system.h" />
+    <ClInclude Include="public\debug_gui\graph_data_buffer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\external\imgui-1.69\imgui\examples\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\external\imgui-1.69\imgui\examples\imgui_impl_sdl.cpp" />
+    <ClCompile Include="..\external\imgui-1.69\imgui\imgui.cpp" />
+    <ClCompile Include="..\external\imgui-1.69\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\external\imgui-1.69\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\external\imgui-1.69\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="private\debug_gui\debug_gui_system.cpp" />
+    <ClCompile Include="private\debug_gui\graph_data_buffer.cpp" />
+    <ClCompile Include="private\debug_gui\imgui_sdl_gl3_render.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="input.vcxproj">
+      <Project>{47c8ee95-de35-4b19-be63-f9959414eaeb}</Project>
+    </ProjectReference>
+    <ProjectReference Include="render.vcxproj">
+      <Project>{492e3253-7f98-4f62-92ab-2c6f92cb2b27}</Project>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

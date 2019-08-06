@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="public">
+      <UniqueIdentifier>{c655870e-6d55-4b21-8b0e-22732cf09514}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private">
+      <UniqueIdentifier>{7494643a-44df-496e-b26e-5025809f7d21}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="public\math\morton_encoding.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\math\box3.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\math\intersections.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\math\bit_twiddling.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\math\trig.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\math\dda.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\math\glm_headers.h">
+      <Filter>public</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="public\math\morton_encoding.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\math\box3.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\math\intersections.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\math\bit_twiddling.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\math\trig.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\math\dda.inl">
+      <Filter>public</Filter>
+    </None>
+  </ItemGroup>
+</Project>

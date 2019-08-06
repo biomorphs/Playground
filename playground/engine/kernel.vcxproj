@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{03ffcecd-38f1-48c3-be2b-5cfc42c34a8f}</ProjectGuid>
+    <RootNamespace>kernel</RootNamespace>
+  </PropertyGroup>
+  <Import Project="props/build_configs.props" />
+  <Import Project="props/engine_lib_paths.props" />
+  <Import Project="props/library_build.props" />
+  <Import Project="props/shared_preprocessor.props" />
+  <PropertyGroup>
+    <IncludePath>$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)public\kernel\;$(ProjectDir)private\kernel\;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="public\kernel\assert.h" />
+    <ClInclude Include="public\kernel\atomics.h" />
+    <ClInclude Include="public\kernel\base_types.h" />
+    <ClInclude Include="public\kernel\file_io.h" />
+    <ClInclude Include="public\kernel\log.h" />
+    <ClInclude Include="public\kernel\mutex.h" />
+    <ClInclude Include="public\kernel\semaphore.h" />
+    <ClInclude Include="public\kernel\platform.h" />
+    <ClInclude Include="public\kernel\thread.h" />
+    <ClInclude Include="public\kernel\time.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="private\kernel\atomics.cpp" />
+    <ClCompile Include="private\kernel\file_io.cpp" />
+    <ClCompile Include="private\kernel\log.cpp" />
+    <ClCompile Include="private\kernel\mutex.cpp" />
+    <ClCompile Include="private\kernel\semaphore.cpp" />
+    <ClCompile Include="private\kernel\platform.cpp" />
+    <ClCompile Include="private\kernel\thread.cpp" />
+    <ClCompile Include="private\kernel\time.cpp" />
+  </ItemGroup>
+</Project>

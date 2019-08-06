@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="public">
+      <UniqueIdentifier>{60b51ae0-ed1c-4b39-86ab-b50cd1fa0fdd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private">
+      <UniqueIdentifier>{b49c4698-10f2-4a5a-beea-7ffc178554c8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="public\vox\block.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\vox\paged_blocks.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\vox\model.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\vox\simple_quad_extractor.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\vox\greedy_quad_extractor.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\vox\model_ray_marcher.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\vox\model_data_reader.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\vox\model_data_writer.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\vox\model_area_data_writer.h">
+      <Filter>public</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="public\vox\block.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\vox\paged_blocks.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\vox\model.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\vox\simple_quad_extractor.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\vox\greedy_quad_extractor.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\vox\model_ray_marcher.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\vox\model_data_reader.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\vox\model_data_writer.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\vox\model_area_data_writer.inl">
+      <Filter>public</Filter>
+    </None>
+  </ItemGroup>
+</Project>

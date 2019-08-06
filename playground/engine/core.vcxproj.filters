@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="public">
+      <UniqueIdentifier>{1e3feef5-d42b-4dbf-a2f8-8810b52a8c6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private">
+      <UniqueIdentifier>{fe26ef89-88af-449d-aed9-868ef52f1699}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="public\core\system.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\system_enumerator.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\system_registrar.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\system_manager.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\shortname.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\timer.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\string_hashing.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\thread_pool.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\list.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\object_pool.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\run_length_encoding.h">
+      <Filter>public</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="private\core\system_manager.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\core\timer.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\core\thread_pool.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\core\run_length_encoding.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="public\core\shortname.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\core\list.inl">
+      <Filter>public</Filter>
+    </None>
+    <None Include="public\core\object_pool.inl">
+      <Filter>public</Filter>
+    </None>
+  </ItemGroup>
+</Project>
