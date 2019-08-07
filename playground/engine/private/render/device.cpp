@@ -227,7 +227,7 @@ namespace Render
 
 		// send the data (we have to send it 4 components at a time)
 		// always float, never normalised
-		glVertexAttribPointer(vertexLayoutSlot, components, GL_FLOAT, GL_FALSE, components * sizeof(float) * vectorCount, (void*)offset);
+		glVertexAttribPointer(vertexLayoutSlot, components, GL_FLOAT, GL_FALSE, components * sizeof(float) * (int)vectorCount, (void*)offset);
 		SDE_RENDER_PROCESS_GL_ERRORS("glVertexAttribPointer");
 
 		glVertexAttribDivisor(vertexLayoutSlot, 1);
@@ -262,39 +262,35 @@ namespace Render
 		SDE_RENDER_PROCESS_GL_ERRORS("glDrawArrays");
 	}
 
-	void Device::SetUniforms(const ShaderProgram& p, const UniformBuffer& uniforms)
+	void Device::SetUniforms(ShaderProgram& p, const UniformBuffer& uniforms)
 	{
 		for (const auto& it : uniforms.Vec4Values())
 		{
-			// Find the uniform handle in the program
-			auto uniformHandle = p.GetUniformHandle(it.first);
+			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(),it.first);
 			if(uniformHandle != -1)
-				SetUniformValue(uniformHandle, it.second);
+				SetUniformValue(uniformHandle, it.second.m_value);
 		}
 
 		for (const auto& it : uniforms.Mat4Values())
 		{
-			// Find the uniform handle in the program
-			auto uniformHandle = p.GetUniformHandle(it.first);
+			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(), it.first);
 			if (uniformHandle != -1)
-				SetUniformValue(uniformHandle, it.second);
+				SetUniformValue(uniformHandle, it.second.m_value);
 		}
 
 		uint32_t textureUnit = 0;
 		for (const auto& it : uniforms.Samplers())
 		{
-			// Find the uniform handle in the program
-			auto uniformHandle = p.GetUniformHandle(it.first);
+			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(), it.first);
 			if (uniformHandle != -1)
-				SetSampler(uniformHandle, it.second, textureUnit++);
+				SetSampler(uniformHandle, it.second.m_value, textureUnit++);
 		}
 
 		for (const auto& it : uniforms.ArraySamplers())
 		{
-			// Find the uniform handle in the program
-			auto uniformHandle = p.GetUniformHandle(it.first);
+			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(), it.first);
 			if (uniformHandle != -1)
-				SetArraySampler(uniformHandle, it.second, textureUnit++);
+				SetArraySampler(uniformHandle, it.second.m_value, textureUnit++);
 		}
 	}
 }

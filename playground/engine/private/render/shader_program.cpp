@@ -63,17 +63,28 @@ namespace Render
 		m_uniformHandles[uniformHash] = result;
 	}
 
-	uint32_t ShaderProgram::GetUniformHandle(uint32_t nameHash) const
+	uint32_t ShaderProgram::GetUniformHandle(const char* uniformName)
 	{
-		auto it = m_uniformHandles.find(nameHash);
-		SDE_ASSERT(it != m_uniformHandles.end());
-		return it->second;
+		return GetUniformHandle(uniformName, Core::StringHashing::GetHash(uniformName));
 	}
 
-	uint32_t ShaderProgram::GetUniformHandle(const char* uniformName) const
+	uint32_t ShaderProgram::GetUniformHandle(const char* uniformName, uint32_t nameHash)
 	{
-		const uint32_t uniformHash = Core::StringHashing::GetHash(uniformName);
-		return GetUniformHandle(uniformHash);
+		uint32_t foundHandle = -1;
+		auto it = m_uniformHandles.find(nameHash);
+		if (it == m_uniformHandles.end())
+		{
+			foundHandle = glGetUniformLocation(m_handle, uniformName);
+			if (foundHandle != -1)
+			{
+				m_uniformHandles[nameHash] = foundHandle;
+			}
+		}
+		else
+		{
+			foundHandle = it->second;
+		}
+		return foundHandle;
 	}
 
 	void ShaderProgram::Destroy()

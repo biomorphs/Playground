@@ -36,7 +36,7 @@ const uint64_t c_maxQuads = 1024 * 128;
 class Graphics::TextureArray
 {
 public:
-	TextureArray() { m_textures.reserve(c_maxQuads); }
+	TextureArray() = default;
 	~TextureArray();
 
 	TextureHandle LoadTexture(const char* path);
@@ -52,14 +52,13 @@ private:
 class Graphics::RenderPass2D : public Render::RenderPass
 {
 public:
-	RenderPass2D(SDE::RenderSystem* rs, Graphics::TextureArray* ta)
+	RenderPass2D(SDE::RenderSystem* rs, Graphics::TextureArray* ta, std::vector<Quad>& quads)
 		: m_renderSystem(rs)
 		, m_textures(ta)
+		, m_quads(quads)
 	{ 
-		m_quads.reserve(c_maxQuads);
 	}
 	virtual ~RenderPass2D() = default;
-	void SetQuads(const std::vector<Graphics::Quad>& q) { m_quads = q; }
 
 	void Reset() { m_quads.clear(); }
 	void RenderAll(Render::Device&);
@@ -67,7 +66,7 @@ private:
 	void BuildQuadMesh();
 	void SetupQuadMaterial();
 	void BuildInstanceBuffers();
-	std::vector<Quad> m_quads;
+	std::vector<Quad>& m_quads;
 	std::unique_ptr<Render::Mesh> m_quadMesh;
 	std::unique_ptr<Render::Material> m_quadMaterial;
 	std::unique_ptr<Render::ShaderProgram> m_quadShaders;
@@ -106,26 +105,26 @@ bool Graphics::PostInit()
 	m_textures = std::make_unique<TextureArray>();
 	m_textures->LoadTexture("white.bmp");
 
-	m_renderPass = std::make_unique<RenderPass2D>(m_renderSystem, m_textures.get());
+	m_renderPass = std::make_unique<RenderPass2D>(m_renderSystem, m_textures.get(), m_quads);
 	m_renderSystem->AddPass(*m_renderPass);
 
-	// tell lua what a texture handle is
+	// expose TextureHandle to lua
 	auto texHandleScriptType = m_scriptSystem->Globals().new_usertype<TextureHandle>("TextureHandle",
 		sol::constructors<TextureHandle()>()
 		);
 
 	// expose Graphics namespace functions
-	m_scriptSystem->Globals()["Graphics"].get_or_create<sol::table>();
-	m_scriptSystem->Globals()["Graphics"]["SetClearColour"] = [this](float r, float g, float b) {
+	auto graphics = m_scriptSystem->Globals()["Graphics"].get_or_create<sol::table>();
+	graphics["SetClearColour"] = [this](float r, float g, float b) {
 		m_renderSystem->SetClearColour(glm::vec4(r, g, b, 1.0f));
 	};
-	m_scriptSystem->Globals()["Graphics"]["DrawQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a) {
+	graphics["DrawQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a) {
 		DrawQuad({ px,py }, { sx,sy }, { r,g,b,a }, { 0 });
 	};
-	m_scriptSystem->Globals()["Graphics"]["DrawTexturedQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a, TextureHandle h) {
+	graphics["DrawTexturedQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a, TextureHandle h) {
 		DrawQuad({ px,py }, { sx,sy }, { r,g,b,a }, h);
 	};
-	m_scriptSystem->Globals()["Graphics"]["LoadTexture"] = [this](const char* path) -> TextureHandle {
+	graphics["LoadTexture"] = [this](const char* path) -> TextureHandle {
 		return m_textures->LoadTexture(path);
 	};
 
@@ -134,9 +133,6 @@ bool Graphics::PostInit()
 
 bool Graphics::Tick()
 {
-	m_debugGui->Image(*m_textures->GetTexture({ 0 }), { 256,256 });
-	m_renderPass->SetQuads(m_quads);
-	m_quads.clear();
 	return true;
 }
 
@@ -151,7 +147,7 @@ void Graphics::RenderPass2D::BuildQuadMesh()
 {
 	m_quadMesh = std::make_unique<Render::Mesh>();
 	Render::MeshBuilder builder;
-	builder.AddVertexStream(2);		// position
+	builder.AddVertexStream(2);		// position only
 	builder.BeginChunk();
 	builder.BeginTriangle();
 	builder.SetStreamData(0, { 0,0 }, { 1,0 }, { 0,1 });	// ccw by default
@@ -188,8 +184,6 @@ void Graphics::RenderPass2D::SetupQuadMaterial()
 	{
 		SDE_LOG("Shader linkage failed - %s", errorText.c_str());
 	}
-	m_quadShaders->AddUniform("ProjectionMat");
-	m_quadShaders->AddUniform("MyTexture");
 
 	m_quadMaterial->SetShaderProgram(m_quadShaders.get());
 	m_quadMesh->SetMaterial(m_quadMaterial.get());
@@ -301,6 +295,7 @@ TextureHandle Graphics::TextureArray::LoadTexture(const char* path)
 
 	auto newTex = Render::Texture();
 	int w, h, components;
+	stbi_set_flip_vertically_on_load(true);	
 	unsigned char* loadedData = stbi_load(path, &w, &h, &components, 4);		// we always want rgba
 	if (loadedData == nullptr)
 	{

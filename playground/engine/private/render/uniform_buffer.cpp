@@ -8,27 +8,27 @@ Matt Hoyle
 
 namespace Render
 {
-	void UniformBuffer::SetValue(const char* name, const glm::mat4& value)
+	void UniformBuffer::SetValue(std::string name, const glm::mat4& value)
 	{
-		const uint32_t hash = Core::StringHashing::GetHash(name);
-		m_mat4Values[hash] = value;
+		const uint32_t hash = Core::StringHashing::GetHash(name.c_str());
+		m_mat4Values[hash] = { name, value };
 	}
 
-	void UniformBuffer::SetValue(const char* name, const glm::vec4& value)
+	void UniformBuffer::SetValue(std::string name, const glm::vec4& value)
 	{
-		const uint32_t hash = Core::StringHashing::GetHash(name);
-		m_vec4Values[hash] = value;
+		const uint32_t hash = Core::StringHashing::GetHash(name.c_str());
+		m_vec4Values[hash] = { name, value };
 	}
 
-	void UniformBuffer::SetSampler(const char* name, uint32_t handle)
+	void UniformBuffer::SetSampler(std::string name, uint32_t handle)
 	{
-		const uint32_t hash = Core::StringHashing::GetHash(name);
-		m_textureSamplers[hash] = handle;
+		const uint32_t hash = Core::StringHashing::GetHash(name.c_str());
+		m_textureSamplers[hash] = { name, handle };
 	}
 
-	void UniformBuffer::SetArraySampler(const char* name, uint32_t handle)
+	void UniformBuffer::SetArraySampler(std::string name, uint32_t handle)
 	{
-		const uint32_t hash = Core::StringHashing::GetHash(name);
-		m_textureArraySamplers[hash] = handle;
+		const uint32_t hash = Core::StringHashing::GetHash(name.c_str());
+		m_textureArraySamplers[hash] = { name, handle };
 	}
 }

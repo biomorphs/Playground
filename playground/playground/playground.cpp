@@ -53,7 +53,6 @@ void Playground::TickScript()
 		SDE_LOG("Lua Error - %s", err.what());
 		ShutdownScript();
 	}
-	
 }
 
 void Playground::ShutdownScript()
@@ -96,14 +95,13 @@ bool Playground::Tick()
 {
 	bool forceOpen = true;
 	m_debugGui->BeginWindow(forceOpen, "Script");
-	m_debugGui->TextInput("Filename", m_scriptPath.data(), m_scriptPath.size());
 	if (m_debugGui->Button("Reload"))
 	{
 		ReloadScript();
 	}
-	m_debugGui->Separator();
 	if (m_scriptErrorText.length() > 0)
 	{
+		m_debugGui->Separator();
 		m_debugGui->Text(m_scriptErrorText.c_str());
 	}
 	m_debugGui->EndWindow();

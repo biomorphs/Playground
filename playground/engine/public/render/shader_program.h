@@ -23,8 +23,8 @@ namespace Render
 		void Destroy();
 
 		void AddUniform(const char* uniformName);
-		uint32_t GetUniformHandle(const char* uniformName) const;
-		uint32_t GetUniformHandle(uint32_t nameHash) const;
+		uint32_t GetUniformHandle(const char* uniformName, uint32_t nameHash);	// lazily updates cache
+		uint32_t GetUniformHandle(const char* uniformName);
 
 		inline uint32_t GetHandle() const { return m_handle; }
 

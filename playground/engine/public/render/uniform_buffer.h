@@ -6,6 +6,7 @@ Matt Hoyle
 
 #include "math/glm_headers.h"
 #include <unordered_map>
+#include <string>
 
 namespace Render
 {
@@ -20,20 +21,29 @@ namespace Render
 		UniformBuffer(const UniformBuffer& other) = default;
 		UniformBuffer(UniformBuffer&& other) = default;
 
-		void SetValue(const char* name, const glm::vec4& value);
-		void SetValue(const char* name, const glm::mat4& value);
-		void SetSampler(const char* name, uint32_t handle);
-		void SetArraySampler(const char* name, uint32_t handle);
+		template <class T>
+		struct Uniform {
+			std::string m_name;
+			T m_value;
+		};
+		using Vec4Uniforms = std::unordered_map<uint32_t, Uniform<glm::vec4>>;
+		using Mat4Uniforms = std::unordered_map<uint32_t, Uniform<glm::mat4>>;
+		using SamplerUniforms = std::unordered_map<uint32_t, Uniform<uint32_t>>;
 
-		const std::unordered_map<uint32_t, glm::vec4>& Vec4Values() const { return m_vec4Values; }
-		const std::unordered_map<uint32_t, glm::mat4>& Mat4Values() const { return m_mat4Values; }
-		const std::unordered_map<uint32_t, uint32_t>& Samplers() const { return m_textureSamplers; }
-		const std::unordered_map<uint32_t, uint32_t>& ArraySamplers() const { return m_textureArraySamplers; }
+		void SetValue(std::string name, const glm::vec4& value);
+		void SetValue(std::string name, const glm::mat4& value);
+		void SetSampler(std::string name, uint32_t handle);
+		void SetArraySampler(std::string name, uint32_t handle);
+
+		const Vec4Uniforms& Vec4Values() const { return m_vec4Values; }
+		const Mat4Uniforms& Mat4Values() const { return m_mat4Values; }
+		const SamplerUniforms& Samplers() const { return m_textureSamplers; }
+		const SamplerUniforms& ArraySamplers() const { return m_textureArraySamplers; }
 		
 	private:
-		std::unordered_map<uint32_t, glm::vec4> m_vec4Values;
-		std::unordered_map<uint32_t, glm::mat4> m_mat4Values;
-		std::unordered_map<uint32_t, uint32_t> m_textureSamplers;
-		std::unordered_map<uint32_t, uint32_t> m_textureArraySamplers;
+		Vec4Uniforms m_vec4Values;
+		Mat4Uniforms m_mat4Values;
+		SamplerUniforms m_textureSamplers;
+		SamplerUniforms m_textureArraySamplers;
 	};
 }

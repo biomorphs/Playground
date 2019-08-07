@@ -52,7 +52,7 @@ namespace Render
 	{
 		// Shadow current state to save driver overhead
 		const Mesh* currentMesh = nullptr;
-		const ShaderProgram* currentProgram = nullptr;
+		ShaderProgram* currentProgram = nullptr;
 		const Material* currentMaterial = nullptr;
 
 		ApplyRenderState(device);	// Apply any global render state
@@ -64,7 +64,7 @@ namespace Render
 				continue;	// Should never occur, but just to be safe
 			}
 			const Material* theMaterial = theMesh->GetMaterial();
-			const ShaderProgram* theShader = theMaterial->GetShaderProgram();
+			ShaderProgram* theShader = theMaterial->GetShaderProgram();
 
 			if (theShader != currentProgram)
 			{

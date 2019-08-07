@@ -12,6 +12,6 @@ void main()
 	vec4 pos = vec4(position,0,1);
 	vec4 v = ProjectionMat * instance_modelmat * pos; 
     out_colour = instance_colour;
-	out_uv = position;	// uvs can be took straight from the position as we always draw a (0,0)-(1,1) quad
+	out_uv = position;	// we always draw a (0,0)-(1,1) quad
     gl_Position = v;
 }
