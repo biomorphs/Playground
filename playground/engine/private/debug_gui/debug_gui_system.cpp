@@ -43,7 +43,7 @@ namespace DebugGui
 	{
 		ImGui::SdeImguiInit();
 		m_imguiPass = std::make_unique<ImguiSdlGL3RenderPass>(m_renderSystem->GetWindow(), m_renderSystem->GetDevice());
-		m_renderSystem->AddPass(*m_imguiPass);
+		m_renderSystem->AddPass(*m_imguiPass, 0x10000000);	// high pass sort key so debug gui always renders last
 
 		return true;
 	}

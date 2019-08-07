@@ -75,8 +75,8 @@ namespace SDE
 
 		for (auto renderPass : m_passes)
 		{
-			renderPass->RenderAll(*m_device);
-			renderPass->Reset();
+			renderPass.m_pass->RenderAll(*m_device);
+			renderPass.m_pass->Reset();
 		}
 
 		m_device->Present();
@@ -91,9 +91,15 @@ namespace SDE
 		m_window = nullptr;
 	}
 
-	uint32_t RenderSystem::AddPass(Render::RenderPass& pass)
+	void RenderSystem::AddPass(Render::RenderPass& pass, uint32_t sortKey)
 	{
-		m_passes.push_back(&pass);
-		return (uint32_t)(m_passes.size() - 1);
+		if (sortKey == -1)
+		{
+			sortKey = m_lastSortKey++;
+		}
+		m_passes.push_back({ &pass, sortKey });
+		std::sort(m_passes.begin(), m_passes.end(), [](const Pass& a, Pass& b) {
+			return a.m_key < b.m_key;
+		});
 	}
 }

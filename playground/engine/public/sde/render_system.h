@@ -30,8 +30,7 @@ namespace SDE
 		RenderSystem();
 		virtual ~RenderSystem();
 
-		uint32_t AddPass(Render::RenderPass& pass);
-		Render::RenderPass& GetPass(uint32_t passId);
+		void AddPass(Render::RenderPass& pass, uint32_t sortKey = -1);
 
 		inline Render::Window* GetWindow() { return m_window.get(); }
 		inline Render::Device* GetDevice() { return m_device.get(); }
@@ -57,13 +56,12 @@ namespace SDE
 
 		Config m_config;
 		glm::vec4 m_clearColour;
-		std::vector<Render::RenderPass*> m_passes;
+
+		struct Pass { Render::RenderPass* m_pass; uint32_t m_key; };
+		std::vector<Pass> m_passes;
+		uint32_t m_lastSortKey = 0;
+
 		std::unique_ptr<Render::Window> m_window;
 		std::unique_ptr<Render::Device> m_device;
 	};
-
-	inline Render::RenderPass& RenderSystem::GetPass(uint32_t passId)
-	{
-		return *m_passes[passId];
-	}
 }
