@@ -243,10 +243,11 @@ void Graphics::RenderPass2D::RenderAll(Render::Device& d)
 	ub.SetValue("ProjectionMat", projectionMat);
 
 	// render state
-	d.SetDepthState(true, false);		// enable z-test
+	d.SetDepthState(true, false);		// enable z-test, disable write
 	d.SetBackfaceCulling(true, true);	// backface culling, ccw order
-	d.SetBlending(true);
-	d.SetScissorEnabled(false);
+	d.SetBlending(true);				// enable blending (we might want to do it manually instead)
+	d.SetScissorEnabled(false);			// (don't) scissor me timbers
+
 	d.BindShaderProgram(*m_quadShaders);
 
 	// bind vertex array

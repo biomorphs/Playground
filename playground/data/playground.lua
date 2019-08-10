@@ -6,13 +6,13 @@
 Playground = {}
 local Sprites = {}
 local MyTexture = TextureHandle:new()
-local Gravity = -50
+local Gravity = -80
 
 function Playground:InitSprite(i)
 	Sprites[i] = {}
-	Sprites[i].position = { math.random(0,1280), math.random(0,680) }
-	Sprites[i].size = math.random(8,256)
-	Sprites[i].colour = {math.random(),math.random(),math.random(),math.random()}
+	Sprites[i].position = { math.random(600,680), math.random(320,380) }
+	Sprites[i].size = math.random(8,128)
+	Sprites[i].colour = {math.random(),math.random(),math.random(),0.5 + math.random() * 0.5}
 	Sprites[i].velocity = {(-1.0 + (math.random() * 2.0)) * 100, math.random() * 200}
 	Sprites[i].texture = Graphics.LoadTexture("blob.png");
 end
@@ -20,24 +20,40 @@ end
 function Playground:Init()
 	print("Init!")
 
-	for i=1,1000 do
+	for i=1,10000 do
 		Playground:InitSprite(i)
 	end
 end
 
 function Playground:Tick()
+	local timeDelta = Playground.DeltaTime
 	for i=1,#Sprites do
 		-- gravity
-		Sprites[i].velocity[2] = Sprites[i].velocity[2] + Gravity * Playground.DeltaTime
+		Sprites[i].velocity[2] = Sprites[i].velocity[2] + Gravity * timeDelta
 
-		Sprites[i].size = Sprites[i].size - Playground.DeltaTime * 8
+		if Sprites[i].position[2] < 0 then
+			Sprites[i].position[2] = 0
+			Sprites[i].velocity[2] = -Sprites[i].velocity[2] * 0.8
+		end
+
+		if Sprites[i].position[1] < 0 then
+			Sprites[i].position[1] = 0
+			Sprites[i].velocity[1] = -Sprites[i].velocity[1] * 0.8
+		end
+
+		if Sprites[i].position[1] > 1280 - Sprites[i].size then
+			Sprites[i].position[1] = 1280 - Sprites[i].size
+			Sprites[i].velocity[1] = -Sprites[i].velocity[1] * 0.8
+		end
+
+		Sprites[i].size = Sprites[i].size - timeDelta * 8
 		if Sprites[i].size < 0 then
 			Playground:InitSprite(i)
 		end
 
 		-- update pos
-		Sprites[i].position[1] = Sprites[i].position[1] + Sprites[i].velocity[1] * Playground.DeltaTime
-		Sprites[i].position[2] = Sprites[i].position[2] + Sprites[i].velocity[2] * Playground.DeltaTime
+		Sprites[i].position[1] = Sprites[i].position[1] + Sprites[i].velocity[1] * timeDelta
+		Sprites[i].position[2] = Sprites[i].position[2] + Sprites[i].velocity[2] * timeDelta
 
 		Graphics.DrawTexturedQuad(
 		Sprites[i].position[1], Sprites[i].position[2], 
