@@ -208,6 +208,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\data\config.lua" />
+    <None Include="..\data\cube.fs" />
+    <None Include="..\data\cube.vs" />
     <None Include="..\data\learnlua.lua" />
     <None Include="..\data\playground.lua" />
     <None Include="..\data\quad.fs" />

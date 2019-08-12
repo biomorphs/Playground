@@ -42,5 +42,7 @@
     <None Include="..\data\config.lua" />
     <None Include="..\data\quad.fs" />
     <None Include="..\data\quad.vs" />
+    <None Include="..\data\cube.vs" />
+    <None Include="..\data\cube.fs" />
   </ItemGroup>
 </Project>
