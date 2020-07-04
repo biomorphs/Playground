@@ -4,11 +4,12 @@ Matt Hoyle
 */
 #pragma once
 
-#include <vector>
-#include <memory>
 #include "core/system.h"
 #include "math/glm_headers.h"
 #include "render/render_pass.h"
+#include <vector>
+#include <memory>
+#include <string>
 
 namespace Render
 {

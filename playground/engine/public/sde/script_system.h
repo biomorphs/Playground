@@ -6,6 +6,7 @@ Matt Hoyle
 
 #include "core/system.h"
 #include <string>
+#include <memory>
 
 namespace sol
 {

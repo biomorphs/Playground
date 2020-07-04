@@ -11,11 +11,6 @@
   <PropertyGroup>
     <IncludePath>$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)..\external\lua-5.3.5_Win64_vc15_lib\include;$(ProjectDir)..\external\sol2-2.20.6\sol;$(ProjectDir)..\external\sol2-2.20.6;$(ProjectDir)..\external\glm;$(ProjectDir)public\;$(ProjectDir)public\sde\;$(ProjectDir)private\sde\;$(IncludePath)</IncludePath>
   </PropertyGroup>
-  <ItemDefinitionGroup>
-    <ClCompile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-    </ClCompile>
-  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="public\sde\camera_controller.h" />
     <ClInclude Include="public\sde\config_system.h" />

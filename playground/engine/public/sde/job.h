@@ -5,6 +5,7 @@ Matt Hoyle
 #pragma once
 
 #include <functional>
+#include <string>
 
 namespace SDE
 {

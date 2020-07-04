@@ -4,6 +4,7 @@
 #include "math/glm_headers.h"
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace DebugGui
 {
