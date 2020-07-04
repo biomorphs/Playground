@@ -46,6 +46,8 @@ namespace Render
 		void DrawPrimitives(PrimitiveType primitive, uint32_t vertexStart, uint32_t vertexCount);
 		void DrawPrimitivesInstanced(PrimitiveType primitive, uint32_t vertexStart, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstInstance=0);
 		void SetUniforms(ShaderProgram& p, const UniformBuffer& uniforms);
+		void BindUniformBufferIndex(ShaderProgram& p, const char* bufferName, uint32_t bindingIndex);
+		void SetUniforms(ShaderProgram& p, const RenderBuffer& ubo, uint32_t uboBindingIndex);
 	private:
 		uint32_t TranslatePrimitiveType(PrimitiveType type) const;
 

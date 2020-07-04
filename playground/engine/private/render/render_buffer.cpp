@@ -27,6 +27,8 @@ namespace Render
 			return GL_ARRAY_BUFFER;
 		case RenderBufferType::IndexData:
 			return GL_ELEMENT_ARRAY_BUFFER;
+		case RenderBufferType::UniformData:
+			return GL_UNIFORM_BUFFER;
 		default:
 			return -1;
 		}
@@ -51,20 +53,21 @@ namespace Render
 
 		if (bufferSize > 0)
 		{
-			auto glBufferType = TranslateBufferType(type);
+			auto bufferType = TranslateBufferType(type);
 
 			glGenBuffers(1, &m_handle);
 			SDE_RENDER_PROCESS_GL_ERRORS_RET("glGenBuffers");
 
-			glBindBuffer(glBufferType, m_handle);
+			glBindBuffer(bufferType, m_handle);
 			SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindBuffer");
 
 			// We initialise the buffer memory to the correct size, but we do NOT populate it
-			glBufferData(glBufferType, bufferSize, nullptr, GL_STATIC_DRAW);
+			auto usageType = TranslateModificationType(modification);
+			glBufferData(bufferType, bufferSize, nullptr, usageType);
 			SDE_RENDER_PROCESS_GL_ERRORS_RET("glBufferData");
 
 			// Reset state
-			glBindBuffer(glBufferType, 0);
+			glBindBuffer(bufferType, 0);
 			SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindBuffer");
 
 			m_bufferSize = bufferSize;
@@ -76,20 +79,21 @@ namespace Render
 
 	void RenderBuffer::SetData(size_t offset, size_t size, void* srcData)
 	{
-		auto glBufferType = TranslateBufferType(m_type);
+		auto bufferType = TranslateBufferType(m_type);
 
 		SDE_ASSERT(offset < m_bufferSize);
 		SDE_ASSERT((size + offset) <= m_bufferSize);
 		SDE_ASSERT(srcData != nullptr);
 		SDE_ASSERT(m_handle != 0);
 
-		glBindBuffer(glBufferType, m_handle);
+		SDE_RENDER_PROCESS_GL_ERRORS("PreglBindBuffer");
+		glBindBuffer(bufferType, m_handle);
 		SDE_RENDER_PROCESS_GL_ERRORS("glBindBuffer");
 
-		glBufferSubData(glBufferType, offset, size, srcData);
+		glBufferSubData(bufferType, offset, size, srcData);
 		SDE_RENDER_PROCESS_GL_ERRORS("glBufferSubData");
 
-		glBindBuffer(glBufferType, 0);	// Reset state
+		glBindBuffer(bufferType, 0);	// Reset state
 		SDE_RENDER_PROCESS_GL_ERRORS("glBindBuffer");
 	}
 

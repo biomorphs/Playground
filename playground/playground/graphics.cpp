@@ -138,6 +138,13 @@ private:
 	Graphics::MeshArray* m_meshes;
 	Render::RenderBuffer m_instanceTransforms;
 	Render::RenderBuffer m_instanceColours;
+	Render::RenderBuffer m_globalsUniformBuffer;
+};
+
+struct GlobalUniforms
+{
+	glm::mat4 m_projectionMat;
+	glm::mat4 m_viewMat;
 };
 
 Graphics::Graphics()
@@ -581,7 +588,13 @@ void Graphics::RenderPass3D::RenderAll(Render::Device& d)
 	{
 		m_instanceTransforms.Create(c_maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
 		m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
+		m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Static);
+
 		SetupShader();
+
+		// Bind the globals UBO to index 0
+		d.BindUniformBufferIndex(*m_shaders, "Globals", 0);
+
 		s_firstFrame = false;
 	}
 
@@ -601,19 +614,20 @@ void Graphics::RenderPass3D::RenderAll(Render::Device& d)
 	Render::UniformBuffer ub;
 	const auto& windowProps = m_renderSystem->GetWindow()->GetProperties();
 	auto windowSize = glm::vec2(windowProps.m_sizeX, windowProps.m_sizeY);
-	
-	auto projectionMat = glm::perspectiveFov(glm::radians(90.0f), windowSize.x, windowSize.y, 0.1f, 1000.0f);
-	auto viewMat = glm::lookAt(m_cameraPosition, m_cameraTarget, { 0.0f,1.0f,0.0f });
-	ub.SetValue("ProjectionMat", projectionMat);
-	ub.SetValue("ViewMat", viewMat);
 
 	// render state
 	d.SetDepthState(true, true);		// enable z-test, enable write
 	d.SetBackfaceCulling(true, true);	// backface culling, ccw order
 	d.SetBlending(true);				// enable blending (we might want to do it manually instead)
 	d.SetScissorEnabled(false);			// (don't) scissor me timbers
-
 	d.BindShaderProgram(*m_shaders);
+
+	GlobalUniforms globals;
+	globals.m_projectionMat = glm::perspectiveFov(glm::radians(90.0f), windowSize.x, windowSize.y, 0.1f, 1000.0f);
+	globals.m_viewMat = glm::lookAt(m_cameraPosition, m_cameraTarget, { 0.0f,1.0f,0.0f });
+	m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
+
+	d.SetUniforms(*m_shaders, m_globalsUniformBuffer, 0);	// do this for every shader change
 
 	auto firstInstance = m_instances.begin();
 	while (firstInstance != m_instances.end())

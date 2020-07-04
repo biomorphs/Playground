@@ -25,6 +25,7 @@ namespace Render
 		void AddUniform(const char* uniformName);
 		uint32_t GetUniformHandle(const char* uniformName, uint32_t nameHash);	// lazily updates cache
 		uint32_t GetUniformHandle(const char* uniformName);
+		uint32_t GetUniformBufferBlockIndex(const char* bufferName) const;
 
 		inline uint32_t GetHandle() const { return m_handle; }
 

@@ -293,4 +293,22 @@ namespace Render
 				SetArraySampler(uniformHandle, it.second.m_value, textureUnit++);
 		}
 	}
+
+	void Device::SetUniforms(ShaderProgram& p, const RenderBuffer& ubo, uint32_t uboBindingIndex)
+	{
+		glBindBufferBase(GL_UNIFORM_BUFFER, uboBindingIndex, ubo.GetHandle());
+		SDE_RENDER_PROCESS_GL_ERRORS("glBindBufferBase");
+	}
+
+	void Device::BindUniformBufferIndex(ShaderProgram& p, const char* bufferName, uint32_t bindingIndex)
+	{
+		// First we find the uniform block index
+		uint32_t blockIndex = p.GetUniformBufferBlockIndex(bufferName);
+		if (blockIndex != GL_INVALID_INDEX)
+		{
+			// create a binding between the uniforms in the shader and the global ubo array (bindingIndex)
+			glUniformBlockBinding(p.GetHandle(), blockIndex, bindingIndex);
+			SDE_RENDER_PROCESS_GL_ERRORS("glUniformBlockBinding");
+		}
+	}
 }

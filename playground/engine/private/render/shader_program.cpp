@@ -68,6 +68,13 @@ namespace Render
 		return GetUniformHandle(uniformName, Core::StringHashing::GetHash(uniformName));
 	}
 
+	uint32_t ShaderProgram::GetUniformBufferBlockIndex(const char* bufferName) const
+	{
+		uint32_t index = glGetUniformBlockIndex(m_handle, bufferName);
+		SDE_RENDER_PROCESS_GL_ERRORS("glGetUniformBlockIndex");
+		return index;
+	}
+
 	uint32_t ShaderProgram::GetUniformHandle(const char* uniformName, uint32_t nameHash)
 	{
 		uint32_t foundHandle = -1;

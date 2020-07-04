@@ -11,7 +11,8 @@ namespace Render
 	enum class RenderBufferType : uint32_t
 	{
 		VertexData,
-		IndexData
+		IndexData,
+		UniformData,	// UBO
 	};
 
 	enum class RenderBufferModification : uint32_t
