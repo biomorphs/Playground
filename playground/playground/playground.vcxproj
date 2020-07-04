@@ -198,11 +198,13 @@
   <ItemGroup>
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="model_asset.cpp" />
     <ClCompile Include="playground.cpp" />
     <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h" />
+    <ClInclude Include="model_asset.h" />
     <ClInclude Include="playground.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>

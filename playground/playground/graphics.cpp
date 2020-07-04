@@ -17,8 +17,6 @@
 #include "math/glm_headers.h"
 #include "stb_image.h"
 #include <sol.hpp>
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
 
 struct TextureHandle
 {
@@ -177,18 +175,6 @@ bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
 	m_debugGui = (DebugGui::DebugGuiSystem*)systemEnumerator.GetSystem("DebugGui");
 	m_scriptSystem = (SDE::ScriptSystem*)systemEnumerator.GetSystem("Script");
 	m_renderSystem = (SDE::RenderSystem*)systemEnumerator.GetSystem("Render");
-
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile("cottage/cottage_blender.fbx",
-		aiProcess_CalcTangentSpace |
-		aiProcess_Triangulate |
-		aiProcess_JoinIdenticalVertices |
-		aiProcess_SortByPType);
-
-	// If the import failed, report it
-	if (!scene) {
-		return false;
-	}
 
 	return true;
 }
