@@ -12,6 +12,9 @@
     <Filter Include="Header Files">
       <UniqueIdentifier>{731d09a6-fa0c-4031-b802-33095635806a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="smol">
+      <UniqueIdentifier>{7530bba8-f22c-42d8-838e-9ec395304182}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -29,6 +32,12 @@
     <ClCompile Include="model_asset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="smol\texture_manager.cpp">
+      <Filter>smol</Filter>
+    </ClCompile>
+    <ClCompile Include="smol\mesh_manager.cpp">
+      <Filter>smol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h">
@@ -42,6 +51,15 @@
     </ClInclude>
     <ClInclude Include="stb_image.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="smol\texture_manager.h">
+      <Filter>smol</Filter>
+    </ClInclude>
+    <ClInclude Include="smol\mesh_manager.h">
+      <Filter>smol</Filter>
+    </ClInclude>
+    <ClInclude Include="smol\mesh_instance.h">
+      <Filter>smol</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

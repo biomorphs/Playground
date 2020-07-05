@@ -200,12 +200,17 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model_asset.cpp" />
     <ClCompile Include="playground.cpp" />
+    <ClCompile Include="smol\mesh_manager.cpp" />
+    <ClCompile Include="smol\texture_manager.cpp" />
     <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h" />
     <ClInclude Include="model_asset.h" />
     <ClInclude Include="playground.h" />
+    <ClInclude Include="smol\mesh_instance.h" />
+    <ClInclude Include="smol\mesh_manager.h" />
+    <ClInclude Include="smol\texture_manager.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>

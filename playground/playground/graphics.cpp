@@ -13,90 +13,35 @@
 #include "render/shader_program.h"
 #include "render/shader_binary.h"
 #include "render/window.h"
-#include "render/texture.h"
-#include "render/texture_source.h"
 #include "render/mesh_instance_render_pass.h"
 #include "math/glm_headers.h"
 #include "model_asset.h"
-#include "stb_image.h"
 #include <sol.hpp>
-
-struct TextureHandle
-{
-	uint64_t m_index;
-	static TextureHandle Invalid() { return { (uint64_t)-1 }; };
-};
-
-struct MeshHandle
-{
-	uint64_t m_index;
-	static MeshHandle Invalid() { return { (uint64_t)-1 }; };
-};
+#include "smol/texture_manager.h"
+#include "smol/mesh_manager.h"
 
 struct Graphics::Quad
 {
 	glm::vec2 m_position;
 	glm::vec2 m_size;
 	glm::vec4 m_colour;
-	TextureHandle m_texture;
-};
-
-struct Graphics::MeshInstance
-{
-	uint64_t m_sortKey;
-	glm::mat4 m_transform;
-	glm::vec4 m_colour;
-	TextureHandle m_texture;
-	MeshHandle m_mesh;
+	smol::TextureHandle m_texture;
 };
 
 struct Graphics::RenderMesh
 {
-	MeshHandle m_mesh;
-	TextureHandle m_texture;
+	smol::MeshHandle m_mesh;
+	smol::TextureHandle m_texture;
 	glm::mat4 m_transform;
 };
 
 const uint64_t c_maxQuads = 1024 * 128;
 const uint64_t c_maxInstances = 1024 * 128;
 
-class Graphics::MeshArray
-{
-public:
-	MeshArray() = default;
-	~MeshArray();
-
-	MeshHandle AddMesh(const char* name, Render::Mesh* m);
-	MeshHandle LoadMesh(const char* name);
-	Render::Mesh* GetMesh(const MeshHandle& h);
-private:
-	struct MeshDesc {
-		Render::Mesh* m_mesh;
-		std::string m_name;
-	};
-	std::vector<MeshDesc> m_meshes;
-};
-
-class Graphics::TextureArray
-{
-public:
-	TextureArray() = default;
-	~TextureArray();
-
-	TextureHandle LoadTexture(const char* path);
-	Render::Texture* GetTexture(const TextureHandle& h);
-private:
-	struct TextureDesc { 
-		Render::Texture m_texture;
-		std::string m_path;
-	};
-	std::vector<TextureDesc> m_textures;
-};
-
 class Graphics::RenderPass2D : public Render::RenderPass
 {
 public:
-	RenderPass2D(SDE::RenderSystem* rs, Graphics::TextureArray* ta, std::vector<Quad>& quads)
+	RenderPass2D(SDE::RenderSystem* rs, smol::TextureManager* ta, std::vector<Quad>& quads)
 		: m_renderSystem(rs)
 		, m_textures(ta)
 		, m_quads(quads)
@@ -115,7 +60,7 @@ private:
 	std::unique_ptr<Render::Material> m_quadMaterial;
 	std::unique_ptr<Render::ShaderProgram> m_quadShaders;
 	SDE::RenderSystem* m_renderSystem;
-	Graphics::TextureArray* m_textures;
+	smol::TextureManager* m_textures;
 	Render::RenderBuffer m_quadInstanceTransforms;
 	Render::RenderBuffer m_quadInstanceColours;
 };
@@ -123,7 +68,7 @@ private:
 class Graphics::RenderPass3D : public Render::RenderPass
 {
 public:
-	RenderPass3D(SDE::RenderSystem* rs, Graphics::TextureArray* ta, Graphics::MeshArray* ma, std::vector<MeshInstance>& instances)
+	RenderPass3D(SDE::RenderSystem* rs, smol::TextureManager* ta, smol::MeshManager* ma, std::vector<smol::MeshInstance>& instances)
 		: m_renderSystem(rs)
 		, m_textures(ta)
 		, m_meshes(ma)
@@ -140,11 +85,11 @@ private:
 	glm::vec3 m_cameraTarget = { 0.0f,0.0f,0.0f };
 	void SetupShader();
 	void PopulateInstanceBuffers();
-	std::vector<MeshInstance>& m_instances;
+	std::vector<smol::MeshInstance>& m_instances;
 	std::unique_ptr<Render::ShaderProgram> m_shaders;
 	SDE::RenderSystem* m_renderSystem;
-	Graphics::TextureArray* m_textures;
-	Graphics::MeshArray* m_meshes;
+	smol::TextureManager* m_textures;
+	smol::MeshManager* m_meshes;
 	Render::RenderBuffer m_instanceTransforms;
 	Render::RenderBuffer m_instanceColours;
 	Render::RenderBuffer m_globalsUniformBuffer;
@@ -166,12 +111,12 @@ Graphics::~Graphics()
 {
 }
 
-void Graphics::DrawQuad(glm::vec2 pos, glm::vec2 size, glm::vec4 colour, const TextureHandle& th)
+void Graphics::DrawQuad(glm::vec2 pos, glm::vec2 size, glm::vec4 colour, const smol::TextureHandle& th)
 {
 	m_quads.push_back({ pos, size, colour, th });
 }
 
-void Graphics::DrawCube(glm::vec3 pos, glm::vec3 size, glm::vec4 colour, const struct TextureHandle& th)
+void Graphics::DrawCube(glm::vec3 pos, glm::vec3 size, glm::vec4 colour, const struct smol::TextureHandle& th)
 {
 	// cube is always mesh 0
 	uint64_t meshIndex = 0;
@@ -195,11 +140,11 @@ bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
 bool Graphics::PostInit()
 {
 	// load white texture in slot 0
-	m_textures = std::make_unique<TextureArray>();
+	m_textures = std::make_unique<smol::TextureManager>();
 	m_textures->LoadTexture("white.bmp");
 
 	// make mesh array
-	m_meshes = std::make_unique<MeshArray>();
+	m_meshes = std::make_unique<smol::MeshManager>();
 	GenerateCubeMesh();
 	
 	auto loadedModel = Model::Loader::Load("container.FBX");
@@ -215,8 +160,8 @@ bool Graphics::PostInit()
 	m_renderSystem->AddPass(*m_render3d);
 
 	// expose TextureHandle to lua
-	auto texHandleScriptType = m_scriptSystem->Globals().new_usertype<TextureHandle>("TextureHandle",
-		sol::constructors<TextureHandle()>()
+	auto texHandleScriptType = m_scriptSystem->Globals().new_usertype<smol::TextureHandle>("TextureHandle",
+		sol::constructors<smol::TextureHandle()>()
 		);
 
 	// expose Graphics namespace functions
@@ -227,16 +172,16 @@ bool Graphics::PostInit()
 	graphics["DrawQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a) {
 		DrawQuad({ px,py }, { sx,sy }, { r,g,b,a }, { 0 });
 	};
-	graphics["DrawTexturedQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a, TextureHandle h) {
+	graphics["DrawTexturedQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a, smol::TextureHandle h) {
 		DrawQuad({ px,py }, { sx,sy }, { r,g,b,a }, h);
 	};
 	graphics["DrawCube"] = [this](float px, float py, float pz, float sx, float sy, float sz, float r, float g, float b, float a) {
 		DrawCube({ px,py,pz }, { sx,sy,sz }, { r,g,b,a }, { 0 });
 	};
-	graphics["DrawTexturedCube"] = [this](float px, float py, float pz, float sx, float sy, float sz, float r, float g, float b, float a, TextureHandle h) {
+	graphics["DrawTexturedCube"] = [this](float px, float py, float pz, float sx, float sy, float sz, float r, float g, float b, float a, smol::TextureHandle h) {
 		DrawCube({ px,py,pz }, { sx,sy,sz }, { r,g,b,a }, h);
 	};
-	graphics["LoadTexture"] = [this](const char* path) -> TextureHandle {
+	graphics["LoadTexture"] = [this](const char* path) -> smol::TextureHandle {
 		return m_textures->LoadTexture(path);
 	};
 	graphics["LookAt"] = [this](float px, float py, float pz, float tx, float ty, float tz) {
@@ -251,13 +196,10 @@ bool Graphics::PostInit()
 
 bool Graphics::Tick()
 {
-	if (m_inputSystem->ControllerState(0) != nullptr)
-	{
-		Render::Camera c;
-		m_debugCameraController->Update(*m_inputSystem->ControllerState(0), 0.033f);
-		m_debugCameraController->ApplyToCamera(c);
-		m_render3d->SetCamera(c.Position(), c.Target());
-	}
+	Render::Camera c;
+	m_debugCameraController->Update(m_inputSystem->ControllerState(0), 0.033f);
+	m_debugCameraController->ApplyToCamera(c);
+	m_render3d->SetCamera(c.Position(), c.Target());
 
 	// draw the test meshes
 	for (const auto& mh : m_testMesh)
@@ -507,7 +449,7 @@ void Graphics::RenderPass2D::RenderAll(Render::Device& d)
 		});
 
 		// use the texture or our in built white texture
-		TextureHandle texture = firstQuad->m_texture.m_index != (uint64_t)-1 ? firstQuad->m_texture : TextureHandle{0};
+		smol::TextureHandle texture = firstQuad->m_texture.m_index != (uint64_t)-1 ? firstQuad->m_texture : smol::TextureHandle{0};
 		ub.SetSampler("MyTexture", m_textures->GetTexture(texture)->GetHandle());
 		d.SetUniforms(*m_quadShaders, ub);
 
@@ -518,111 +460,6 @@ void Graphics::RenderPass2D::RenderAll(Render::Device& d)
 		d.DrawPrimitivesInstanced(meshChunk.m_primitiveType, meshChunk.m_firstVertex, meshChunk.m_vertexCount, instanceCount, firstIndex);
 
 		firstQuad = lastQuad;
-	}
-}
-
-TextureHandle Graphics::TextureArray::LoadTexture(const char* path)
-{
-	for (uint64_t i = 0; i < m_textures.size(); ++i)
-	{
-		if (m_textures[i].m_path == path)
-		{
-			return { i };
-		}
-	}
-
-	auto newTex = Render::Texture();
-	int w, h, components;
-	stbi_set_flip_vertically_on_load(true);	
-	unsigned char* loadedData = stbi_load(path, &w, &h, &components, 4);		// we always want rgba
-	if (loadedData == nullptr)
-	{
-		stbi_image_free(loadedData);
-		return TextureHandle::Invalid();
-	}
-
-	std::vector<uint8_t> rawDataBuffer;
-	rawDataBuffer.resize(w * h * 4);
-	memcpy(rawDataBuffer.data(), loadedData, w*h * 4);
-	stbi_image_free(loadedData);
-
-	std::vector<Render::TextureSource::MipDesc> mip;
-	mip.push_back({ (uint32_t)w,(uint32_t)h,0,w*h * (size_t)4 });
-	Render::TextureSource ts((uint32_t)w, (uint32_t)h, Render::TextureSource::Format::RGBA8, { mip }, rawDataBuffer);
-	std::vector< Render::TextureSource> sources;
-	sources.push_back(ts);
-	if (!newTex.Create(sources))
-	{
-		return TextureHandle::Invalid();
-	}
-
-	m_textures.push_back({ std::move(newTex), path });
-	return { m_textures.size() - 1 };
-}
-
-Render::Texture* Graphics::TextureArray::GetTexture(const TextureHandle& h)
-{
-	if (h.m_index != -1 && h.m_index < m_textures.size())
-	{
-		return &m_textures[h.m_index].m_texture;
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
-Graphics::TextureArray::~TextureArray()
-{
-	for (auto& it : m_textures)
-	{
-		it.m_texture.Destroy();
-	}
-}
-
-MeshHandle Graphics::MeshArray::AddMesh(const char* name, Render::Mesh* m)
-{
-	for (uint64_t i = 0; i < m_meshes.size(); ++i)
-	{
-		if (m_meshes[i].m_name == name)
-		{
-			return MeshHandle::Invalid();
-		}
-	}
-	m_meshes.push_back({ m, name });
-	return { m_meshes.size() - 1 };
-}
-
-MeshHandle Graphics::MeshArray::LoadMesh(const char* name)
-{
-	for (uint64_t i = 0; i < m_meshes.size(); ++i)
-	{
-		if (m_meshes[i].m_name == name)
-		{
-			return { i };
-		}
-	}
-
-	return MeshHandle::Invalid();
-}
-
-Render::Mesh* Graphics::MeshArray::GetMesh(const MeshHandle& h)
-{
-	if (h.m_index != -1 && h.m_index < m_meshes.size())
-	{
-		return m_meshes[h.m_index].m_mesh;
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
-Graphics::MeshArray::~MeshArray()
-{
-	for (auto& it : m_meshes)
-	{
-		delete it.m_mesh;
 	}
 }
 
@@ -692,7 +529,7 @@ void Graphics::RenderPass3D::RenderAll(Render::Device& d)
 	}
 
 	// sort by generic sort key
-	std::sort(m_instances.begin(), m_instances.end(), [](const MeshInstance& q1, const MeshInstance& q2) -> bool {
+	std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
 		return q1.m_sortKey < q2.m_sortKey;
 	});
 
@@ -736,7 +573,7 @@ void Graphics::RenderPass3D::RenderAll(Render::Device& d)
 
 		// find the last matching mesh
 		uint64_t meshID = firstInstance->m_mesh.m_index;
-		auto lastMeshInstance = std::find_if(firstInstance, m_instances.end(), [meshID](const MeshInstance& m) -> bool {
+		auto lastMeshInstance = std::find_if(firstInstance, m_instances.end(), [meshID](const smol::MeshInstance& m) -> bool {
 			return m.m_mesh.m_index != meshID;
 		});
 
@@ -745,12 +582,12 @@ void Graphics::RenderPass3D::RenderAll(Render::Device& d)
 		while (firstTexInstance != lastMeshInstance)
 		{
 			uint64_t texID = firstTexInstance->m_texture.m_index;
-			auto lastTexInstance = std::find_if(firstTexInstance, lastMeshInstance, [texID](const MeshInstance& m) -> bool {
+			auto lastTexInstance = std::find_if(firstTexInstance, lastMeshInstance, [texID](const smol::MeshInstance& m) -> bool {
 				return m.m_texture.m_index != texID;
 			});
 
 			// firstTexInstance -> lastTexInstance instances to draw
-			TextureHandle texture = texID != (uint64_t)-1 ? firstTexInstance->m_texture : TextureHandle{ 0 };
+			smol::TextureHandle texture = texID != (uint64_t)-1 ? firstTexInstance->m_texture : smol::TextureHandle{ 0 };
 			ub.SetSampler("MyTexture", m_textures->GetTexture(texture)->GetHandle());
 			d.SetUniforms(*m_shaders, ub);
 			for (const auto& chunk : theMesh->GetChunks())

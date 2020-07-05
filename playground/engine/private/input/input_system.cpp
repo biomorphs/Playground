@@ -7,6 +7,7 @@ Matt Hoyle
 #include <SDL_joystick.h>
 #include <SDL_gamecontroller.h>
 #include <SDL_mouse.h>
+#include <algorithm>
 
 namespace Input
 {
@@ -21,6 +22,7 @@ namespace Input
 
 	bool InputSystem::Tick()
 	{
+		EnumerateControllers();
 		UpdateControllerState();
 		UpdateMouseState();
 		return true;
@@ -31,10 +33,16 @@ namespace Input
 		return m_mouseState;
 	}
 
-	const ControllerRawState* InputSystem::ControllerState(uint32_t padIndex) const
+	const ControllerRawState InputSystem::ControllerState(uint32_t padIndex) const
 	{
-		SDE_ASSERT(padIndex < m_controllers.size());
-		return &m_controllers[padIndex].m_padState;
+		if (padIndex < m_controllers.size())
+		{
+			return m_controllers[padIndex].m_padState;
+		}
+		else
+		{
+			return {};
+		}
 	}
 
 	void InputSystem::UpdateMouseState()
@@ -115,6 +123,7 @@ namespace Input
 
 	void InputSystem::EnumerateControllers()
 	{
+		m_controllers.clear();
 		for (int i = 0; i < SDL_NumJoysticks(); ++i) 
 		{
 			if (SDL_IsGameController(i)) 

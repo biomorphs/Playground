@@ -20,7 +20,7 @@ namespace Input
 		virtual bool Tick();
 
 		inline uint32_t ControllerCount() const { return (uint32_t)m_controllers.size(); }
-		const ControllerRawState* ControllerState(uint32_t padIndex) const;
+		const ControllerRawState ControllerState(uint32_t padIndex) const;
 		const MouseRawState& MouseState() const;
 
 	private:
