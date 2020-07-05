@@ -19,6 +19,7 @@
 #include <sol.hpp>
 #include "smol/texture_manager.h"
 #include "smol/mesh_manager.h"
+#include "smol/renderer.h"
 
 struct Graphics::Quad
 {
@@ -36,7 +37,6 @@ struct Graphics::RenderMesh
 };
 
 const uint64_t c_maxQuads = 1024 * 128;
-const uint64_t c_maxInstances = 1024 * 128;
 
 class Graphics::RenderPass2D : public Render::RenderPass
 {
@@ -65,46 +65,9 @@ private:
 	Render::RenderBuffer m_quadInstanceColours;
 };
 
-class Graphics::RenderPass3D : public Render::RenderPass
-{
-public:
-	RenderPass3D(SDE::RenderSystem* rs, smol::TextureManager* ta, smol::MeshManager* ma, std::vector<smol::MeshInstance>& instances)
-		: m_renderSystem(rs)
-		, m_textures(ta)
-		, m_meshes(ma)
-		, m_instances(instances)
-	{
-	}
-	virtual ~RenderPass3D() = default;
-
-	void Reset() { m_instances.clear(); }
-	void RenderAll(Render::Device&);
-	void SetCamera(glm::vec3 pos, glm::vec3 target) { m_cameraPosition = pos; m_cameraTarget = target; }
-private:
-	glm::vec3 m_cameraPosition = { 0.0f,0.0f,0.0f };
-	glm::vec3 m_cameraTarget = { 0.0f,0.0f,0.0f };
-	void SetupShader();
-	void PopulateInstanceBuffers();
-	std::vector<smol::MeshInstance>& m_instances;
-	std::unique_ptr<Render::ShaderProgram> m_shaders;
-	SDE::RenderSystem* m_renderSystem;
-	smol::TextureManager* m_textures;
-	smol::MeshManager* m_meshes;
-	Render::RenderBuffer m_instanceTransforms;
-	Render::RenderBuffer m_instanceColours;
-	Render::RenderBuffer m_globalsUniformBuffer;
-};
-
-struct GlobalUniforms
-{
-	glm::mat4 m_projectionMat;
-	glm::mat4 m_viewMat;
-};
-
 Graphics::Graphics()
 {
 	m_quads.reserve(c_maxQuads);
-	m_instances.reserve(c_maxInstances);
 }
 
 Graphics::~Graphics()
@@ -119,17 +82,14 @@ void Graphics::DrawQuad(glm::vec2 pos, glm::vec2 size, glm::vec4 colour, const s
 void Graphics::DrawCube(glm::vec3 pos, glm::vec3 size, glm::vec4 colour, const struct smol::TextureHandle& th)
 {
 	// cube is always mesh 0
-	uint64_t meshIndex = 0;
-	uint64_t sortKey = (th.m_index & 0x00000000ffffffff) | (meshIndex << 32);
 	glm::mat4 cubeTransform;
 	glm::translate(cubeTransform, pos);
 	glm::scale(cubeTransform, size);
-	m_instances.push_back({ sortKey, cubeTransform, colour, th, {0} });
+	m_render3d->SubmitInstance(cubeTransform, colour, { 0 }, th);
 }
 
 bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
 {
-	m_debugGui = (DebugGui::DebugGuiSystem*)systemEnumerator.GetSystem("DebugGui");
 	m_scriptSystem = (SDE::ScriptSystem*)systemEnumerator.GetSystem("Script");
 	m_renderSystem = (SDE::RenderSystem*)systemEnumerator.GetSystem("Render");
 	m_inputSystem = (Input::InputSystem*)systemEnumerator.GetSystem("Input");
@@ -156,7 +116,9 @@ bool Graphics::PostInit()
 	m_render2d = std::make_unique<RenderPass2D>(m_renderSystem, m_textures.get(), m_quads);
 	m_renderSystem->AddPass(*m_render2d);
 
-	m_render3d = std::make_unique<RenderPass3D>(m_renderSystem, m_textures.get(), m_meshes.get(), m_instances);
+	const auto& windowProps = m_renderSystem->GetWindow()->GetProperties();
+	auto windowSize = glm::vec2(windowProps.m_sizeX, windowProps.m_sizeY);
+	m_render3d = std::make_unique<smol::Renderer>(m_textures.get(), m_meshes.get(), windowSize);
 	m_renderSystem->AddPass(*m_render3d);
 
 	// expose TextureHandle to lua
@@ -199,26 +161,12 @@ bool Graphics::Tick()
 	Render::Camera c;
 	m_debugCameraController->Update(m_inputSystem->ControllerState(0), 0.033f);
 	m_debugCameraController->ApplyToCamera(c);
-	m_render3d->SetCamera(c.Position(), c.Target());
+	m_render3d->SetCamera(c);
 
 	// draw the test meshes
 	for (const auto& mh : m_testMesh)
 	{
-		uint64_t meshIndex = mh.m_mesh.m_index;
-		uint64_t sortKey = (mh.m_texture.m_index & 0x00000000ffffffff) | (meshIndex << 32);
-
-		// Extract col vectors of the matrix
-		const auto& m = mh.m_transform;
-		glm::vec3 col1(m[0][0], m[0][1], m[0][2]);
-		glm::vec3 col2(m[1][0], m[1][1], m[1][2]);
-		glm::vec3 col3(m[2][0], m[2][1], m[2][2]);
-		//Extract the scaling factors
-		glm::vec3 scaling;
-		scaling.x = glm::length(col1);
-		scaling.y = glm::length(col2);
-		scaling.z = glm::length(col3);
-
-		m_instances.push_back({ sortKey, mh.m_transform, glm::vec4(1.0f,1.0f,1.0f,1.0f), mh.m_texture, mh.m_mesh });
+		m_render3d->SubmitInstance(mh.m_transform, glm::vec4(1.0f), mh.m_mesh, mh.m_texture);
 	}
 
 	return true;
@@ -460,144 +408,5 @@ void Graphics::RenderPass2D::RenderAll(Render::Device& d)
 		d.DrawPrimitivesInstanced(meshChunk.m_primitiveType, meshChunk.m_firstVertex, meshChunk.m_vertexCount, instanceCount, firstIndex);
 
 		firstQuad = lastQuad;
-	}
-}
-
-void Graphics::RenderPass3D::SetupShader()
-{
-	m_shaders = std::make_unique<Render::ShaderProgram>();
-
-	auto vertexShader = std::make_unique<Render::ShaderBinary>();
-	std::string errorText;
-	if (!vertexShader->CompileFromFile(Render::ShaderType::VertexShader, "cube.vs", errorText))
-	{
-		SDE_LOG("Vertex shader compilation failed - %s", errorText.c_str());
-	}
-	auto fragmentShader = std::make_unique<Render::ShaderBinary>();
-	if (!fragmentShader->CompileFromFile(Render::ShaderType::FragmentShader, "cube.fs", errorText))
-	{
-		SDE_LOG("Fragment shader compilation failed - %s", errorText.c_str());
-	}
-
-	if (!m_shaders->Create(*vertexShader, *fragmentShader, errorText))
-	{
-		SDE_LOG("Shader linkage failed - %s", errorText.c_str());
-	}
-}
-
-void Graphics::RenderPass3D::PopulateInstanceBuffers()
-{
-	//static to avoid constant allocations
-	static std::vector<glm::mat4> instanceTransforms;
-	instanceTransforms.reserve(c_maxInstances);
-	instanceTransforms.clear();
-	static std::vector<glm::vec4> instanceColours;
-	instanceColours.reserve(c_maxInstances);
-	instanceColours.clear();
-
-	for (const auto& c : m_instances)
-	{
-		instanceTransforms.push_back(c.m_transform);
-		instanceColours.push_back(c.m_colour);
-	}
-
-	// copy the instance buffers to gpu
-	m_instanceTransforms.SetData(0, instanceTransforms.size() * sizeof(glm::mat4), instanceTransforms.data());
-	m_instanceColours.SetData(0, instanceColours.size() * sizeof(glm::vec4), instanceColours.data());
-}
-
-void Graphics::RenderPass3D::RenderAll(Render::Device& d)
-{
-	static bool s_firstFrame = true;
-	if (s_firstFrame)
-	{
-		m_instanceTransforms.Create(c_maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
-		m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
-		m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Static);
-
-		SetupShader();
-
-		// Bind the globals UBO to index 0
-		d.BindUniformBufferIndex(*m_shaders, "Globals", 0);
-
-		s_firstFrame = false;
-	}
-
-	if (m_instances.size() == 0)
-	{
-		return;
-	}
-
-	// sort by generic sort key
-	std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
-		return q1.m_sortKey < q2.m_sortKey;
-	});
-
-	PopulateInstanceBuffers();
-
-	// global uniforms
-	Render::UniformBuffer ub;
-	const auto& windowProps = m_renderSystem->GetWindow()->GetProperties();
-	auto windowSize = glm::vec2(windowProps.m_sizeX, windowProps.m_sizeY);
-
-	// render state
-	d.SetDepthState(true, true);		// enable z-test, enable write
-	d.SetBackfaceCulling(true, true);	// backface culling, ccw order
-	d.SetBlending(true);				// enable blending (we might want to do it manually instead)
-	d.SetScissorEnabled(false);			// (don't) scissor me timbers
-	d.BindShaderProgram(*m_shaders);
-
-	GlobalUniforms globals;
-	globals.m_projectionMat = glm::perspectiveFov(glm::radians(90.0f), windowSize.x, windowSize.y, 0.1f, 1000.0f);
-	globals.m_viewMat = glm::lookAt(m_cameraPosition, m_cameraTarget, { 0.0f,1.0f,0.0f });
-	m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
-
-	d.SetUniforms(*m_shaders, m_globalsUniformBuffer, 0);	// do this for every shader change
-
-	auto firstInstance = m_instances.begin();
-	while (firstInstance != m_instances.end())
-	{
-		const Render::Mesh* theMesh = m_meshes->GetMesh(firstInstance->m_mesh);
-
-		// bind vertex array
-		d.BindVertexArray(theMesh->GetVertexArray());
-
-		// bind instancing streams immediately after mesh vertex streams
-		int instancingSlotIndex = theMesh->GetVertexArray().GetStreamCount();
-		// matrices must be set over multiple stream as part of vao
-		d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, 0, 4);
-		d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 4, 4);
-		d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 8, 4);
-		d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 12, 4);
-		d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceColours, instancingSlotIndex++, 4, 0);
-
-		// find the last matching mesh
-		uint64_t meshID = firstInstance->m_mesh.m_index;
-		auto lastMeshInstance = std::find_if(firstInstance, m_instances.end(), [meshID](const smol::MeshInstance& m) -> bool {
-			return m.m_mesh.m_index != meshID;
-		});
-
-		// 1 draw call per texture
-		auto firstTexInstance = firstInstance;
-		while (firstTexInstance != lastMeshInstance)
-		{
-			uint64_t texID = firstTexInstance->m_texture.m_index;
-			auto lastTexInstance = std::find_if(firstTexInstance, lastMeshInstance, [texID](const smol::MeshInstance& m) -> bool {
-				return m.m_texture.m_index != texID;
-			});
-
-			// firstTexInstance -> lastTexInstance instances to draw
-			smol::TextureHandle texture = texID != (uint64_t)-1 ? firstTexInstance->m_texture : smol::TextureHandle{ 0 };
-			ub.SetSampler("MyTexture", m_textures->GetTexture(texture)->GetHandle());
-			d.SetUniforms(*m_shaders, ub);
-			for (const auto& chunk : theMesh->GetChunks())
-			{
-				auto instanceCount = (uint32_t)(lastTexInstance - firstTexInstance);
-				uint32_t firstIndex = (uint32_t)(firstTexInstance - m_instances.begin());
-				d.DrawPrimitivesInstanced(chunk.m_primitiveType, chunk.m_firstVertex, chunk.m_vertexCount, instanceCount, firstIndex);
-			}		
-			firstTexInstance = lastTexInstance;
-		}
-		firstInstance = lastMeshInstance;
 	}
 }

@@ -38,6 +38,9 @@
     <ClCompile Include="smol\mesh_manager.cpp">
       <Filter>smol</Filter>
     </ClCompile>
+    <ClCompile Include="smol\renderer.cpp">
+      <Filter>smol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h">
@@ -59,6 +62,9 @@
       <Filter>smol</Filter>
     </ClInclude>
     <ClInclude Include="smol\mesh_instance.h">
+      <Filter>smol</Filter>
+    </ClInclude>
+    <ClInclude Include="smol\renderer.h">
       <Filter>smol</Filter>
     </ClInclude>
   </ItemGroup>
