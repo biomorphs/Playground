@@ -4,6 +4,7 @@
 #include "render/render_buffer.h"
 #include "render/camera.h"
 #include "math/glm_headers.h"
+#include "mesh_instance.h"
 #include <vector>
 #include <memory>
 
@@ -11,9 +12,7 @@ namespace smol
 {
 	class TextureManager;
 	class MeshManager;
-	struct MeshInstance;
 	struct MeshHandle;
-	struct TextureHandle;
 
 	class Renderer : public Render::RenderPass
 	{

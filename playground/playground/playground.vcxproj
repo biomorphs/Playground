@@ -202,6 +202,7 @@
     <ClCompile Include="playground.cpp" />
     <ClCompile Include="smol\mesh_manager.cpp" />
     <ClCompile Include="smol\renderer.cpp" />
+    <ClCompile Include="smol\renderer_2d.cpp" />
     <ClCompile Include="smol\texture_manager.cpp" />
     <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
@@ -212,6 +213,7 @@
     <ClInclude Include="smol\mesh_instance.h" />
     <ClInclude Include="smol\mesh_manager.h" />
     <ClInclude Include="smol\renderer.h" />
+    <ClInclude Include="smol\renderer_2d.h" />
     <ClInclude Include="smol\texture_manager.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>

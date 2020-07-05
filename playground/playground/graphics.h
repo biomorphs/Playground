@@ -2,7 +2,6 @@
 #include "core/system.h"
 #include "core/timer.h"
 #include "math/glm_headers.h"
-#include "smol/mesh_instance.h"
 #include <vector>
 #include <string>
 #include <memory>
@@ -25,6 +24,7 @@ namespace smol
 	struct TextureHandle;
 	class MeshManager;
 	class Renderer;
+	class Renderer2D;
 }
 
 class Graphics : public Core::ISystem
@@ -36,7 +36,6 @@ public:
 	virtual bool PostInit();
 	virtual bool Tick();
 	virtual void Shutdown();
-	void DrawQuad(glm::vec2 pos, glm::vec2 size, glm::vec4 colour, const struct smol::TextureHandle& th);
 	void DrawCube(glm::vec3 pos, glm::vec3 size, glm::vec4 colour, const struct smol::TextureHandle& th);
 private:
 	void GenerateCubeMesh();
@@ -46,11 +45,8 @@ private:
 	std::vector<Graphics::RenderMesh> m_testMesh;
 	std::vector<Graphics::RenderMesh> m_testMesh2;
 
-	struct Quad;
-	class RenderPass2D;
 	std::unique_ptr<SDE::DebugCameraController> m_debugCameraController;
-	std::vector<Quad> m_quads;
-	std::unique_ptr<RenderPass2D> m_render2d;
+	std::unique_ptr<smol::Renderer2D> m_render2d;
 	std::unique_ptr<smol::Renderer> m_render3d;
 	std::unique_ptr<smol::TextureManager> m_textures;
 	std::unique_ptr<smol::MeshManager> m_meshes;

@@ -9,25 +9,14 @@
 #include "input/input_system.h"
 #include "render/mesh_builder.h"
 #include "render/mesh.h"
-#include "render/material.h"
-#include "render/shader_program.h"
-#include "render/shader_binary.h"
 #include "render/window.h"
-#include "render/mesh_instance_render_pass.h"
 #include "math/glm_headers.h"
 #include "model_asset.h"
 #include <sol.hpp>
 #include "smol/texture_manager.h"
 #include "smol/mesh_manager.h"
 #include "smol/renderer.h"
-
-struct Graphics::Quad
-{
-	glm::vec2 m_position;
-	glm::vec2 m_size;
-	glm::vec4 m_colour;
-	smol::TextureHandle m_texture;
-};
+#include "smol/renderer_2d.h"
 
 struct Graphics::RenderMesh
 {
@@ -36,55 +25,19 @@ struct Graphics::RenderMesh
 	glm::mat4 m_transform;
 };
 
-const uint64_t c_maxQuads = 1024 * 128;
-
-class Graphics::RenderPass2D : public Render::RenderPass
-{
-public:
-	RenderPass2D(SDE::RenderSystem* rs, smol::TextureManager* ta, std::vector<Quad>& quads)
-		: m_renderSystem(rs)
-		, m_textures(ta)
-		, m_quads(quads)
-	{ 
-	}
-	virtual ~RenderPass2D() = default;
-
-	void Reset() { m_quads.clear(); }
-	void RenderAll(Render::Device&);
-private:
-	void BuildQuadMesh();
-	void SetupQuadMaterial();
-	void PopulateInstanceBuffers();
-	std::vector<Quad>& m_quads;
-	std::unique_ptr<Render::Mesh> m_quadMesh;
-	std::unique_ptr<Render::Material> m_quadMaterial;
-	std::unique_ptr<Render::ShaderProgram> m_quadShaders;
-	SDE::RenderSystem* m_renderSystem;
-	smol::TextureManager* m_textures;
-	Render::RenderBuffer m_quadInstanceTransforms;
-	Render::RenderBuffer m_quadInstanceColours;
-};
-
 Graphics::Graphics()
 {
-	m_quads.reserve(c_maxQuads);
 }
 
 Graphics::~Graphics()
 {
 }
 
-void Graphics::DrawQuad(glm::vec2 pos, glm::vec2 size, glm::vec4 colour, const smol::TextureHandle& th)
-{
-	m_quads.push_back({ pos, size, colour, th });
-}
-
 void Graphics::DrawCube(glm::vec3 pos, glm::vec3 size, glm::vec4 colour, const struct smol::TextureHandle& th)
 {
 	// cube is always mesh 0
-	glm::mat4 cubeTransform;
-	glm::translate(cubeTransform, pos);
-	glm::scale(cubeTransform, size);
+	glm::mat4 cubeTransform = glm::translate(glm::identity<glm::mat4>(), pos);
+	cubeTransform = glm::scale(cubeTransform, size);
 	m_render3d->SubmitInstance(cubeTransform, colour, { 0 }, th);
 }
 
@@ -99,12 +52,14 @@ bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
 
 bool Graphics::PostInit()
 {
-	// load white texture in slot 0
+	// Create managers
 	m_textures = std::make_unique<smol::TextureManager>();
+	m_meshes = std::make_unique<smol::MeshManager>();
+
+	// load white texture in slot 0
 	m_textures->LoadTexture("white.bmp");
 
-	// make mesh array
-	m_meshes = std::make_unique<smol::MeshManager>();
+	// load cube mesh into slot 0
 	GenerateCubeMesh();
 	
 	auto loadedModel = Model::Loader::Load("container.fbx");
@@ -119,11 +74,13 @@ bool Graphics::PostInit()
 		m_testMesh2 = CreateRenderMeshesFromModel(*otherModel);
 	}
 
-	m_render2d = std::make_unique<RenderPass2D>(m_renderSystem, m_textures.get(), m_quads);
-	m_renderSystem->AddPass(*m_render2d);
-
 	const auto& windowProps = m_renderSystem->GetWindow()->GetProperties();
 	auto windowSize = glm::vec2(windowProps.m_sizeX, windowProps.m_sizeY);
+
+	// Init render passes
+	m_render2d = std::make_unique<smol::Renderer2D>(m_textures.get(), windowSize);
+	m_renderSystem->AddPass(*m_render2d);
+	
 	m_render3d = std::make_unique<smol::Renderer>(m_textures.get(), m_meshes.get(), windowSize);
 	m_renderSystem->AddPass(*m_render3d);
 
@@ -138,10 +95,10 @@ bool Graphics::PostInit()
 		m_renderSystem->SetClearColour(glm::vec4(r, g, b, 1.0f));
 	};
 	graphics["DrawQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a) {
-		DrawQuad({ px,py }, { sx,sy }, { r,g,b,a }, { 0 });
+		m_render2d->SubmitQuad({ px,py }, { sx,sy }, { r,g,b,a }, { 0 });
 	};
 	graphics["DrawTexturedQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a, smol::TextureHandle h) {
-		DrawQuad({ px,py }, { sx,sy }, { r,g,b,a }, h);
+		m_render2d->SubmitQuad({ px,py }, { sx,sy }, { r,g,b,a }, h);
 	};
 	graphics["DrawCube"] = [this](float px, float py, float pz, float sx, float sy, float sz, float r, float g, float b, float a) {
 		DrawCube({ px,py,pz }, { sx,sy,sz }, { r,g,b,a }, { 0 });
@@ -151,9 +108,6 @@ bool Graphics::PostInit()
 	};
 	graphics["LoadTexture"] = [this](const char* path) -> smol::TextureHandle {
 		return m_textures->LoadTexture(path);
-	};
-	graphics["LookAt"] = [this](float px, float py, float pz, float tx, float ty, float tz) {
-		//m_render3d->SetCamera({ px,py,pz }, { tx,ty,tz });
 	};
 
 	m_debugCameraController = std::make_unique<SDE::DebugCameraController>();
@@ -288,145 +242,4 @@ void Graphics::GenerateCubeMesh()
 	builder.CreateMesh(*mesh);
 
 	m_meshes->AddMesh("Cube", mesh);
-}
-
-void Graphics::RenderPass2D::BuildQuadMesh()
-{
-	m_quadMesh = std::make_unique<Render::Mesh>();
-	Render::MeshBuilder builder;
-	builder.AddVertexStream(2);		// position only
-	builder.BeginChunk();
-	builder.BeginTriangle();
-	builder.SetStreamData(0, { 0,0 }, { 1,0 }, { 0,1 });	// ccw by default
-	builder.EndTriangle();
-	builder.BeginTriangle();
-	builder.SetStreamData(0, { 0,1 }, { 1,0 }, { 1,1 });
-	builder.EndTriangle();
-	builder.EndChunk();
-	builder.CreateMesh(*m_quadMesh);
-
-	// set up instance buffers
-	m_quadInstanceTransforms.Create(c_maxQuads * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
-	m_quadInstanceColours.Create(c_maxQuads * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
-}
-
-void Graphics::RenderPass2D::SetupQuadMaterial()
-{
-	m_quadMaterial = std::make_unique<Render::Material>();
-	m_quadShaders = std::make_unique<Render::ShaderProgram>();
-
-	auto vertexShader = std::make_unique<Render::ShaderBinary>();
-	std::string errorText;
-	if (!vertexShader->CompileFromFile(Render::ShaderType::VertexShader, "quad.vs", errorText))
-	{
-		SDE_LOG("Vertex shader compilation failed - %s", errorText.c_str());
-	}
-	auto fragmentShader = std::make_unique<Render::ShaderBinary>();
-	if (!fragmentShader->CompileFromFile(Render::ShaderType::FragmentShader, "quad.fs", errorText))
-	{
-		SDE_LOG("Fragment shader compilation failed - %s", errorText.c_str());
-	}
-
-	if (!m_quadShaders->Create(*vertexShader, *fragmentShader, errorText))
-	{
-		SDE_LOG("Shader linkage failed - %s", errorText.c_str());
-	}
-
-	m_quadMaterial->SetShaderProgram(m_quadShaders.get());
-	m_quadMesh->SetMaterial(m_quadMaterial.get());
-}
-
-void Graphics::RenderPass2D::PopulateInstanceBuffers()
-{
-	//static to avoid constant allocations
-	static std::vector<glm::mat4> instanceTransforms;
-	instanceTransforms.reserve(c_maxQuads);
-	instanceTransforms.clear();
-	static std::vector<glm::vec4> instanceColours;
-	instanceColours.reserve(c_maxQuads);
-	instanceColours.clear();
-
-	for (const auto& q : m_quads)
-	{
-		glm::mat4 modelMat = glm::mat4(1.0f);
-		modelMat = glm::translate(modelMat, glm::vec3(q.m_position, 0.0f));
-		modelMat = glm::scale(modelMat, glm::vec3(q.m_size, 0.0f));
-		instanceTransforms.push_back(modelMat);
-		instanceColours.push_back(q.m_colour);
-	}
-
-	// copy the instance buffers to gpu
-	m_quadInstanceTransforms.SetData(0, instanceTransforms.size() * sizeof(glm::mat4), instanceTransforms.data());
-	m_quadInstanceColours.SetData(0, instanceColours.size() * sizeof(glm::vec4), instanceColours.data());
-}
-
-void Graphics::RenderPass2D::RenderAll(Render::Device& d)
-{
-	static bool s_firstFrame = true;
-	if (s_firstFrame)
-	{
-		BuildQuadMesh();
-		SetupQuadMaterial();
-		s_firstFrame = false;
-	}
-
-	if (m_quads.size() == 0)
-	{
-		return;
-	}
-
-	// Sort the quads by texture to separate draw calls
-	std::sort(m_quads.begin(), m_quads.end(), [](const Quad& q1, const Quad& q2) -> bool {
-		return q1.m_texture.m_index < q2.m_texture.m_index;
-	});
-
-	PopulateInstanceBuffers();
-
-	// global uniforms
-	const auto& windowProps = m_renderSystem->GetWindow()->GetProperties();
-	auto windowSize = glm::vec2(windowProps.m_sizeX, windowProps.m_sizeY);
-	auto projectionMat = glm::ortho(0.0f, windowSize.x, 0.0f, windowSize.y);
-	Render::UniformBuffer ub;
-	ub.SetValue("ProjectionMat", projectionMat);
-
-	// render state
-	d.SetDepthState(true, false);		// enable z-test, disable write
-	d.SetBackfaceCulling(true, true);	// backface culling, ccw order
-	d.SetBlending(true);				// enable blending (we might want to do it manually instead)
-	d.SetScissorEnabled(false);			// (don't) scissor me timbers
-
-	d.BindShaderProgram(*m_quadShaders);
-
-	// bind vertex array
-	d.BindVertexArray(m_quadMesh->GetVertexArray());
-
-	// set instance buffers. matrices must be set over multiple stream as part of vao
-	d.BindInstanceBuffer(m_quadMesh->GetVertexArray(), m_quadInstanceTransforms, 1, 4, 0, 4);
-	d.BindInstanceBuffer(m_quadMesh->GetVertexArray(), m_quadInstanceTransforms, 2, 4, sizeof(float) * 4, 4);
-	d.BindInstanceBuffer(m_quadMesh->GetVertexArray(), m_quadInstanceTransforms, 3, 4, sizeof(float) * 8, 4);
-	d.BindInstanceBuffer(m_quadMesh->GetVertexArray(), m_quadInstanceTransforms, 4, 4, sizeof(float) * 12, 4);
-	d.BindInstanceBuffer(m_quadMesh->GetVertexArray(), m_quadInstanceColours, 5, 4, 0);
-	
-	// find the first and last quad with the same texture
-	auto firstQuad = m_quads.begin();
-	while (firstQuad != m_quads.end())
-	{
-		uint64_t texID = firstQuad->m_texture.m_index;
-		auto lastQuad = std::find_if(firstQuad, m_quads.end(), [texID](const Quad& q) -> bool {
-			return q.m_texture.m_index != texID;
-		});
-
-		// use the texture or our in built white texture
-		smol::TextureHandle texture = firstQuad->m_texture.m_index != (uint64_t)-1 ? firstQuad->m_texture : smol::TextureHandle{0};
-		ub.SetSampler("MyTexture", m_textures->GetTexture(texture)->GetHandle());
-		d.SetUniforms(*m_quadShaders, ub);
-
-		// somehow only draw firstQuad-lastQuad instances
-		const auto& meshChunk = m_quadMesh->GetChunks()[0];
-		auto instanceCount = (uint32_t)(lastQuad - firstQuad);
-		uint32_t firstIndex = (uint32_t)(firstQuad - m_quads.begin());
-		d.DrawPrimitivesInstanced(meshChunk.m_primitiveType, meshChunk.m_firstVertex, meshChunk.m_vertexCount, instanceCount, firstIndex);
-
-		firstQuad = lastQuad;
-	}
 }

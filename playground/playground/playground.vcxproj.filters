@@ -41,6 +41,9 @@
     <ClCompile Include="smol\renderer.cpp">
       <Filter>smol</Filter>
     </ClCompile>
+    <ClCompile Include="smol\renderer_2d.cpp">
+      <Filter>smol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h">
@@ -65,6 +68,9 @@
       <Filter>smol</Filter>
     </ClInclude>
     <ClInclude Include="smol\renderer.h">
+      <Filter>smol</Filter>
+    </ClInclude>
+    <ClInclude Include="smol\renderer_2d.h">
       <Filter>smol</Filter>
     </ClInclude>
   </ItemGroup>
