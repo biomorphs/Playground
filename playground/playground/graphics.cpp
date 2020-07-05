@@ -107,10 +107,16 @@ bool Graphics::PostInit()
 	m_meshes = std::make_unique<smol::MeshManager>();
 	GenerateCubeMesh();
 	
-	auto loadedModel = Model::Loader::Load("container.FBX");
+	auto loadedModel = Model::Loader::Load("container.fbx");
 	if (loadedModel != nullptr)
 	{
 		m_testMesh = CreateRenderMeshesFromModel(*loadedModel);
+	}
+
+	auto otherModel = Model::Loader::Load("cottage_blender.fbx");
+	if (otherModel != nullptr)
+	{
+		m_testMesh2 = CreateRenderMeshesFromModel(*otherModel);
 	}
 
 	m_render2d = std::make_unique<RenderPass2D>(m_renderSystem, m_textures.get(), m_quads);
@@ -163,10 +169,24 @@ bool Graphics::Tick()
 	m_debugCameraController->ApplyToCamera(c);
 	m_render3d->SetCamera(c);
 
-	// draw the test meshes
-	for (const auto& mh : m_testMesh)
+	for (const auto& mh : m_testMesh2)
 	{
-		m_render3d->SubmitInstance(mh.m_transform, glm::vec4(1.0f), mh.m_mesh, mh.m_texture);
+		glm::mat4 modelMat = mh.m_transform;
+		m_render3d->SubmitInstance(modelMat, glm::vec4(1.0f), mh.m_mesh, mh.m_texture);
+	}
+
+	const float tm_distance = 4.0f;
+	const int maxMeshes = 8;
+	glm::vec3 translate(-((maxMeshes * tm_distance) / 2.0f),0.0f,20.0f);
+	for (int i = 0; i < 8; ++i)
+	{
+		for (const auto& mh : m_testMesh)
+		{
+			glm::mat4 modelMat = mh.m_transform;
+			auto newTransform = glm::translate(glm::identity<glm::mat4>(), translate);
+			m_render3d->SubmitInstance(newTransform * modelMat, glm::vec4(1.0f), mh.m_mesh, mh.m_texture);
+		}
+		translate.x += tm_distance;
 	}
 
 	return true;
@@ -210,8 +230,8 @@ std::vector<Graphics::RenderMesh> Graphics::CreateRenderMeshesFromModel(const cl
 		auto newMesh = new Render::Mesh();
 		builder.CreateMesh(*newMesh);
 
-		char meshName[256];
-		sprintf_s(meshName, "Test_%d", meshIndex++);
+		char meshName[1024] = "";
+		sprintf_s(meshName, "%s_%d", m.GetPath().c_str(), meshIndex++);
 		auto newMeshHandle = m_meshes->AddMesh(meshName, newMesh);
 		std::string diffuseTexturePath = mesh.Material().DiffuseMaps().size() > 0 ? mesh.Material().DiffuseMaps()[0] : "white.bmp";
 		auto newTextureHandle = m_textures->LoadTexture(diffuseTexturePath.c_str());

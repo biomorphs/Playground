@@ -131,6 +131,7 @@ std::unique_ptr<Model> Model::Loader::Load(const char* path)
 	}
 
 	auto result = std::make_unique<Model>();
+	result->SetPath(path);
 	glm::mat4 nodeTransform = ToGlMatrix(scene->mRootNode->mTransformation);
 	ParseSceneNode(scene, scene->mRootNode, *result, nodeTransform);
 

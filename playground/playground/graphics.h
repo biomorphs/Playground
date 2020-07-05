@@ -44,6 +44,7 @@ private:
 	struct RenderMesh;
 	std::vector<RenderMesh> CreateRenderMeshesFromModel(const class Model& m);
 	std::vector<Graphics::RenderMesh> m_testMesh;
+	std::vector<Graphics::RenderMesh> m_testMesh2;
 
 	struct Quad;
 	class RenderPass2D;

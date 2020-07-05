@@ -33,7 +33,7 @@ namespace smol
 
 	private:
 		Render::Camera m_camera;
-		void SetupShader();
+		void SetupShader(Render::Device& d);
 		void PopulateInstanceBuffers();
 
 		const uint64_t c_maxInstances = 1024 * 128;

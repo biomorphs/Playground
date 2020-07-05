@@ -90,8 +90,10 @@ public:
 
 	std::vector<ModelMesh>& Meshes() { return m_meshes; }
 	const std::vector<ModelMesh>& Meshes() const { return m_meshes; }
+	const std::string& GetPath() const { return m_path; }
 
 private:
+	void SetPath(const char* p)	{ m_path = p; }
 	std::vector<ModelMesh> m_meshes;
 	std::string m_path;
 };

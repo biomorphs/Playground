@@ -33,7 +33,7 @@ namespace smol
 		m_instances.push_back({sortKey, transform, colour, texture, mesh});
 	}
 
-	void Renderer::SetupShader()
+	void Renderer::SetupShader(Render::Device& d)
 	{
 		m_shaders = std::make_unique<Render::ShaderProgram>();
 
@@ -53,6 +53,9 @@ namespace smol
 		{
 			SDE_LOG("Shader linkage failed - %s", errorText.c_str());
 		}
+
+		// Bind the globals UBO to index 0
+		d.BindUniformBufferIndex(*m_shaders, "Globals", 0);
 	}
 
 	void Renderer::PopulateInstanceBuffers()
@@ -85,11 +88,7 @@ namespace smol
 			m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
 			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Static);
 
-			SetupShader();
-
-			// Bind the globals UBO to index 0
-			d.BindUniformBufferIndex(*m_shaders, "Globals", 0);
-
+			SetupShader(d);
 			s_firstFrame = false;
 		}
 
@@ -158,6 +157,7 @@ namespace smol
 				// firstTexInstance -> lastTexInstance instances to draw
 				smol::TextureHandle texture = texID != (uint64_t)-1 ? firstTexInstance->m_texture : smol::TextureHandle{ 0 };
 				ub.SetSampler("MyTexture", m_textures->GetTexture(texture)->GetHandle());
+				
 				d.SetUniforms(*m_shaders, ub);
 				for (const auto& chunk : theMesh->GetChunks())
 				{
