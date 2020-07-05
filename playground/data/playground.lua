@@ -10,7 +10,7 @@ local Gravity = -80
 
 function Playground:InitSprite(i)
 	Sprites[i] = {}
-	Sprites[i].position = { math.random(-20,20), math.random(-20,20), math.random(-20,20) }
+	Sprites[i].position = { math.random(0,0), math.random(0,0), math.random(0,0) }
 	Sprites[i].size = math.random(8,64)
 	Sprites[i].colour = {math.random(),math.random(),math.random(),0.5 + math.random() * 0.5}
 	Sprites[i].velocity = {(-1.0 + (math.random() * 2.0)) * 100, math.random() * 200, (-1.0 + (math.random() * 2.0)) * 100}
@@ -27,11 +27,11 @@ end
 function Playground:Init()
 	print("Init!")
 
-	for i=1,10000 do
+	for i=1,100 do
 		Playground:InitSprite(i)
-	end
+	 end
 
-	Graphics.LookAt(200,200,500,0,0,0)
+	Graphics.LookAt(-1,2.5,-4,0,0,0)
 end
 
 function Playground:Tick()

@@ -20,7 +20,7 @@ namespace Render
 		bool HasData();
 
 		// Step 1: Define streams
-		uint32_t AddVertexStream(int32_t componentCount);
+		uint32_t AddVertexStream(int32_t componentCount, size_t reserveMemory = 0);
 
 		// Step 2: Define chunks
 		void BeginChunk();

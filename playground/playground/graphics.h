@@ -11,10 +11,16 @@ namespace DebugGui
 	class DebugGuiSystem;
 }
 
+namespace Input
+{
+	class InputSystem;
+}
+
 namespace SDE
 {
 	class ScriptSystem;
 	class RenderSystem;
+	class DebugCameraController;
 }
 
 namespace Render
@@ -37,12 +43,17 @@ public:
 private:
 	void GenerateCubeMesh();
 
+	struct RenderMesh;
+	std::vector<RenderMesh> CreateRenderMeshesFromModel(const class Model& m);
+	std::vector<Graphics::RenderMesh> m_testMesh;
+
 	struct Quad;
 	struct MeshInstance;
 	class RenderPass2D;
 	class RenderPass3D;
 	class TextureArray;
 	class MeshArray;
+	std::unique_ptr<SDE::DebugCameraController> m_debugCameraController;
 	std::vector<Quad> m_quads;
 	std::vector<MeshInstance> m_instances;
 	std::unique_ptr<RenderPass2D> m_render2d;
@@ -52,4 +63,5 @@ private:
 	DebugGui::DebugGuiSystem* m_debugGui = nullptr;
 	SDE::ScriptSystem* m_scriptSystem = nullptr;
 	SDE::RenderSystem* m_renderSystem = nullptr;
+	Input::InputSystem* m_inputSystem = nullptr;
 };

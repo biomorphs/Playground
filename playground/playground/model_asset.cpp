@@ -4,7 +4,17 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-void Model::Loader::ProcessMesh(const aiScene* scene, const struct aiMesh* mesh, Model& model)
+glm::mat4 ToGlMatrix(const aiMatrix4x4& m)
+{
+	return {
+		m.a1, m.b1, m.c1, m.d1,
+		m.a2, m.b2, m.c2, m.d2,
+		m.a3, m.b3, m.c3, m.d3,
+		m.a4, m.b4, m.c4, m.d4,
+	};
+}
+
+void Model::Loader::ProcessMesh(const aiScene* scene, const struct aiMesh* mesh, Model& model, glm::mat4 transform)
 {
 	// Make sure its triangles!
 	if (!(mesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE))
@@ -14,7 +24,11 @@ void Model::Loader::ProcessMesh(const aiScene* scene, const struct aiMesh* mesh,
 	}
 
 	// Process vertices
+	glm::vec3 boundsMin(FLT_MAX);
+	glm::vec3 boundsMax(FLT_MIN);
+
 	ModelMesh newMesh;
+	newMesh.Transform() = transform;
 	auto& vertices = newMesh.Vertices();
 	vertices.reserve(mesh->mNumVertices);
 	MeshVertex newVertex;
@@ -27,10 +41,14 @@ void Model::Loader::ProcessMesh(const aiScene* scene, const struct aiMesh* mesh,
 		}
 		if (mesh->mTextureCoords[0] != nullptr)
 		{
-			newVertex.m_texCoord0 = glm::vec2(mesh->mTextureCoords[0]->x, mesh->mTextureCoords[0]->y);
+			newVertex.m_texCoord0 = glm::vec2(mesh->mTextureCoords[0][v].x, mesh->mTextureCoords[0][v].y);
 		}
+		boundsMin = glm::min(boundsMin, newVertex.m_position);
+		boundsMax = glm::max(boundsMax, newVertex.m_position);
 		vertices.push_back(newVertex);
 	}
+	SDE_LOG("Mesh bounds: [%2.2f, %2.2f, %2.2f] -> [%2.2f, %2.2f, %2.2f]",
+		boundsMin.x, boundsMin.y, boundsMin.z, boundsMax.x, boundsMax.y, boundsMax.z);
 
 	// Process indices
 	auto& indices = newMesh.Indices();
@@ -75,20 +93,26 @@ void Model::Loader::ProcessMesh(const aiScene* scene, const struct aiMesh* mesh,
 			sceneMat->GetTexture(aiTextureType_SPECULAR, t, &texturePath);
 			newMaterial.SpecularMaps().push_back(texturePath.C_Str());
 		}
+
+		newMesh.SetMaterial(std::move(newMaterial));
 	}
+
+	model.Meshes().push_back(std::move(newMesh));
 }
 
-void Model::Loader::ParseSceneNode(const aiScene* scene, const aiNode* node, Model& model)
+void Model::Loader::ParseSceneNode(const aiScene* scene, const aiNode* node, Model& model, glm::mat4 parentTransform)
 {
+	glm::mat4 nodeTransform = ToGlMatrix(node->mTransformation) * parentTransform;
+
 	for (uint32_t meshIndex = 0; meshIndex < node->mNumMeshes; ++meshIndex)
 	{
 		SDE_ASSERT(scene->mNumMeshes >= node->mMeshes[meshIndex], "Bad mesh index");
-		ProcessMesh(scene, scene->mMeshes[node->mMeshes[meshIndex]], model);
+		ProcessMesh(scene, scene->mMeshes[node->mMeshes[meshIndex]], model, nodeTransform);
 	}
 
 	for (uint32_t childIndex = 0; childIndex < node->mNumChildren; ++childIndex)
 	{
-		ParseSceneNode(scene, node->mChildren[childIndex], model);
+		ParseSceneNode(scene, node->mChildren[childIndex], model, nodeTransform);
 	}
 }
 
@@ -99,15 +123,16 @@ std::unique_ptr<Model> Model::Loader::Load(const char* path)
 		aiProcess_CalcTangentSpace |
 		aiProcess_Triangulate |
 		aiProcess_JoinIdenticalVertices |
-		aiProcess_SortByPType |
-		aiProcess_FlipUVs);	// aiProcess_FlipUVs required?
+		aiProcess_SortByPType 
+	);
 	if (!scene)
 	{
 		return nullptr;
 	}
 
 	auto result = std::make_unique<Model>();
-	ParseSceneNode(scene, scene->mRootNode, *result);
+	glm::mat4 nodeTransform = ToGlMatrix(scene->mRootNode->mTransformation);
+	ParseSceneNode(scene, scene->mRootNode, *result, nodeTransform);
 
 	return result;
 }

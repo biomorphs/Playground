@@ -73,13 +73,14 @@ namespace Render
 		streamData.insert(streamData.end(), glm::value_ptr(v2), glm::value_ptr(v2) + 4);
 	}
 
-	uint32_t MeshBuilder::AddVertexStream(int32_t componentCount)
+	uint32_t MeshBuilder::AddVertexStream(int32_t componentCount, size_t reserveMemory)
 	{
 		SDE_ASSERT(componentCount <= 4);
 		SDE_ASSERT(m_chunks.size() == 0);
 		
 		StreamDesc newStream;
 		newStream.m_componentCount = componentCount;
+		newStream.m_streamData.reserve(reserveMemory);
 		m_streams.push_back(newStream);
 
 		return static_cast<uint32_t>( m_streams.size() - 1 );

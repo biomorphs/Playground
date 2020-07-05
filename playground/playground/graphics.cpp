@@ -5,6 +5,8 @@
 #include "render/render_pass.h"
 #include "sde/script_system.h"
 #include "sde/render_system.h"
+#include "sde/debug_camera_controller.h"
+#include "input/input_system.h"
 #include "render/mesh_builder.h"
 #include "render/mesh.h"
 #include "render/material.h"
@@ -15,6 +17,7 @@
 #include "render/texture_source.h"
 #include "render/mesh_instance_render_pass.h"
 #include "math/glm_headers.h"
+#include "model_asset.h"
 #include "stb_image.h"
 #include <sol.hpp>
 
@@ -40,12 +43,18 @@ struct Graphics::Quad
 
 struct Graphics::MeshInstance
 {
-	uint64_t m_sortKey;		// top 32 bits = mesh id, bottom = texture id
-	glm::vec3 m_position;
-	glm::vec3 m_size;
+	uint64_t m_sortKey;
+	glm::mat4 m_transform;
 	glm::vec4 m_colour;
 	TextureHandle m_texture;
 	MeshHandle m_mesh;
+};
+
+struct Graphics::RenderMesh
+{
+	MeshHandle m_mesh;
+	TextureHandle m_texture;
+	glm::mat4 m_transform;
 };
 
 const uint64_t c_maxQuads = 1024 * 128;
@@ -127,7 +136,7 @@ public:
 	void RenderAll(Render::Device&);
 	void SetCamera(glm::vec3 pos, glm::vec3 target) { m_cameraPosition = pos; m_cameraTarget = target; }
 private:
-	glm::vec3 m_cameraPosition = { 0.0f,200.0f,500.0f };
+	glm::vec3 m_cameraPosition = { 0.0f,0.0f,0.0f };
 	glm::vec3 m_cameraTarget = { 0.0f,0.0f,0.0f };
 	void SetupShader();
 	void PopulateInstanceBuffers();
@@ -167,7 +176,10 @@ void Graphics::DrawCube(glm::vec3 pos, glm::vec3 size, glm::vec4 colour, const s
 	// cube is always mesh 0
 	uint64_t meshIndex = 0;
 	uint64_t sortKey = (th.m_index & 0x00000000ffffffff) | (meshIndex << 32);
-	m_instances.push_back({ sortKey, pos, size, colour, th, {0} });
+	glm::mat4 cubeTransform;
+	glm::translate(cubeTransform, pos);
+	glm::scale(cubeTransform, size);
+	m_instances.push_back({ sortKey, cubeTransform, colour, th, {0} });
 }
 
 bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
@@ -175,6 +187,7 @@ bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
 	m_debugGui = (DebugGui::DebugGuiSystem*)systemEnumerator.GetSystem("DebugGui");
 	m_scriptSystem = (SDE::ScriptSystem*)systemEnumerator.GetSystem("Script");
 	m_renderSystem = (SDE::RenderSystem*)systemEnumerator.GetSystem("Render");
+	m_inputSystem = (Input::InputSystem*)systemEnumerator.GetSystem("Input");
 
 	return true;
 }
@@ -188,6 +201,12 @@ bool Graphics::PostInit()
 	// make mesh array
 	m_meshes = std::make_unique<MeshArray>();
 	GenerateCubeMesh();
+	
+	auto loadedModel = Model::Loader::Load("container.FBX");
+	if (loadedModel != nullptr)
+	{
+		m_testMesh = CreateRenderMeshesFromModel(*loadedModel);
+	}
 
 	m_render2d = std::make_unique<RenderPass2D>(m_renderSystem, m_textures.get(), m_quads);
 	m_renderSystem->AddPass(*m_render2d);
@@ -221,14 +240,45 @@ bool Graphics::PostInit()
 		return m_textures->LoadTexture(path);
 	};
 	graphics["LookAt"] = [this](float px, float py, float pz, float tx, float ty, float tz) {
-		m_render3d->SetCamera({ px,py,pz }, { tx,ty,tz });
+		//m_render3d->SetCamera({ px,py,pz }, { tx,ty,tz });
 	};
+
+	m_debugCameraController = std::make_unique<SDE::DebugCameraController>();
+	m_debugCameraController->SetPosition({0.0f,0.0f,0.0f});
 
 	return true;
 }
 
 bool Graphics::Tick()
 {
+	if (m_inputSystem->ControllerState(0) != nullptr)
+	{
+		Render::Camera c;
+		m_debugCameraController->Update(*m_inputSystem->ControllerState(0), 0.033f);
+		m_debugCameraController->ApplyToCamera(c);
+		m_render3d->SetCamera(c.Position(), c.Target());
+	}
+
+	// draw the test meshes
+	for (const auto& mh : m_testMesh)
+	{
+		uint64_t meshIndex = mh.m_mesh.m_index;
+		uint64_t sortKey = (mh.m_texture.m_index & 0x00000000ffffffff) | (meshIndex << 32);
+
+		// Extract col vectors of the matrix
+		const auto& m = mh.m_transform;
+		glm::vec3 col1(m[0][0], m[0][1], m[0][2]);
+		glm::vec3 col2(m[1][0], m[1][1], m[1][2]);
+		glm::vec3 col3(m[2][0], m[2][1], m[2][2]);
+		//Extract the scaling factors
+		glm::vec3 scaling;
+		scaling.x = glm::length(col1);
+		scaling.y = glm::length(col2);
+		scaling.z = glm::length(col3);
+
+		m_instances.push_back({ sortKey, mh.m_transform, glm::vec4(1.0f,1.0f,1.0f,1.0f), mh.m_texture, mh.m_mesh });
+	}
+
 	return true;
 }
 
@@ -239,6 +289,47 @@ void Graphics::Shutdown()
 	m_render3d = nullptr;
 	m_textures = nullptr;
 	m_meshes = nullptr;
+}
+
+std::vector<Graphics::RenderMesh> Graphics::CreateRenderMeshesFromModel(const class Model& m)
+{
+	std::vector<Graphics::RenderMesh> meshHandles;
+
+	int meshIndex = 0;
+	meshHandles.reserve(m.Meshes().size());
+	for (const auto& mesh : m.Meshes())
+	{
+		Render::MeshBuilder builder;
+		builder.AddVertexStream(3, mesh.Indices().size());		// position
+		builder.AddVertexStream(2, mesh.Indices().size());		// uv
+		builder.BeginChunk();
+		const auto& vertices = mesh.Vertices();
+		const auto& indices = mesh.Indices();
+		for (uint32_t index = 0; index < indices.size(); index += 3)
+		{
+			const auto& v0 = vertices[indices[index]];
+			const auto& v1 = vertices[indices[index + 1]];
+			const auto& v2 = vertices[indices[index + 2]];
+			builder.BeginTriangle();
+			builder.SetStreamData(0, v0.m_position, v1.m_position, v2.m_position);
+			builder.SetStreamData(1, v0.m_texCoord0, v1.m_texCoord0, v2.m_texCoord0);
+			builder.EndTriangle();
+		}
+		builder.EndChunk();
+
+		auto newMesh = new Render::Mesh();
+		builder.CreateMesh(*newMesh);
+
+		char meshName[256];
+		sprintf_s(meshName, "Test_%d", meshIndex++);
+		auto newMeshHandle = m_meshes->AddMesh(meshName, newMesh);
+		std::string diffuseTexturePath = mesh.Material().DiffuseMaps().size() > 0 ? mesh.Material().DiffuseMaps()[0] : "white.bmp";
+		auto newTextureHandle = m_textures->LoadTexture(diffuseTexturePath.c_str());
+
+		meshHandles.push_back({ newMeshHandle, newTextureHandle, mesh.Transform() });
+	}	
+
+	return meshHandles;
 }
 
 void Graphics::GenerateCubeMesh()
@@ -569,10 +660,7 @@ void Graphics::RenderPass3D::PopulateInstanceBuffers()
 
 	for (const auto& c : m_instances)
 	{
-		glm::mat4 modelMat = glm::mat4(1.0f);
-		modelMat = glm::translate(modelMat, c.m_position);
-		modelMat = glm::scale(modelMat, c.m_size);
-		instanceTransforms.push_back(modelMat);
+		instanceTransforms.push_back(c.m_transform);
 		instanceColours.push_back(c.m_colour);
 	}
 

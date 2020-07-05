@@ -1,5 +1,13 @@
 #pragma once
 
+/////////////////////////////////////////////////
+// BLENDER FBX EXPORT SETTINGS
+// PATH MODE - RELATIVE
+// Apply scalings - FBX all
+// Forward -z forward
+// Up Y up
+// Apply unit + transformation
+
 #include "math/glm_headers.h"
 
 #include <vector>
@@ -19,8 +27,6 @@ class MeshMaterial
 public:
 	MeshMaterial() = default;
 	~MeshMaterial() = default;
-	MeshMaterial(const MeshMaterial&) = delete;
-	MeshMaterial(MeshMaterial&&) = default;
 
 	std::vector<std::string>& DiffuseMaps() { return m_diffuseMaps; }
 	const std::vector<std::string>& DiffuseMaps() const { return m_diffuseMaps; }
@@ -51,10 +57,17 @@ public:
 	std::vector<uint32_t>& Indices() { return m_indices; }
 	const std::vector<uint32_t>& Indices() const { return m_indices; }
 
+	void SetMaterial(MeshMaterial&& m) { m_material = std::move(m); }
+	const MeshMaterial& Material() const { return m_material; }
+
+	glm::mat4& Transform() { return m_transform; }
+	const glm::mat4& Transform() const { return m_transform; }
+
 private:
 	std::vector<MeshVertex> m_vertices;
 	std::vector<uint32_t> m_indices;
 	MeshMaterial m_material;
+	glm::mat4 m_transform;
 };
 
 // A render-agnostic model
@@ -71,9 +84,12 @@ public:
 	public:
 		static std::unique_ptr<Model> Load(const char* path);
 	private:
-		static void ParseSceneNode(const struct aiScene* scene, const struct aiNode* node, Model& model);
-		static void ProcessMesh(const aiScene* scene, const struct aiMesh* mesh, Model& model);
+		static void ParseSceneNode(const struct aiScene* scene, const struct aiNode* node, Model& model, glm::mat4 parentTransform);
+		static void ProcessMesh(const aiScene* scene, const struct aiMesh* mesh, Model& model, glm::mat4 parentTransform);
 	};
+
+	std::vector<ModelMesh>& Meshes() { return m_meshes; }
+	const std::vector<ModelMesh>& Meshes() const { return m_meshes; }
 
 private:
 	std::vector<ModelMesh> m_meshes;
