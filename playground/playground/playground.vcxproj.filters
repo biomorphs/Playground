@@ -35,13 +35,16 @@
     <ClCompile Include="smol\texture_manager.cpp">
       <Filter>smol</Filter>
     </ClCompile>
-    <ClCompile Include="smol\mesh_manager.cpp">
-      <Filter>smol</Filter>
-    </ClCompile>
     <ClCompile Include="smol\renderer.cpp">
       <Filter>smol</Filter>
     </ClCompile>
     <ClCompile Include="smol\renderer_2d.cpp">
+      <Filter>smol</Filter>
+    </ClCompile>
+    <ClCompile Include="smol\model.cpp">
+      <Filter>smol</Filter>
+    </ClCompile>
+    <ClCompile Include="smol\model_manager.cpp">
       <Filter>smol</Filter>
     </ClCompile>
   </ItemGroup>
@@ -61,9 +64,6 @@
     <ClInclude Include="smol\texture_manager.h">
       <Filter>smol</Filter>
     </ClInclude>
-    <ClInclude Include="smol\mesh_manager.h">
-      <Filter>smol</Filter>
-    </ClInclude>
     <ClInclude Include="smol\mesh_instance.h">
       <Filter>smol</Filter>
     </ClInclude>
@@ -71,6 +71,12 @@
       <Filter>smol</Filter>
     </ClInclude>
     <ClInclude Include="smol\renderer_2d.h">
+      <Filter>smol</Filter>
+    </ClInclude>
+    <ClInclude Include="smol\model.h">
+      <Filter>smol</Filter>
+    </ClInclude>
+    <ClInclude Include="smol\model_manager.h">
       <Filter>smol</Filter>
     </ClInclude>
   </ItemGroup>

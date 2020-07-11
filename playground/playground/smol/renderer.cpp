@@ -6,6 +6,8 @@
 #include "render/mesh.h"
 #include "render/uniform_buffer.h"
 #include "mesh_instance.h"
+#include "model_manager.h"
+#include "model.h"
 #include <algorithm>
 
 namespace smol
@@ -26,11 +28,19 @@ namespace smol
 		m_camera = c;
 	}
 
-	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, MeshHandle mesh, TextureHandle texture)
+	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model)
 	{
-		const uint64_t meshIndex = mesh.m_index;
-		const uint64_t sortKey = (texture.m_index & 0x00000000ffffffff) | (meshIndex << 32);
-		m_instances.push_back({sortKey, transform, colour, texture, mesh});
+		const auto theModel = m_models->GetModel(model);
+		if (theModel != nullptr)
+		{
+			for (const auto& part : theModel->Parts())
+			{
+				const uint64_t meshHash = reinterpret_cast<uintptr_t>(part.m_mesh) & 0x00000000ffffffff;
+				const uint64_t textureHash = part.m_diffuse.m_index & 0x00000000ffffffff;
+				const uint64_t sortKey = textureHash | (meshHash << 32);
+				m_instances.push_back({ sortKey, transform * part.m_transform, colour, part.m_diffuse, part.m_mesh });
+			}
+		}
 	}
 
 	void Renderer::SetupShader(Render::Device& d)
@@ -125,7 +135,7 @@ namespace smol
 		auto firstInstance = m_instances.begin();
 		while (firstInstance != m_instances.end())
 		{
-			const Render::Mesh* theMesh = m_meshes->GetMesh(firstInstance->m_mesh);
+			const Render::Mesh* theMesh =firstInstance->m_mesh;
 
 			// bind vertex array
 			d.BindVertexArray(theMesh->GetVertexArray());
@@ -140,9 +150,8 @@ namespace smol
 			d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceColours, instancingSlotIndex++, 4, 0);
 
 			// find the last matching mesh
-			uint64_t meshID = firstInstance->m_mesh.m_index;
-			auto lastMeshInstance = std::find_if(firstInstance, m_instances.end(), [meshID](const smol::MeshInstance& m) -> bool {
-				return m.m_mesh.m_index != meshID;
+			auto lastMeshInstance = std::find_if(firstInstance, m_instances.end(), [theMesh](const smol::MeshInstance& m) -> bool {
+				return m.m_mesh != theMesh;
 				});
 
 			// 1 draw call per texture

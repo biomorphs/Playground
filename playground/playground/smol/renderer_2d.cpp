@@ -4,6 +4,7 @@
 #include "render/uniform_buffer.h"
 #include "render/shader_program.h"
 #include "render/shader_binary.h"
+#include "render/mesh.h"
 #include <algorithm>
 
 namespace smol

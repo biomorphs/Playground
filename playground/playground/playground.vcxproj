@@ -200,7 +200,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model_asset.cpp" />
     <ClCompile Include="playground.cpp" />
-    <ClCompile Include="smol\mesh_manager.cpp" />
+    <ClCompile Include="smol\model.cpp" />
+    <ClCompile Include="smol\model_manager.cpp" />
     <ClCompile Include="smol\renderer.cpp" />
     <ClCompile Include="smol\renderer_2d.cpp" />
     <ClCompile Include="smol\texture_manager.cpp" />
@@ -211,7 +212,8 @@
     <ClInclude Include="model_asset.h" />
     <ClInclude Include="playground.h" />
     <ClInclude Include="smol\mesh_instance.h" />
-    <ClInclude Include="smol\mesh_manager.h" />
+    <ClInclude Include="smol\model.h" />
+    <ClInclude Include="smol\model_manager.h" />
     <ClInclude Include="smol\renderer.h" />
     <ClInclude Include="smol\renderer_2d.h" />
     <ClInclude Include="smol\texture_manager.h" />

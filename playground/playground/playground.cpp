@@ -94,6 +94,13 @@ bool Playground::PreInit(Core::ISystemEnumerator& systemEnumerator)
 
 bool Playground::Tick()
 {
+	static bool s_firstTick = true;
+	if (s_firstTick)
+	{
+		s_firstTick = false;
+		ReloadScript();
+	}
+
 	bool forceOpen = true;
 	m_debugGui->BeginWindow(forceOpen, "Script");
 	if (m_debugGui->Button("Reload"))

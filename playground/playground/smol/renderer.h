@@ -11,15 +11,14 @@
 namespace smol
 {
 	class TextureManager;
-	class MeshManager;
-	struct MeshHandle;
+	class ModelManager;
 
 	class Renderer : public Render::RenderPass
 	{
 	public:
-		Renderer(TextureManager* ta, MeshManager* ma, glm::vec2 windowSize)
+		Renderer(TextureManager* ta, ModelManager* mm, glm::vec2 windowSize)
 			: m_textures(ta)
-			, m_meshes(ma)
+			, m_models(mm)
 			, m_windowSize(windowSize)
 		{
 		}
@@ -28,7 +27,7 @@ namespace smol
 		void Reset();
 		void RenderAll(Render::Device&);
 		void SetCamera(const Render::Camera& c);
-		void SubmitInstance(glm::mat4 transform, glm::vec4 colour, MeshHandle mesh, TextureHandle texture);
+		void SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model);
 
 	private:
 		Render::Camera m_camera;
@@ -40,7 +39,7 @@ namespace smol
 		std::vector<smol::MeshInstance> m_instances;
 		std::unique_ptr<Render::ShaderProgram> m_shaders;	// todo- shader manager?
 		smol::TextureManager* m_textures;
-		smol::MeshManager* m_meshes;
+		smol::ModelManager* m_models;
 		Render::RenderBuffer m_instanceTransforms;
 		Render::RenderBuffer m_instanceColours;
 		Render::RenderBuffer m_globalsUniformBuffer;

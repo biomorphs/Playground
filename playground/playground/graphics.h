@@ -21,8 +21,7 @@ namespace SDE
 namespace smol 
 {
 	class TextureManager;
-	struct TextureHandle;
-	class MeshManager;
+	class ModelManager;
 	class Renderer;
 	class Renderer2D;
 }
@@ -36,21 +35,12 @@ public:
 	virtual bool PostInit();
 	virtual bool Tick();
 	virtual void Shutdown();
-	void DrawCube(glm::vec3 pos, glm::vec3 size, glm::vec4 colour, const struct smol::TextureHandle& th);
 private:
-	void GenerateCubeMesh();
-
-	struct RenderMesh;
-	std::vector<RenderMesh> CreateRenderMeshesFromModel(const class Model& m);
-	std::vector<Graphics::RenderMesh> m_testMesh;
-	std::vector<Graphics::RenderMesh> m_testMesh2;
-	std::vector<Graphics::RenderMesh> m_cubeModel;
-
 	std::unique_ptr<SDE::DebugCameraController> m_debugCameraController;
 	std::unique_ptr<smol::Renderer2D> m_render2d;
 	std::unique_ptr<smol::Renderer> m_render3d;
 	std::unique_ptr<smol::TextureManager> m_textures;
-	std::unique_ptr<smol::MeshManager> m_meshes;
+	std::unique_ptr<smol::ModelManager> m_models;
 	SDE::ScriptSystem* m_scriptSystem = nullptr;
 	SDE::RenderSystem* m_renderSystem = nullptr;
 	Input::InputSystem* m_inputSystem = nullptr;

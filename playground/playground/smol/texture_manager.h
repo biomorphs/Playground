@@ -16,6 +16,8 @@ namespace smol
 	{
 	public:
 		TextureManager() = default;
+		TextureManager(const TextureManager&) = delete;
+		TextureManager(TextureManager&&) = delete;
 		~TextureManager();
 
 		TextureHandle LoadTexture(const char* path);

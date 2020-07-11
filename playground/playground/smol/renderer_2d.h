@@ -2,6 +2,7 @@
 #include "render/render_pass.h"
 #include "render/shader_program.h"
 #include "render/render_buffer.h"
+#include "render/mesh.h"
 #include "math/glm_headers.h"
 #include "texture_manager.h"
 #include <vector>
@@ -9,7 +10,6 @@
 
 namespace Render
 {
-	class Mesh;
 	class ShaderProgram;
 }
 

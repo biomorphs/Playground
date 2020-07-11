@@ -96,7 +96,7 @@ namespace Render
 
 		// Make sure all streams have data
 #ifdef SDE_DEBUG
-		for (auto stream : m_streams)
+		for (const auto& stream : m_streams)
 		{
 			SDE_ASSERT((stream.m_streamData.size() / stream.m_componentCount) == m_currentVertexIndex);
 		}

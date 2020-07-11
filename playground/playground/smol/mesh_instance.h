@@ -2,7 +2,11 @@
 #include <stdint.h>
 #include "math/glm_headers.h"
 #include "texture_manager.h"
-#include "mesh_manager.h"
+
+namespace Render
+{
+	class Mesh;
+}
 
 namespace smol
 {
@@ -12,6 +16,6 @@ namespace smol
 		glm::mat4 m_transform;
 		glm::vec4 m_colour;				// todo: how do we make this generic?
 		smol::TextureHandle m_texture;	// todo: generic samplers
-		MeshHandle m_mesh;
+		Render::Mesh* m_mesh;
 	};
 }
