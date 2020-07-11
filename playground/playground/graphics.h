@@ -44,6 +44,7 @@ private:
 	std::vector<RenderMesh> CreateRenderMeshesFromModel(const class Model& m);
 	std::vector<Graphics::RenderMesh> m_testMesh;
 	std::vector<Graphics::RenderMesh> m_testMesh2;
+	std::vector<Graphics::RenderMesh> m_cubeModel;
 
 	std::unique_ptr<SDE::DebugCameraController> m_debugCameraController;
 	std::unique_ptr<smol::Renderer2D> m_render2d;

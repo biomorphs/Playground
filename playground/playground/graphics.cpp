@@ -38,7 +38,11 @@ void Graphics::DrawCube(glm::vec3 pos, glm::vec3 size, glm::vec4 colour, const s
 	// cube is always mesh 0
 	glm::mat4 cubeTransform = glm::translate(glm::identity<glm::mat4>(), pos);
 	cubeTransform = glm::scale(cubeTransform, size);
-	m_render3d->SubmitInstance(cubeTransform, colour, { 0 }, th);
+	for (const auto& mh : m_cubeModel)
+	{
+		glm::mat4 modelMat = mh.m_transform;
+		m_render3d->SubmitInstance(cubeTransform * modelMat, glm::vec4(1.0f), mh.m_mesh, mh.m_texture);
+	}
 }
 
 bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
@@ -60,7 +64,11 @@ bool Graphics::PostInit()
 	m_textures->LoadTexture("white.bmp");
 
 	// load cube mesh into slot 0
-	GenerateCubeMesh();
+	auto loadedCube = Model::Loader::Load("cube.fbx");
+	if (loadedCube != nullptr)
+	{
+		m_cubeModel = CreateRenderMeshesFromModel(*loadedCube);
+	}
 	
 	auto loadedModel = Model::Loader::Load("container.fbx");
 	if (loadedModel != nullptr)
@@ -68,7 +76,7 @@ bool Graphics::PostInit()
 		m_testMesh = CreateRenderMeshesFromModel(*loadedModel);
 	}
 
-	auto otherModel = Model::Loader::Load("cottage_blender.fbx");
+	auto otherModel = Model::Loader::Load("islands.fbx");
 	if (otherModel != nullptr)
 	{
 		m_testMesh2 = CreateRenderMeshesFromModel(*otherModel);

@@ -116,7 +116,7 @@ namespace smol
 		d.BindShaderProgram(*m_shaders);
 
 		GlobalUniforms globals;
-		globals.m_projectionMat = glm::perspectiveFov(glm::radians(90.0f), windowSize.x, windowSize.y, 0.1f, 1000.0f);
+		globals.m_projectionMat = glm::perspectiveFov(glm::radians(75.0f), windowSize.x, windowSize.y, 0.1f, 1000.0f);
 		globals.m_viewMat = glm::lookAt(m_camera.Position(), m_camera.Target(), m_camera.Up());
 		m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
 
