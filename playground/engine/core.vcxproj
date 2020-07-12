@@ -9,11 +9,12 @@
   <Import Project="props/library_build.props" />
   <Import Project="props/shared_preprocessor.props" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)..\external\json-3.6.1\single_include;$(ProjectDir)public\;$(ProjectDir)public\core\;$(ProjectDir)private\core\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)external\Optick_1.3.0\include;$(SolutionDir)..\external\json-3.6.1\single_include;$(ProjectDir)public\;$(ProjectDir)public\core\;$(ProjectDir)private\core\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="public\core\list.h" />
     <ClInclude Include="public\core\object_pool.h" />
+    <ClInclude Include="public\core\profiler.h" />
     <ClInclude Include="public\core\run_length_encoding.h" />
     <ClInclude Include="public\core\shortname.h" />
     <ClInclude Include="public\core\string_hashing.h" />

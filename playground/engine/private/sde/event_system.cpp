@@ -5,6 +5,7 @@ Matt Hoyle
 #include "event_system.h"
 #include <algorithm>
 #include <SDL.h>
+#include "core/profiler.h"
 
 namespace SDE
 {
@@ -25,6 +26,7 @@ namespace SDE
 
 	bool EventSystem::Tick()
 	{
+		SDE_PROF_EVENT("EventSystem::Tick");
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{

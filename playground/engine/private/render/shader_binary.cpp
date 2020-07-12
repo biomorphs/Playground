@@ -5,6 +5,7 @@ Matt Hoyle
 #include "shader_binary.h"
 #include "utils.h"
 #include "kernel/file_io.h"
+#include "core/profiler.h"
 
 namespace Render
 {
@@ -38,6 +39,8 @@ namespace Render
 
 	bool ShaderBinary::CompileSource(ShaderType type, const std::string& src, std::string& resultText)
 	{
+		SDE_PROF_EVENT();
+
 		uint32_t shaderType = TranslateShaderType(type);
 		SDE_ASSERT(shaderType != -1);
 
@@ -70,6 +73,7 @@ namespace Render
 
 	bool ShaderBinary::CompileFromFile(ShaderType type, const char* srcLocation, std::string& resultText)
 	{
+		SDE_PROF_EVENT();
 		std::string shaderSource;
 		if (!Kernel::FileIO::LoadTextFromFile(srcLocation, shaderSource))
 		{
@@ -82,6 +86,7 @@ namespace Render
 
 	void ShaderBinary::Destroy()
 	{
+		SDE_PROF_EVENT();
 		if (m_handle != 0)
 		{
 			glDeleteShader(m_handle);

@@ -3,6 +3,7 @@ SDLEngine
 Matt Hoyle
 */
 #pragma once
+#include "core/profiler.h"
 
 namespace Core
 {
@@ -12,14 +13,14 @@ namespace Core
 	{
 	public:
 		virtual ~ISystem() {}
-		virtual bool PreInit(ISystemEnumerator& systemEnumerator) { return true; }
-		virtual bool Initialise() { return true; }
-		virtual bool PostInit() { return true; }
+		virtual bool PreInit(ISystemEnumerator& systemEnumerator) { SDE_PROF_EVENT(); return true; }
+		virtual bool Initialise() { SDE_PROF_EVENT(); return true; }
+		virtual bool PostInit() { SDE_PROF_EVENT(); return true; }
 
-		virtual bool Tick() { return true; }
+		virtual bool Tick() { SDE_PROF_EVENT(); return true; }
 
-		virtual void PreShutdown() { }
-		virtual void Shutdown() { }
-		virtual void PostShutdown() { }
+		virtual void PreShutdown() { SDE_PROF_EVENT(); }
+		virtual void Shutdown() { SDE_PROF_EVENT(); }
+		virtual void PostShutdown() { SDE_PROF_EVENT(); }
 	};
 }

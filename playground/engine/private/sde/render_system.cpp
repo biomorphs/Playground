@@ -8,6 +8,7 @@ Matt Hoyle
 #include "render/window.h"
 #include "render/device.h"
 #include "sde/config_system.h"
+#include "core/profiler.h"
 
 namespace SDE
 {
@@ -22,6 +23,8 @@ namespace SDE
 
 	void RenderSystem::LoadConfig(ConfigSystem* cfg)
 	{
+		SDE_PROF_EVENT();
+
 		auto values = cfg->Values();
 		auto render = values["Render"];
 		if (render.valid())
@@ -36,6 +39,7 @@ namespace SDE
 
 	bool RenderSystem::PreInit(Core::ISystemEnumerator& systemEnumerator)
 	{
+		SDE_PROF_EVENT();
 		auto configSystem = (SDE::ConfigSystem*)systemEnumerator.GetSystem("Config");
 		LoadConfig(configSystem);
 
@@ -44,6 +48,8 @@ namespace SDE
 
 	bool RenderSystem::Initialise()
 	{
+		SDE_PROF_EVENT();
+
 		Render::Window::Properties winProps(m_config.m_windowTitle, m_config.m_windowWidth, m_config.m_windowHeight);
 		winProps.m_flags = m_config.m_fullscreen ? Render::Window::CreateFullscreen : 0;
 		m_window = std::make_unique<Render::Window>(winProps);
@@ -65,12 +71,15 @@ namespace SDE
 
 	bool RenderSystem::PostInit()
 	{
+		SDE_PROF_EVENT();
 		m_window->Show();
 		return true;
 	}
 
 	bool RenderSystem::Tick()
 	{
+		SDE_PROF_EVENT();
+
 		m_device->ClearColourDepthTarget(m_clearColour);
 
 		for (auto renderPass : m_passes)
@@ -86,6 +95,8 @@ namespace SDE
 
 	void RenderSystem::PostShutdown()
 	{
+		SDE_PROF_EVENT();
+
 		m_passes.clear();
 		m_device = nullptr;
 		m_window = nullptr;

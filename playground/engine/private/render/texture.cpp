@@ -5,6 +5,7 @@ Matt Hoyle
 #include "texture.h"
 #include "texture_source.h"
 #include "utils.h"
+#include "core/profiler.h"
 
 namespace Render
 {
@@ -74,6 +75,8 @@ namespace Render
 
 	bool Texture::CreateSimpleUncompressedTexture(const TextureSource& src)
 	{
+		SDE_PROF_EVENT();
+
 		glGenTextures(1, &m_handle);
 		SDE_RENDER_PROCESS_GL_ERRORS_RET("glGenTextures");
 
@@ -118,6 +121,8 @@ namespace Render
 
 	bool Texture::CreateSimpleCompressedTexture(const TextureSource& src)
 	{
+		SDE_PROF_EVENT();
+
 		glGenTextures(1, &m_handle);
 		SDE_RENDER_PROCESS_GL_ERRORS_RET("glGenTextures");
 
@@ -158,6 +163,8 @@ namespace Render
 
 	bool Texture::CreateArrayCompressedTexture(const std::vector<TextureSource>& src)
 	{
+		SDE_PROF_EVENT();
+
 		glGenTextures(1, &m_handle);
 		SDE_RENDER_PROCESS_GL_ERRORS_RET("glGenTextures");
 
@@ -251,6 +258,7 @@ namespace Render
 
 	bool Texture::Update(const std::vector<TextureSource>& src)
 	{
+		SDE_PROF_EVENT();
 		SDE_RENDER_ASSERT(m_handle != -1);
 		SDE_ASSERT(src.size() > 0);
 		if (!ValidateSource(src))
@@ -295,6 +303,7 @@ namespace Render
 
 	bool Texture::Create(const TextureSource& src)
 	{
+		SDE_PROF_EVENT();
 		SDE_RENDER_ASSERT(m_handle == -1);
 		m_isArray = false;
 
@@ -312,6 +321,7 @@ namespace Render
 
 	bool Texture::Create(const std::vector<TextureSource>& src)
 	{
+		SDE_PROF_EVENT();
 		SDE_RENDER_ASSERT(m_handle == -1);
 		SDE_ASSERT(src.size() > 0);
 		if (!ValidateSource(src))
@@ -346,6 +356,7 @@ namespace Render
 
 	void Texture::Destroy()
 	{
+		SDE_PROF_EVENT();
 		if (m_handle != -1)
 		{
 			glDeleteTextures(1, &m_handle);

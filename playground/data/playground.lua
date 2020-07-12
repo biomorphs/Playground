@@ -19,7 +19,7 @@ function Playground:InitLight(i)
 	Lights[i] = {}
 	Lights[i].Position = {math.random(-20,20),math.random(10,30),math.random(-20,20)}
 	Lights[i].Colour = {math.random(0,255)/255.0,math.random(0,255)/255.0,math.random(0,255)/255.0}
-	Lights[i].Ambient = 0.02;
+	Lights[i].Ambient = 0.02
 	Lights[i].Velocity = {0.0,0.0,0.0}
 	Lights[i].Cooldown = 0.0
 end
@@ -27,13 +27,12 @@ end
 function Playground:Init()
 	print("Init!")
 
-	for i=1,5 do
+	for i=1,4 do
 		Playground:InitLight(i)
 	end
 end
 
 function Playground:Tick()
-	
 	local timeDelta = Playground.DeltaTime * 0.25
 	for i=1,#Lights do
 		Lights[i].Cooldown = Lights[i].Cooldown - timeDelta
@@ -47,7 +46,7 @@ function Playground:Tick()
 		Lights[i].Position[2] = Lights[i].Position[2] + Lights[i].Velocity[2] * timeDelta
 		Lights[i].Position[3] = Lights[i].Position[3] + Lights[i].Velocity[3] * timeDelta
 
-		Graphics.SetLight(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3], LightAmbient)
+		Graphics.SetLight(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3], Lights[i].Ambient)
 		Graphics.DrawModel(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0,5.0,LightModel,LightShader)
 	end
 

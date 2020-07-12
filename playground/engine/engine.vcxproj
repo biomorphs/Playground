@@ -9,7 +9,7 @@
   <Import Project="props/library_build.props" />
   <Import Project="props/shared_preprocessor.props" />
   <PropertyGroup>
-    <IncludePath>$(ProjectDir)public\;$(ProjectDir)public\engine\;$(ProjectDir)private\engine\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)external\Optick_1.3.0\include;$(ProjectDir)public\;$(ProjectDir)public\engine\;$(ProjectDir)private\engine\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="public\engine\engine_startup.h" />

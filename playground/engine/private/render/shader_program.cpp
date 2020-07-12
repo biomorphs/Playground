@@ -6,6 +6,7 @@ Matt Hoyle
 #include "shader_binary.h"
 #include "utils.h"
 #include "core/string_hashing.h"
+#include "core/profiler.h"
 
 namespace Render
 {
@@ -21,6 +22,8 @@ namespace Render
 
 	bool ShaderProgram::Create(const ShaderBinary& vertexShader, const ShaderBinary& fragmentShader, std::string& result)
 	{
+		SDE_PROF_EVENT();
+
 		SDE_ASSERT(vertexShader.GetType() == ShaderType::VertexShader);
 		SDE_ASSERT(fragmentShader.GetType() == ShaderType::FragmentShader);
 		SDE_ASSERT(vertexShader.GetHandle() != 0);
@@ -96,6 +99,7 @@ namespace Render
 
 	void ShaderProgram::Destroy()
 	{
+		SDE_PROF_EVENT();
 		if (m_handle != 0)
 		{
 			glDeleteProgram(m_handle);

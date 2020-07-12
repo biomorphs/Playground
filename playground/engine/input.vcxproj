@@ -9,7 +9,7 @@
   <Import Project="props/library_build.props" />
   <Import Project="props/shared_preprocessor.props" />
   <PropertyGroup>
-    <IncludePath>$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)public\;$(ProjectDir)public\input\;$(ProjectDir)private\input\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)external\Optick_1.3.0\include;$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)public\;$(ProjectDir)public\input\;$(ProjectDir)private\input\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="public\input\controller_state.h" />

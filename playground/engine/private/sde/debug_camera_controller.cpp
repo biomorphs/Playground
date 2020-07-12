@@ -6,6 +6,7 @@ Matt Hoyle
 #include "input/controller_state.h"
 #include "render/camera.h"
 #include "math/glm_headers.h"
+#include "core/profiler.h"
 
 #define PI 3.14159265358f
 
@@ -32,6 +33,8 @@ namespace SDE
 
 	void DebugCameraController::Update(const Input::ControllerRawState& controllerState, double timeDelta)
 	{
+		SDE_PROF_EVENT();
+
 		static float s_yawRotSpeed = 2.0f;
 		static float s_pitchRotSpeed = 2.0f;
 		static float s_forwardSpeed = 1.0f;

@@ -2,6 +2,7 @@
 
 #include "sde/job_system.h"
 #include "../stb_image.h"
+#include "core/profiler.h"
 
 namespace smol
 {
@@ -12,6 +13,8 @@ namespace smol
 
 	void TextureManager::ProcessLoadedTextures()
 	{
+		SDE_PROF_EVENT();
+
 		Kernel::ScopedMutex lock(m_loadedTexturesMutex);
 		for (const auto& src : m_loadedTextures)
 		{
@@ -39,6 +42,7 @@ namespace smol
 
 		std::string pathString = path;
 		m_jobSystem->PushJob([this, pathString, newHandle]() {
+			SDE_PROF_EVENT("LoadTexture");
 			int w, h, components;
 			stbi_set_flip_vertically_on_load(true);
 			unsigned char* loadedData = stbi_load(pathString.c_str(), &w, &h, &components, 4);		// we always want rgba

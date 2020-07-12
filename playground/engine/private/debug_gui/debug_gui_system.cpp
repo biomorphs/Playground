@@ -10,6 +10,7 @@ Matt Hoyle
 #include "sde/render_system.h"
 #include "sde/event_system.h"
 #include <imgui\imgui.h>
+#include "core/profiler.h"
 
 namespace DebugGui
 {
@@ -24,6 +25,8 @@ namespace DebugGui
 
 	bool DebugGuiSystem::PreInit(Core::ISystemEnumerator& systemEnumerator)
 	{
+		SDE_PROF_EVENT();
+
 		m_renderSystem = (SDE::RenderSystem*)systemEnumerator.GetSystem("Render");
 		auto EventSystem = (SDE::EventSystem*)systemEnumerator.GetSystem("Events");
 		EventSystem->RegisterEventHandler([this](void* e)
@@ -36,11 +39,14 @@ namespace DebugGui
 
 	bool DebugGuiSystem::Initialise()
 	{
+		SDE_PROF_EVENT();
 		return true;
 	}
 
 	bool DebugGuiSystem::PostInit()
 	{
+		SDE_PROF_EVENT();
+
 		ImGui::SdeImguiInit();
 		m_imguiPass = std::make_unique<ImguiSdlGL3RenderPass>(m_renderSystem->GetWindow(), m_renderSystem->GetDevice());
 		m_renderSystem->AddPass(*m_imguiPass, 0x10000000);	// high pass sort key so debug gui always renders last
@@ -127,15 +133,22 @@ namespace DebugGui
 
 	bool DebugGuiSystem::Tick()
 	{
+		SDE_PROF_EVENT();
+
 		// Start next frame
 		m_imguiPass->NewFrame();
-		ImGui::NewFrame();
+		{
+			SDE_PROF_EVENT("ImGui::NewFrame");
+			ImGui::NewFrame();
+		}
 
 		return true;
 	}
 
 	void DebugGuiSystem::Shutdown()
 	{
+		SDE_PROF_EVENT();
+
 		m_imguiPass = nullptr;
 		ImGui::SdeImguiShutdown();
 	}

@@ -8,6 +8,7 @@ Matt Hoyle
 #include "kernel/log.h"
 #include "core/system_enumerator.h"
 #include "sde/script_system.h"
+#include "core/profiler.h"
 #include <sol.hpp>
 
 namespace SDE
@@ -37,6 +38,8 @@ namespace SDE
 
 	bool ConfigSystem::PreInit(Core::ISystemEnumerator& systemEnumerator)
 	{
+		SDE_PROF_EVENT();
+
 		m_scriptSystem = (SDE::ScriptSystem*)systemEnumerator.GetSystem("Script");
 		m_scriptSystem->Globals().create_named_table("Config");
 		LoadConfigFile("config.lua");
@@ -46,6 +49,7 @@ namespace SDE
 
 	void ConfigSystem::PreShutdown()
 	{
+		SDE_PROF_EVENT();
 		m_scriptSystem = nullptr;
 	}
 }

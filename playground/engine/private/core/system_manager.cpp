@@ -7,6 +7,7 @@ Matt Hoyle
 #include "kernel/assert.h"
 #include "core/string_hashing.h"
 #include "kernel/log.h"
+#include "profiler.h"
 
 namespace Core
 {
@@ -40,25 +41,35 @@ namespace Core
 
 	bool SystemManager::Initialise()
 	{
-		for (auto it = m_systems.begin(); it != m_systems.end(); ++it)
+		SDE_PROF_FRAME("SystemManager::Initialise");
 		{
-			if (!(*it)->PreInit(*this))
+			SDE_PROF_EVENT("PreInit");
+			for (auto it = m_systems.begin(); it != m_systems.end(); ++it)
 			{
-				return false;
+				if (!(*it)->PreInit(*this))
+				{
+					return false;
+				}
 			}
 		}
-		for (auto it = m_systems.begin(); it != m_systems.end(); ++it)
 		{
-			if (!(*it)->Initialise())
+			SDE_PROF_EVENT("Initialise");
+			for (auto it = m_systems.begin(); it != m_systems.end(); ++it)
 			{
-				return false;
+				if (!(*it)->Initialise())
+				{
+					return false;
+				}
 			}
 		}
-		for (auto it = m_systems.begin(); it != m_systems.end(); ++it)
 		{
-			if (!(*it)->PostInit())
+			SDE_PROF_EVENT("PostInit");
+			for (auto it = m_systems.begin(); it != m_systems.end(); ++it)
 			{
-				return false;
+				if (!(*it)->PostInit())
+				{
+					return false;
+				}
 			}
 		}
 
@@ -67,6 +78,7 @@ namespace Core
 	
 	bool SystemManager::Tick()
 	{
+		SDE_PROF_FRAME("SystemManager::Tick");
 		bool keepRunning = true;
 		for (auto it = m_systems.begin(); it != m_systems.end(); ++it)
 		{
@@ -77,6 +89,7 @@ namespace Core
 	
 	void SystemManager::Shutdown()
 	{
+		SDE_PROF_FRAME("SystemManager::Shutdown");
 		for (auto it = m_systems.begin(); it != m_systems.end(); ++it)
 		{
 			(*it)->PreShutdown();

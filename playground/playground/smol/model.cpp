@@ -3,11 +3,14 @@
 #include "render/mesh_builder.h"
 #include "render/mesh.h"
 #include "renderer.h"
+#include "core/profiler.h"
 
 namespace smol
 {
 	std::unique_ptr<Model> Model::CreateFromAsset(const Assets::Model& m, TextureManager& tm)
 	{
+		SDE_PROF_EVENT();
+
 		auto resultModel = std::make_unique<Model>();
 		resultModel->m_parts.reserve(m.Meshes().size());
 		for (const auto& mesh : m.Meshes())

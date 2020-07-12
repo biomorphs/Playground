@@ -6,6 +6,7 @@
 #include "render/shader_binary.h"
 #include "render/mesh.h"
 #include <algorithm>
+#include "core/profiler.h"
 
 namespace smol
 {
@@ -58,6 +59,8 @@ namespace smol
 
 	void Renderer2D::PopulateInstanceBuffers()
 	{
+		SDE_PROF_EVENT();
+
 		//static to avoid constant allocations
 		static std::vector<glm::mat4> instanceTransforms;
 		instanceTransforms.reserve(c_maxQuads);
@@ -82,6 +85,8 @@ namespace smol
 
 	void Renderer2D::RenderAll(Render::Device& d)
 	{
+		SDE_PROF_EVENT();
+
 		static bool s_firstFrame = true;
 		if (s_firstFrame)
 		{

@@ -9,7 +9,7 @@
   <Import Project="props/library_build.props" />
   <Import Project="props/shared_preprocessor.props" />
   <PropertyGroup>
-    <IncludePath>$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)..\external\lua-5.3.5_Win64_vc15_lib\include;$(ProjectDir)..\external\sol2-2.20.6\sol;$(ProjectDir)..\external\sol2-2.20.6;$(ProjectDir)..\external\glm;$(ProjectDir)public\;$(ProjectDir)public\sde\;$(ProjectDir)private\sde\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)external\Optick_1.3.0\include;$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)..\external\lua-5.3.5_Win64_vc15_lib\include;$(ProjectDir)..\external\sol2-2.20.6\sol;$(ProjectDir)..\external\sol2-2.20.6;$(ProjectDir)..\external\glm;$(ProjectDir)public\;$(ProjectDir)public\sde\;$(ProjectDir)private\sde\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="public\sde\camera_controller.h" />

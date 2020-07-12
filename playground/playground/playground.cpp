@@ -4,7 +4,7 @@
 #include "core/system_enumerator.h"
 #include "debug_gui/debug_gui_system.h"
 #include "sde/script_system.h"
-
+#include "core/profiler.h"
 #include <sol.hpp>
 
 Playground::Playground()
@@ -18,6 +18,7 @@ Playground::~Playground()
 
 void Playground::InitScript()
 {
+	SDE_PROF_EVENT();
 	try
 	{
 		if (m_scriptSystem->Globals()["g_playground"] != nullptr)
@@ -39,6 +40,7 @@ void Playground::InitScript()
 
 void Playground::TickScript()
 {
+	SDE_PROF_EVENT();
 	try
 	{
 		m_scriptSystem->Globals()["Playground"].get_or_create<sol::table>();
@@ -58,6 +60,7 @@ void Playground::TickScript()
 
 void Playground::ShutdownScript()
 {
+	SDE_PROF_EVENT();
 	try
 	{
 		if (m_scriptSystem->Globals()["g_playground"] != nullptr)
@@ -75,6 +78,7 @@ void Playground::ShutdownScript()
 
 void Playground::ReloadScript()
 {
+	SDE_PROF_EVENT();
 	ShutdownScript();
 	m_scriptErrorText = "";
 	if (m_scriptSystem->RunScriptFromFile(m_scriptPath.c_str(), m_scriptErrorText))
@@ -85,6 +89,7 @@ void Playground::ReloadScript()
 
 bool Playground::PreInit(Core::ISystemEnumerator& systemEnumerator)
 {
+	SDE_PROF_EVENT();
 	m_debugGui = (DebugGui::DebugGuiSystem*)systemEnumerator.GetSystem("DebugGui");
 	m_scriptSystem = (SDE::ScriptSystem*)systemEnumerator.GetSystem("Script");
 	m_lastFrameTime = m_timer.GetSeconds();
@@ -94,6 +99,7 @@ bool Playground::PreInit(Core::ISystemEnumerator& systemEnumerator)
 
 bool Playground::Tick()
 {
+	SDE_PROF_EVENT();
 	static bool s_firstTick = true;
 	if (s_firstTick)
 	{
@@ -124,5 +130,6 @@ bool Playground::Tick()
 
 void Playground::Shutdown()
 {
+	SDE_PROF_EVENT();
 	ShutdownScript();
 }

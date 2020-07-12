@@ -5,6 +5,7 @@ Matt Hoyle
 #include "render_buffer.h"
 #include "utils.h"
 #include <glew.h>
+#include "core/profiler.h"
 
 namespace Render
 {
@@ -49,6 +50,7 @@ namespace Render
 
 	bool RenderBuffer::Create(size_t bufferSize, RenderBufferType type, RenderBufferModification modification)
 	{
+		SDE_PROF_EVENT();
 		SDE_RENDER_ASSERT(bufferSize > 0, "Buffer size must be >0");
 
 		if (bufferSize > 0)
@@ -79,6 +81,7 @@ namespace Render
 
 	void RenderBuffer::SetData(size_t offset, size_t size, void* srcData)
 	{
+		SDE_PROF_EVENT();
 		auto bufferType = TranslateBufferType(m_type);
 
 		SDE_ASSERT(offset < m_bufferSize);
@@ -99,6 +102,7 @@ namespace Render
 
 	bool RenderBuffer::Destroy()
 	{
+		SDE_PROF_EVENT();
 		if (m_handle != 0)
 		{
 			glDeleteBuffers(1, &m_handle);

@@ -14,6 +14,7 @@
 #include "smol/shader_manager.h"
 #include "smol/renderer.h"
 #include "smol/renderer_2d.h"
+#include "core/profiler.h"
 #include <sol.hpp>
 
 Graphics::Graphics()
@@ -26,6 +27,8 @@ Graphics::~Graphics()
 
 bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
 {
+	SDE_PROF_EVENT();
+
 	m_scriptSystem = (SDE::ScriptSystem*)systemEnumerator.GetSystem("Script");
 	m_renderSystem = (SDE::RenderSystem*)systemEnumerator.GetSystem("Render");
 	m_inputSystem = (Input::InputSystem*)systemEnumerator.GetSystem("Input");
@@ -37,6 +40,8 @@ bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
 
 bool Graphics::PostInit()
 {
+	SDE_PROF_EVENT();
+
 	// Create managers
 	m_shaders = std::make_unique<smol::ShaderManager>();
 	m_textures = std::make_unique<smol::TextureManager>(m_jobSystem);
@@ -97,6 +102,8 @@ bool Graphics::PostInit()
 
 bool Graphics::Tick()
 {
+	SDE_PROF_EVENT();
+
 	// Process loaded data on main thread
 	m_textures->ProcessLoadedTextures();
 	m_models->ProcessLoadedModels();
@@ -121,8 +128,12 @@ bool Graphics::Tick()
 
 void Graphics::Shutdown()
 {
+	SDE_PROF_EVENT();
+
 	m_scriptSystem->Globals()["Graphics"] = nullptr;
 	m_render2d = nullptr;
 	m_render3d = nullptr;
+	m_models = nullptr;
+	m_shaders = nullptr;
 	m_textures = nullptr;
 }

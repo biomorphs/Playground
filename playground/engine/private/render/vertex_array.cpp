@@ -5,6 +5,7 @@ Matt Hoyle
 #include "vertex_array.h"
 #include "utils.h"
 #include "render_buffer.h"
+#include "core/profiler.h"
 
 namespace Render
 {
@@ -48,6 +49,8 @@ namespace Render
 
 	bool VertexArray::Create()
 	{
+		SDE_PROF_EVENT();
+
 		SDE_ASSERT(m_handle == 0);
 
 		glGenVertexArrays(1, &m_handle);
@@ -87,6 +90,8 @@ namespace Render
 
 	void VertexArray::Destroy()
 	{
+		SDE_PROF_EVENT();
+
 		// Note we do not destroy the buffers, only the VAO
 		if (m_handle != 0)
 		{

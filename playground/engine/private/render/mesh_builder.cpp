@@ -6,6 +6,7 @@ Matt Hoyle
 #include "mesh_builder.h"
 #include "utils.h"
 #include "math/glm_headers.h"
+#include "core/profiler.h"
 
 namespace Render
 {
@@ -167,6 +168,8 @@ namespace Render
 
 	void MeshBuilder::RecreateMesh(Mesh& target, size_t minVbSize)
 	{
+		SDE_PROF_EVENT();
+
 		auto& streams = target.GetStreams();
 		auto& vertexArray = target.GetVertexArray();
 
@@ -208,6 +211,8 @@ namespace Render
 
 	bool MeshBuilder::CreateMesh(Mesh& target, size_t minVbSize)
 	{
+		SDE_PROF_EVENT();
+
 		auto& streams = target.GetStreams();
 		auto& vertexArray = target.GetVertexArray();
 		auto& chunks = target.GetChunks();

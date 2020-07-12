@@ -3,6 +3,7 @@
 #include "texture_manager.h"
 #include "sde/job_system.h"
 #include "kernel/assert.h"
+#include "core/profiler.h"
 
 namespace smol
 {
@@ -14,6 +15,7 @@ namespace smol
 
 	void ModelManager::ProcessLoadedModels()
 	{
+		SDE_PROF_EVENT();
 		Kernel::ScopedMutex lock(m_loadedModelsMutex);
 		for (auto& loadedModel : m_loadedModels)
 		{
@@ -47,6 +49,7 @@ namespace smol
 
 		std::string pathString = path;
 		m_jobSystem->PushJob([this, pathString, newHandle]() {
+			SDE_PROF_EVENT("LoadModel");
 			auto loadedAsset = Assets::Model::Load(pathString.c_str());
 			if (loadedAsset != nullptr)
 			{

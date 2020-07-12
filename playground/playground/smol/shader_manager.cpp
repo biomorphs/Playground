@@ -2,11 +2,13 @@
 #include "kernel/log.h"
 #include "render/shader_program.h"
 #include "render/shader_binary.h"
+#include "core/profiler.h"
 
 namespace smol
 {
 	void ShaderManager::ReloadAll()
 	{
+		SDE_PROF_EVENT();
 		auto currentShaders = std::move(m_shaders);
 		for (auto &s : currentShaders)
 		{
@@ -20,6 +22,7 @@ namespace smol
 
 	ShaderHandle ShaderManager::LoadShader(const char* name, const char* vsPath, const char* fsPath)
 	{
+		SDE_PROF_EVENT();
 		for (uint64_t i = 0; i < m_shaders.size(); ++i)
 		{
 			if (m_shaders[i].m_name == name)

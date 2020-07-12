@@ -3,6 +3,7 @@ SDLEngine
 Matt Hoyle
 */
 #include "job_system.h"
+#include "core/profiler.h"
 
 namespace SDE
 {
@@ -28,6 +29,7 @@ namespace SDE
 				Job currentJob;
 				if (m_pendingJobs.PopJob(currentJob))
 				{
+					SDE_PROF_EVENT("RunJob");
 					currentJob.Run();
 				}
 				else
@@ -43,6 +45,8 @@ namespace SDE
 
 	void JobSystem::Shutdown()
 	{
+		SDE_PROF_EVENT();
+
 		// Clear out pending jobs, we do not flush under any circumstances!
 		m_pendingJobs.RemoveAll();
 
@@ -63,6 +67,8 @@ namespace SDE
 
 	void JobSystem::PushJob(Job::JobThreadFunction threadFn, const char* dbgName)
 	{
+		SDE_PROF_EVENT();
+
 		static bool trig = false;
 		Job jobDesc(this, threadFn, dbgName);
 		m_pendingJobs.PushJob(jobDesc);

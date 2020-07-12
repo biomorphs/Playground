@@ -13,12 +13,15 @@ Matt Hoyle
 #include <glew.h>
 #include "math/glm_headers.h"
 #include "uniform_buffer.h"
+#include "core/profiler.h"
 
 namespace Render
 {
 	Device::Device(Window& theWindow)
 		: m_window( theWindow )
 	{
+		SDE_PROF_EVENT();
+
 		SDL_Window* windowHandle = theWindow.GetWindowHandle();
 		SDE_RENDER_ASSERT(windowHandle);
 
@@ -62,6 +65,7 @@ namespace Render
 
 	void Device::Present()
 	{
+		SDE_PROF_EVENT();
 		SDL_GL_SwapWindow(m_window.GetWindowHandle());
 	}
 
@@ -151,6 +155,8 @@ namespace Render
 
 	void Device::ClearColourDepthTarget(const glm::vec4& colour)
 	{
+		SDE_PROF_EVENT();
+
 		glClearColor(colour.r, colour.g, colour.b, colour.a);
 		SDE_RENDER_PROCESS_GL_ERRORS("glClearColor");
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -246,6 +252,8 @@ namespace Render
 
 	void Device::DrawPrimitivesInstanced(PrimitiveType primitive, uint32_t vertexStart, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstInstance)
 	{
+		SDE_PROF_EVENT();
+
 		auto primitiveType = TranslatePrimitiveType(primitive);
 		SDE_ASSERT(primitiveType != -1);
 

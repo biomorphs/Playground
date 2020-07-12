@@ -5,6 +5,7 @@ Matt Hoyle
 #include "thread_pool.h"
 #include "kernel/thread.h"
 #include "kernel/assert.h"
+#include "core/profiler.h"
 
 namespace Core
 {
@@ -24,6 +25,7 @@ namespace Core
 			SDE_ASSERT(m_parent != nullptr);
 			auto threadFnc = [this]()
 			{
+				SDE_PROF_THREAD("PooledThread");
 				while (m_parent->m_stopRequested.Get() == 0)
 				{
 					m_parent->m_fn();
@@ -34,6 +36,7 @@ namespace Core
 		}
 		void WaitForFinish()
 		{
+			SDE_PROF_EVENT();
 			m_thread.WaitForFinish();
 		}
 	private:
@@ -54,6 +57,7 @@ namespace Core
 
 	void ThreadPool::Start(const char* poolName, uint32_t threadCount, ThreadPoolFn threadfn)
 	{
+		SDE_PROF_EVENT();
 		SDE_ASSERT(m_threads.size() == 0);
 		m_fn = threadfn;
 		m_threads.reserve(threadCount);
@@ -70,6 +74,7 @@ namespace Core
 
 	void ThreadPool::Stop()
 	{
+		SDE_PROF_EVENT();
 		m_stopRequested = true;
 		for (auto& it : m_threads)
 		{

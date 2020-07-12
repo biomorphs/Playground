@@ -3,6 +3,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "core/profiler.h"
 
 namespace Assets
 {
@@ -19,6 +20,8 @@ namespace Assets
 
 	void Model::ProcessMesh(const aiScene* scene, const struct aiMesh* mesh, Model& model, glm::mat4 transform)
 	{
+		SDE_PROF_EVENT();
+
 		// Make sure its triangles!
 		if (!(mesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE))
 		{
@@ -121,6 +124,8 @@ namespace Assets
 
 	std::unique_ptr<Model> Model::Load(const char* path)
 	{
+		SDE_PROF_EVENT();
+
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(path,
 			aiProcess_CalcTangentSpace |

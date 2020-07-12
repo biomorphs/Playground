@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "kernel/assert.h"
 #include "kernel/log.h"
+#include "core/profiler.h"
 #include "render/shader_program.h"
 #include "render/shader_binary.h"
 #include "render/device.h"
@@ -44,6 +45,7 @@ namespace smol
 
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader)
 	{
+		SDE_PROF_EVENT();
 		const auto theModel = m_models->GetModel(model);
 		const auto theShader = m_shaders->GetShader(shader);
 		if (theModel != nullptr && theShader != nullptr)
@@ -80,6 +82,8 @@ namespace smol
 
 	void Renderer::PopulateInstanceBuffers()
 	{
+		SDE_PROF_EVENT();
+
 		//static to avoid constant allocations
 		static std::vector<glm::mat4> instanceTransforms;
 		instanceTransforms.reserve(c_maxInstances);
@@ -101,9 +105,12 @@ namespace smol
 
 	void Renderer::RenderAll(Render::Device& d)
 	{
+		SDE_PROF_EVENT();
+
 		static bool s_firstFrame = true;
 		if (s_firstFrame)
 		{
+			SDE_PROF_EVENT("Create Instance Buffers");
 			m_instanceTransforms.Create(c_maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
 			m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
 			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Static);
@@ -115,10 +122,13 @@ namespace smol
 			return;
 		}
 
-		// sort by generic sort key
-		std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
-			return q1.m_sortKey < q2.m_sortKey;
-			});
+		{
+			SDE_PROF_EVENT("SortInstances");
+			// sort by generic sort key
+			std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
+				return q1.m_sortKey < q2.m_sortKey;
+				});
+		}
 
 		PopulateInstanceBuffers();
 
@@ -132,16 +142,19 @@ namespace smol
 		d.SetBlending(true);				// enable blending (we might want to do it manually instead)
 		d.SetScissorEnabled(false);			// (don't) scissor me timbers
 
-		GlobalUniforms globals;
-		globals.m_projectionMat = glm::perspectiveFov(glm::radians(75.0f), windowSize.x, windowSize.y, 0.1f, 1000.0f);
-		globals.m_viewMat = glm::lookAt(m_camera.Position(), m_camera.Target(), m_camera.Up());
-		for (int l = 0; l < m_lights.size() && l < c_maxLights; ++l)
 		{
-			globals.m_lights[l].m_colourAndAmbient = m_lights[l].m_colour;
-			globals.m_lights[l].m_position = glm::vec4(m_lights[l].m_position,0.0f);
+			SDE_PROF_EVENT("Update Globals UBO");
+			GlobalUniforms globals;
+			globals.m_projectionMat = glm::perspectiveFov(glm::radians(70.0f), windowSize.x, windowSize.y, 0.1f, 1000.0f);
+			globals.m_viewMat = glm::lookAt(m_camera.Position(), m_camera.Target(), m_camera.Up());
+			for (int l = 0; l < m_lights.size() && l < c_maxLights; ++l)
+			{
+				globals.m_lights[l].m_colourAndAmbient = m_lights[l].m_colour;
+				globals.m_lights[l].m_position = glm::vec4(m_lights[l].m_position, 0.0f);
+			}
+			globals.m_lightCount = static_cast<int>(std::min(m_lights.size(), c_maxLights));
+			m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
 		}
-		globals.m_lightCount = static_cast<int>(std::min(m_lights.size(), c_maxLights));
-		m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
 
 		auto firstInstance = m_instances.begin();
 		while (firstInstance != m_instances.end())

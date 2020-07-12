@@ -4,6 +4,7 @@ Matt Hoyle
 */
 #include "input_system.h"
 #include "kernel/assert.h"
+#include "core/profiler.h"
 #include <SDL_joystick.h>
 #include <SDL_gamecontroller.h>
 #include <SDL_mouse.h>
@@ -22,6 +23,8 @@ namespace Input
 
 	bool InputSystem::Tick()
 	{
+		SDE_PROF_EVENT();
+
 		EnumerateControllers();
 		UpdateControllerState();
 		UpdateMouseState();
@@ -47,6 +50,8 @@ namespace Input
 
 	void InputSystem::UpdateMouseState()
 	{
+		SDE_PROF_EVENT();
+
 		m_mouseState.m_buttonState = 0;
 		uint32_t mouseButtons = SDL_GetMouseState(&m_mouseState.m_cursorX, &m_mouseState.m_cursorY);
 		if (mouseButtons & SDL_BUTTON(SDL_BUTTON_LEFT))
@@ -65,6 +70,8 @@ namespace Input
 
 	void InputSystem::UpdateControllerState()
 	{
+		SDE_PROF_EVENT();
+
 		for (auto& padDesc : m_controllers)
 		{
 			SDL_GameController* controller = (SDL_GameController*)padDesc.m_sdlController;
@@ -117,12 +124,14 @@ namespace Input
 
 	bool InputSystem::Initialise()
 	{
+		SDE_PROF_EVENT();
 		EnumerateControllers();
 		return true;
 	}
 
 	void InputSystem::EnumerateControllers()
 	{
+		SDE_PROF_EVENT();
 		m_controllers.clear();
 		for (int i = 0; i < SDL_NumJoysticks(); ++i) 
 		{
