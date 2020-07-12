@@ -7,10 +7,9 @@ Matt Hoyle
 
 namespace SDE
 {
-	Job::Job(JobSystem* parent, JobThreadFunction threadFn, const char* dbgName)
+	Job::Job(JobSystem* parent, JobThreadFunction threadFn)
 		: m_parent(parent)
 		, m_threadFn(threadFn)
-		, m_dbgName(dbgName)
 	{
 		SDE_ASSERT(parent != nullptr);
 	}
@@ -19,11 +18,6 @@ namespace SDE
 		: m_parent(nullptr)
 	{
 
-	}
-
-	Job::~Job()
-	{
-		m_parent = nullptr;
 	}
 
 	void Job::Run()

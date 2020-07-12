@@ -36,7 +36,7 @@ namespace Render
 		m_context = SDL_GL_CreateContext(windowHandle);
 		SDE_RENDER_ASSERT(m_context);
 
-		SDL_GL_SetSwapInterval(1);	// 0 = no vsync, 1 = vsync
+		SDL_GL_SetSwapInterval(1);
 
 		// glew initialises GL function pointers
 		glewExperimental = true;		// must be set for core profile and above

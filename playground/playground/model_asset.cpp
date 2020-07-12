@@ -124,7 +124,9 @@ namespace Assets
 
 	std::unique_ptr<Model> Model::Load(const char* path)
 	{
-		SDE_PROF_EVENT();
+		char debugName[1024] = { '\0' };
+		sprintf_s(debugName, "Assets::Model::Load(\"%s\")", path);
+		SDE_PROF_EVENT_DYN(debugName);
 
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(path,

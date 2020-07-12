@@ -73,7 +73,10 @@ namespace Render
 
 	bool ShaderBinary::CompileFromFile(ShaderType type, const char* srcLocation, std::string& resultText)
 	{
-		SDE_PROF_EVENT();
+		char debugName[1024] = { '\0' };
+		sprintf_s(debugName, "Render::ShaderBinary::CompileFromFile(\"%s\")", srcLocation);
+		SDE_PROF_EVENT_DYN(debugName);
+
 		std::string shaderSource;
 		if (!Kernel::FileIO::LoadTextFromFile(srcLocation, shaderSource))
 		{

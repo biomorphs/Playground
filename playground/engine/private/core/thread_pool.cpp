@@ -25,7 +25,7 @@ namespace Core
 			SDE_ASSERT(m_parent != nullptr);
 			auto threadFnc = [this]()
 			{
-				SDE_PROF_THREAD("PooledThread");
+				SDE_PROF_THREAD(m_name.c_str());
 				while (m_parent->m_stopRequested.Get() == 0)
 				{
 					m_parent->m_fn();
@@ -36,7 +36,7 @@ namespace Core
 		}
 		void WaitForFinish()
 		{
-			SDE_PROF_EVENT();
+			SDE_PROF_STALL("PooledThread::WaitForFinish");
 			m_thread.WaitForFinish();
 		}
 	private:

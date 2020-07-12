@@ -92,19 +92,25 @@ namespace Render
 
 		const uint32_t mipCount = src.MipCount();
 
-		// This preallocates the entire mip-chain
-		glTexStorage2D(GL_TEXTURE_2D, mipCount, glStorageFormat, src.Width(), src.Height());
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTexStorage2D");
-
-		for (uint32_t m = 0; m < mipCount; ++m)
 		{
-			uint32_t w = 0, h = 0;
-			size_t size = 0;
-			const uint8_t* mipData = src.MipLevel(m, w, h, size);
-			SDE_ASSERT(mipData);
+			SDE_PROF_EVENT("AllocateStorage");
+			// This preallocates the entire mip-chain
+			glTexStorage2D(GL_TEXTURE_2D, mipCount, glStorageFormat, src.Width(), src.Height());
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glTexStorage2D");
+		}
 
-			glTexSubImage2D(GL_TEXTURE_2D, m, 0, 0, w, h, glInternalFormat, glInternalType, mipData);
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glCompressedTexSubImage2D");
+		{
+			SDE_PROF_EVENT("CopyData");
+			for (uint32_t m = 0; m < mipCount; ++m)
+			{
+				uint32_t w = 0, h = 0;
+				size_t size = 0;
+				const uint8_t* mipData = src.MipLevel(m, w, h, size);
+				SDE_ASSERT(mipData);
+
+				glTexSubImage2D(GL_TEXTURE_2D, m, 0, 0, w, h, glInternalFormat, glInternalType, mipData);
+				SDE_RENDER_PROCESS_GL_ERRORS_RET("glCompressedTexSubImage2D");
+			}
 		}
 
 		// This should probably be tied to sampler state, but for now we will just use bilinear for everything

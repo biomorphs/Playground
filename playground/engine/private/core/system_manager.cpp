@@ -78,7 +78,8 @@ namespace Core
 	
 	bool SystemManager::Tick()
 	{
-		SDE_PROF_FRAME("SystemManager::Tick");
+		SDE_PROF_FRAME("Main Thread");
+		SDE_PROF_EVENT();
 		bool keepRunning = true;
 		for (auto it = m_systems.begin(); it != m_systems.end(); ++it)
 		{

@@ -110,7 +110,7 @@ bool Graphics::Tick()
 
 	// Use debug camera
 	Render::Camera c;
-	m_debugCameraController->Update(m_inputSystem->ControllerState(0), 0.033f);
+	m_debugCameraController->Update(m_inputSystem->ControllerState(0), 0.016f);
 	m_debugCameraController->ApplyToCamera(c);
 	m_render3d->SetCamera(c);
 

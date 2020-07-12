@@ -51,7 +51,10 @@ namespace smol
 
 		std::string pathString = path;
 		m_jobSystem->PushJob([this, pathString, newHandle]() {
-			SDE_PROF_EVENT("LoadTexture");
+			char debugName[1024] = { '\0' };
+			sprintf_s(debugName, "LoadTexture(\"%s\")", pathString.c_str());
+			SDE_PROF_EVENT_DYN(debugName);
+
 			int w, h, components;
 			stbi_set_flip_vertically_on_load(true);
 			unsigned char* loadedData = stbi_load(pathString.c_str(), &w, &h, &components, 4);		// we always want rgba

@@ -117,7 +117,7 @@ namespace Render
 		m_currentChunk.m_lastVertex = m_currentVertexIndex;
 		if ((m_currentChunk.m_lastVertex - m_currentChunk.m_firstVertex) > 0)
 		{
-			m_chunks.push_back(m_currentChunk);
+			m_chunks.push_back(std::move(m_currentChunk));
 		}		
 	}
 
@@ -195,7 +195,7 @@ namespace Render
 				streamSize += (streamSize % minVbSize);
 			}
 
-			theBuffer.Create(streamSize, RenderBufferType::VertexData, RenderBufferModification::Dynamic);
+			theBuffer.Create(streamSize, RenderBufferType::VertexData, RenderBufferModification::Static);
 			++streamIndex;
 		}
 

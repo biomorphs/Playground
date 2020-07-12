@@ -17,8 +17,14 @@ namespace smol
 	void ModelManager::ProcessLoadedModels()
 	{
 		SDE_PROF_EVENT();
-		Core::ScopedMutex lock(m_loadedModelsMutex);
-		for (auto& loadedModel : m_loadedModels)
+		
+		std::vector<ModelLoadResult> loadedModels;
+		{
+			Core::ScopedMutex lock(m_loadedModelsMutex);
+			loadedModels = std::move(m_loadedModels);
+		}
+
+		for (auto& loadedModel : loadedModels)
 		{
 			SDE_ASSERT(loadedModel.m_destinationHandle.m_index != -1, "Bad index");
 
@@ -31,7 +37,6 @@ namespace smol
 				}
 			}
 		}
-		m_loadedModels.clear();
 	}
 
 	ModelHandle ModelManager::LoadModel(const char* path)
@@ -50,7 +55,6 @@ namespace smol
 
 		std::string pathString = path;
 		m_jobSystem->PushJob([this, pathString, newHandle]() {
-			SDE_PROF_EVENT("LoadModel");
 			auto loadedAsset = Assets::Model::Load(pathString.c_str());
 			if (loadedAsset != nullptr)
 			{

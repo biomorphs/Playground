@@ -8,7 +8,6 @@ Matt Hoyle
 namespace SDE
 {
 	JobQueue::JobQueue()
-		: m_jobsPool(c_maxJobsQueued)
 	{
 	}
 
@@ -16,21 +15,19 @@ namespace SDE
 	{
 	}
 
-	void JobQueue::PushJob(const Job& j)
+	void JobQueue::PushJob(Job&& j)
 	{
 		Core::ScopedMutex lock(m_lock);
-		auto jobNode = m_jobsPool.Allocate(j);	// Copy-construct job on allocate
-		m_jobs.PushBack(jobNode);
+		m_currentJobs.push(std::move(j));
 	}
 
 	bool JobQueue::PopJob(Job &j)
 	{
 		Core::ScopedMutex lock(m_lock);
-		JobListNode* newJob = m_jobs.PopFront();
-		if (newJob)
+		if (!m_currentJobs.empty())
 		{
-			j = std::move(*newJob);
-			m_jobsPool.Free(newJob);
+			j = std::move(m_currentJobs.front());
+			m_currentJobs.pop();
 			return true;
 		}
 
@@ -40,11 +37,9 @@ namespace SDE
 	void JobQueue::RemoveAll()
 	{
 		Core::ScopedMutex lock(m_lock);
-
-		JobListNode* j = nullptr;
-		while ((j = m_jobs.PopFront()) != nullptr)
+		while (!m_currentJobs.empty())
 		{
-			m_jobsPool.Free(j);
+			m_currentJobs.pop();
 		}
 	}
 }

@@ -9,8 +9,10 @@ local LightShader = Graphics.LoadShader("light", "basic.vs", "basic.fs")
 local DiffuseShader = Graphics.LoadShader("diffuse", "simplediffuse.vs", "simplediffuse.fs")
 
 local LightModel = Graphics.LoadModel("sphere.fbx")
-local IslandModel = Graphics.LoadModel("islands.fbx")
+local IslandModel = Graphics.LoadModel("islands_low.fbx")
 local ContainerModel = Graphics.LoadModel("container.fbx")
+local CottageModel = Graphics.LoadModel("cottage_blender.fbx")
+local MonsterModel = Graphics.LoadModel("udim-monster.fbx")
 
 local Lights = {}
 local lightSpeedMulti = 100
@@ -51,7 +53,13 @@ function Playground:Tick()
 	end
 
 	Graphics.DrawModel(0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,IslandModel,DiffuseShader)
-	Graphics.DrawModel(0.0,3,0.0,1.0,1.0,1.0,1.0,1.0,ContainerModel,DiffuseShader)
+
+	for z=1,40,4 do
+		for x=1,40,2 do
+			Graphics.DrawModel(-80 + (x * 4),3,-80 + (z * 4),1.0,1.0,1.0,1.0,1.0,ContainerModel,DiffuseShader)
+			Graphics.DrawModel(-80 + (x * 4),10,-80 + (z*4),1.0,1.0,1.0,1.0,0.2,CottageModel,DiffuseShader)
+		end
+	end
 end
 
 function Playground:Shutdown()

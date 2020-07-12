@@ -8,7 +8,7 @@ Matt Hoyle
 namespace SDE
 {
 	JobSystem::JobSystem()
-		: m_threadCount(4)
+		: m_threadCount(3)
 		, m_jobThreadTrigger(0)
 		, m_jobThreadStopRequested(0)
 	{
@@ -24,7 +24,9 @@ namespace SDE
 		{
 			if (m_jobThreadStopRequested.Get() == 0)	// This is to stop deadlock on the semaphore when shutting down
 			{
-				m_jobThreadTrigger.Wait();		// Wait for jobs
+				{
+					m_jobThreadTrigger.Wait();		// Wait for jobs
+				}
 
 				Job currentJob;
 				if (m_pendingJobs.PopJob(currentJob))
@@ -65,13 +67,12 @@ namespace SDE
 		m_threadPool.Stop();
 	}
 
-	void JobSystem::PushJob(Job::JobThreadFunction threadFn, const char* dbgName)
+	void JobSystem::PushJob(Job::JobThreadFunction threadFn)
 	{
 		SDE_PROF_EVENT();
 
-		static bool trig = false;
-		Job jobDesc(this, threadFn, dbgName);
-		m_pendingJobs.PushJob(jobDesc);
+		Job jobDesc(this, threadFn);
+		m_pendingJobs.PushJob(std::move(jobDesc));
 		m_jobThreadTrigger.Post();		// Trigger threads
 	}
 }

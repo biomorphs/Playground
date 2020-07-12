@@ -17,13 +17,17 @@ namespace SDE
 		typedef std::function<void()> JobThreadFunction;	// Code to be ran on the job thread
 
 		Job();
-		Job(JobSystem* parent, JobThreadFunction threadFn, const char* dbgName = "");
-		~Job();
+		Job(JobSystem* parent, JobThreadFunction threadFn);
+		~Job() = default;
+		Job(Job&&) = default;
+		Job& operator=(Job&&) = default;
+		Job(const Job&) = delete;
+		
 		void Run();
 
 	private:
-		std::string m_dbgName;
 		JobThreadFunction m_threadFn;
 		JobSystem* m_parent;
+		uint64_t m_padding[8];
 	};
 }
