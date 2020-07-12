@@ -3,6 +3,7 @@
 #include "sde/job_system.h"
 #include "../stb_image.h"
 #include "core/profiler.h"
+#include "core/scoped_mutex.h"
 
 namespace smol
 {
@@ -15,16 +16,24 @@ namespace smol
 	{
 		SDE_PROF_EVENT();
 
-		Kernel::ScopedMutex lock(m_loadedTexturesMutex);
-		for (const auto& src : m_loadedTextures)
+		std::vector<LoadedTexture> loadedTextures;
 		{
-			auto newTex = std::make_unique<Render::Texture>();
-			if (newTex->Create(src.m_texture))
+			SDE_PROF_EVENT("AcquireLoadedTextures");
+			Core::ScopedMutex lock(m_loadedTexturesMutex);
+			loadedTextures = std::move(m_loadedTextures);
+		}
+
+		{
+			SDE_PROF_EVENT("CreateTextures");
+			for (const auto& src : loadedTextures)
 			{
-				m_textures[src.m_destination.m_index].m_texture = std::move(newTex);
+				auto newTex = std::make_unique<Render::Texture>();
+				if (newTex->Create(src.m_texture))
+				{
+					m_textures[src.m_destination.m_index].m_texture = std::move(newTex);
+				}
 			}
 		}
-		m_loadedTextures.clear();
 	}
 
 	TextureHandle TextureManager::LoadTexture(const char* path)
@@ -60,8 +69,14 @@ namespace smol
 			mip.push_back({ (uint32_t)w,(uint32_t)h,0,w * h * (size_t)4 });
 			Render::TextureSource ts((uint32_t)w, (uint32_t)h, Render::TextureSource::Format::RGBA8, { mip }, rawDataBuffer);
 
-			Kernel::ScopedMutex lock(m_loadedTexturesMutex);
-			m_loadedTextures.push_back({ std::move(ts), newHandle });
+			{
+				SDE_PROF_EVENT("PushToResultsList");
+				Core::ScopedMutex lock(m_loadedTexturesMutex);
+				{
+					SDE_PROF_EVENT("PushBack");
+					m_loadedTextures.push_back({ std::move(ts), newHandle });
+				}
+			}
 		});
 
 		return newHandle;

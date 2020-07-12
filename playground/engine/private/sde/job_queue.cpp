@@ -3,6 +3,7 @@ SDLEngine
 Matt Hoyle
 */
 #include "job_queue.h"
+#include "core/scoped_mutex.h"
 
 namespace SDE
 {
@@ -17,14 +18,14 @@ namespace SDE
 
 	void JobQueue::PushJob(const Job& j)
 	{
-		Kernel::ScopedMutex lock(m_lock);
+		Core::ScopedMutex lock(m_lock);
 		auto jobNode = m_jobsPool.Allocate(j);	// Copy-construct job on allocate
 		m_jobs.PushBack(jobNode);
 	}
 
 	bool JobQueue::PopJob(Job &j)
 	{
-		Kernel::ScopedMutex lock(m_lock);
+		Core::ScopedMutex lock(m_lock);
 		JobListNode* newJob = m_jobs.PopFront();
 		if (newJob)
 		{
@@ -38,7 +39,7 @@ namespace SDE
 
 	void JobQueue::RemoveAll()
 	{
-		Kernel::ScopedMutex lock(m_lock);
+		Core::ScopedMutex lock(m_lock);
 
 		JobListNode* j = nullptr;
 		while ((j = m_jobs.PopFront()) != nullptr)

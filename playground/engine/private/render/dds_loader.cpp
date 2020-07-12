@@ -58,7 +58,7 @@ namespace Render
 
 	}
 
-	bool DDSLoader::LoadFile(const char* path, TextureSource& result)
+	std::unique_ptr<TextureSource> DDSLoader::LoadFile(const char* path)
 	{
 		m_rawBuffer.clear();
 		if (!Kernel::FileIO::LoadBinaryFile(path, m_rawBuffer))
@@ -79,9 +79,7 @@ namespace Render
 			return false;
 		}
 
-		result = TextureSource(m_width, m_height, m_format, std::move(m_mipDescriptors), std::move(m_rawBuffer));
-
-		return true;
+		return std::make_unique<TextureSource>(m_width, m_height, m_format, std::move(m_mipDescriptors), std::move(m_rawBuffer));
 	}
 
 	bool DDSLoader::ExtractHeaderData()

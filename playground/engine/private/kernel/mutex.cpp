@@ -42,15 +42,4 @@ namespace Kernel
 		int32_t result = SDL_UnlockMutex(static_cast<SDL_mutex*>(m_mutex));
 		SDE_ASSERT(result == 0);
 	}
-
-	ScopedMutex::ScopedMutex(Mutex& target)
-		: m_mutex(target)
-	{
-		m_mutex.Lock();
-	}
-
-	ScopedMutex::~ScopedMutex()
-	{
-		m_mutex.Unlock();
-	}
 }

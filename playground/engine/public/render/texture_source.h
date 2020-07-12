@@ -32,6 +32,8 @@ namespace Render
 		TextureSource(uint32_t w, uint32_t h, Format f, std::vector<MipDesc>& mips, std::vector<uint8_t>& data);
 		TextureSource(uint32_t w, uint32_t h, Format f, std::vector<MipDesc>& mips, std::vector<uint32_t>& data);
 		~TextureSource();
+		TextureSource(const TextureSource&) = delete;
+		TextureSource(TextureSource&&) = default;
 
 		inline uint32_t Width() const { return m_width; }
 		inline uint32_t Height() const { return m_height; }

@@ -4,6 +4,7 @@ Matt Hoyle
 */
 #pragma once
 
+#include <memory>
 #include "texture_source.h"
 
 namespace Render
@@ -14,7 +15,7 @@ namespace Render
 		DDSLoader();
 		~DDSLoader();
 
-		bool LoadFile(const char* path, TextureSource& result);
+		std::unique_ptr<TextureSource> LoadFile(const char* path);
 
 	private:
 		bool IsDDSFormat() const;

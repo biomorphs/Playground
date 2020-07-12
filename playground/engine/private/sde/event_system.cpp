@@ -30,6 +30,7 @@ namespace SDE
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
+			SDE_PROF_EVENT("HandleEvent");
 			for (auto& it : m_handlers)
 			{
 				it(&event);

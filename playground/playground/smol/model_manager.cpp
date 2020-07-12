@@ -4,6 +4,7 @@
 #include "sde/job_system.h"
 #include "kernel/assert.h"
 #include "core/profiler.h"
+#include "core/scoped_mutex.h"
 
 namespace smol
 {
@@ -16,7 +17,7 @@ namespace smol
 	void ModelManager::ProcessLoadedModels()
 	{
 		SDE_PROF_EVENT();
-		Kernel::ScopedMutex lock(m_loadedModelsMutex);
+		Core::ScopedMutex lock(m_loadedModelsMutex);
 		for (auto& loadedModel : m_loadedModels)
 		{
 			SDE_ASSERT(loadedModel.m_destinationHandle.m_index != -1, "Bad index");
@@ -53,7 +54,7 @@ namespace smol
 			auto loadedAsset = Assets::Model::Load(pathString.c_str());
 			if (loadedAsset != nullptr)
 			{
-				Kernel::ScopedMutex lock(m_loadedModelsMutex);
+				Core::ScopedMutex lock(m_loadedModelsMutex);
 				m_loadedModels.push_back({ std::move(loadedAsset), newHandle });
 			}
 		});

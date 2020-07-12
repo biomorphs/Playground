@@ -20,13 +20,4 @@ namespace Kernel
 	private:
 		void* m_mutex;
 	};
-
-	class ScopedMutex
-	{
-	public:
-		ScopedMutex(Mutex& target);
-		~ScopedMutex();
-	private:
-		Mutex& m_mutex;
-	};
 }
