@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "kernel/assert.h"
 #include "kernel/log.h"
 #include "render/shader_program.h"
 #include "render/shader_binary.h"
@@ -7,15 +8,23 @@
 #include "render/uniform_buffer.h"
 #include "mesh_instance.h"
 #include "model_manager.h"
+#include "shader_manager.h"
 #include "model.h"
 #include <algorithm>
 
 namespace smol
 {
+	struct LightInfo
+	{
+		glm::vec4 m_colourAndAmbient;	// rgb=colour, a=ambient multiplier
+		glm::vec3 m_position;
+	};
+
 	struct GlobalUniforms
 	{
 		glm::mat4 m_projectionMat;
 		glm::mat4 m_viewMat;
+		LightInfo m_light;
 	};
 
 	void Renderer::Reset() 
@@ -28,44 +37,38 @@ namespace smol
 		m_camera = c;
 	}
 
-	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model)
+	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader)
 	{
 		const auto theModel = m_models->GetModel(model);
-		if (theModel != nullptr)
+		const auto theShader = m_shaders->GetShader(shader);
+		if (theModel != nullptr && theShader != nullptr)
 		{
+			uint16_t meshPartIndex = 0;
 			for (const auto& part : theModel->Parts())
 			{
-				const uint64_t meshHash = reinterpret_cast<uintptr_t>(part.m_mesh) & 0x00000000ffffffff;
-				const uint64_t textureHash = part.m_diffuse.m_index & 0x00000000ffffffff;
-				const uint64_t sortKey = textureHash | (meshHash << 32);
-				m_instances.push_back({ sortKey, transform * part.m_transform, colour, part.m_diffuse, part.m_mesh });
+				// Shader - bits 64 - 48
+				const uint64_t shaderHash = static_cast<uint64_t>(shader.m_index) << 48;
+
+				// Then mesh/model - bits 48-32 for model, 32-24 bits per mesh
+				const uint64_t modelHash = static_cast<uint64_t>(model.m_index) << 32;
+				const uint64_t meshHash = static_cast<uint64_t>(meshPartIndex) << 24;
+
+				// bits 24 - 8 for diffuse
+				const uint64_t textureHash = static_cast<uint64_t>(part.m_diffuse.m_index) << 8;
+
+				// 1 byte spare
+
+				const uint64_t sortKey = textureHash | meshHash | modelHash | shaderHash;
+				m_instances.push_back({ sortKey, transform * part.m_transform, colour, part.m_diffuse, shader, part.m_mesh });
 			}
+			SDE_ASSERT(meshPartIndex <= 255, "Too many parts in mesh!");
 		}
 	}
 
-	void Renderer::SetupShader(Render::Device& d)
+	void Renderer::SetLight(glm::vec3 position, glm::vec3 colour, float ambientStr)
 	{
-		m_shaders = std::make_unique<Render::ShaderProgram>();
-
-		auto vertexShader = std::make_unique<Render::ShaderBinary>();
-		std::string errorText;
-		if (!vertexShader->CompileFromFile(Render::ShaderType::VertexShader, "cube.vs", errorText))
-		{
-			SDE_LOG("Vertex shader compilation failed - %s", errorText.c_str());
-		}
-		auto fragmentShader = std::make_unique<Render::ShaderBinary>();
-		if (!fragmentShader->CompileFromFile(Render::ShaderType::FragmentShader, "cube.fs", errorText))
-		{
-			SDE_LOG("Fragment shader compilation failed - %s", errorText.c_str());
-		}
-
-		if (!m_shaders->Create(*vertexShader, *fragmentShader, errorText))
-		{
-			SDE_LOG("Shader linkage failed - %s", errorText.c_str());
-		}
-
-		// Bind the globals UBO to index 0
-		d.BindUniformBufferIndex(*m_shaders, "Globals", 0);
+		m_light.m_colour = glm::vec4(colour, ambientStr);
+		m_light.m_position = position;
 	}
 
 	void Renderer::PopulateInstanceBuffers()
@@ -97,8 +100,6 @@ namespace smol
 			m_instanceTransforms.Create(c_maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
 			m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
 			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Static);
-
-			SetupShader(d);
 			s_firstFrame = false;
 		}
 
@@ -123,19 +124,24 @@ namespace smol
 		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
 		d.SetBlending(true);				// enable blending (we might want to do it manually instead)
 		d.SetScissorEnabled(false);			// (don't) scissor me timbers
-		d.BindShaderProgram(*m_shaders);
 
 		GlobalUniforms globals;
 		globals.m_projectionMat = glm::perspectiveFov(glm::radians(75.0f), windowSize.x, windowSize.y, 0.1f, 1000.0f);
 		globals.m_viewMat = glm::lookAt(m_camera.Position(), m_camera.Target(), m_camera.Up());
+		globals.m_light.m_colourAndAmbient = m_light.m_colour;
+		globals.m_light.m_position = m_light.m_position;
 		m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
-
-		d.SetUniforms(*m_shaders, m_globalsUniformBuffer, 0);	// do this for every shader change
 
 		auto firstInstance = m_instances.begin();
 		while (firstInstance != m_instances.end())
 		{
-			const Render::Mesh* theMesh =firstInstance->m_mesh;
+			const Render::Mesh* theMesh = firstInstance->m_mesh;
+			const auto theShader = m_shaders->GetShader(firstInstance->m_shader);
+
+			// bind shader + globals UBO
+			d.BindShaderProgram(*theShader);
+			d.BindUniformBufferIndex(*theShader, "Globals", 0);
+			d.SetUniforms(*theShader, m_globalsUniformBuffer, 0);
 
 			// bind vertex array
 			d.BindVertexArray(theMesh->GetVertexArray());
@@ -158,16 +164,24 @@ namespace smol
 			auto firstTexInstance = firstInstance;
 			while (firstTexInstance != lastMeshInstance)
 			{
+				// firstTexInstance -> lastTexInstance instances to draw
 				uint64_t texID = firstTexInstance->m_texture.m_index;
 				auto lastTexInstance = std::find_if(firstTexInstance, lastMeshInstance, [texID](const smol::MeshInstance& m) -> bool {
 					return m.m_texture.m_index != texID;
 					});
-
-				// firstTexInstance -> lastTexInstance instances to draw
-				smol::TextureHandle texture = texID != (uint64_t)-1 ? firstTexInstance->m_texture : smol::TextureHandle{ 0 };
-				ub.SetSampler("MyTexture", m_textures->GetTexture(texture)->GetHandle());
 				
-				d.SetUniforms(*m_shaders, ub);
+				// Diffuse texture
+				auto diffusePtr = m_textures->GetTexture(firstTexInstance->m_texture);
+				if (diffusePtr == nullptr)
+				{
+					diffusePtr = m_textures->GetTexture(m_whiteTexture);
+				}
+				if (diffusePtr != nullptr)
+				{
+					ub.SetSampler("MyTexture", diffusePtr->GetHandle());
+				}
+				d.SetUniforms(*theShader, ub);
+
 				for (const auto& chunk : theMesh->GetChunks())
 				{
 					auto instanceCount = (uint32_t)(lastTexInstance - firstTexInstance);

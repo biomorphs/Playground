@@ -1,9 +1,9 @@
 #version 430
 
 layout(location = 0) in vec3 position;
-layout(location = 1) in vec2 uv;
-layout(location = 2) in mat4 instance_modelmat;
-layout(location = 6) in vec4 instance_colour;
+layout(location = 2) in vec2 uv;
+layout(location = 3) in mat4 instance_modelmat;
+layout(location = 7) in vec4 instance_colour;
 
 layout(std140, binding = 0) uniform Globals
 {
@@ -11,8 +11,6 @@ layout(std140, binding = 0) uniform Globals
 	mat4 ViewMatrix;
 };
 
-uniform mat4 ProjectionMat;
-uniform mat4 ViewMat;
 out vec4 out_colour;
 out vec2 out_uv;
 

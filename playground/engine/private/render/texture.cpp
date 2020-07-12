@@ -293,6 +293,23 @@ namespace Render
 		return true;
 	}
 
+	bool Texture::Create(const TextureSource& src)
+	{
+		SDE_RENDER_ASSERT(m_handle == -1);
+		m_isArray = false;
+
+		if (ShouldCreateCompressed(src.SourceFormat()))
+		{
+			return CreateSimpleCompressedTexture(src);
+		}
+		else
+		{
+			return CreateSimpleUncompressedTexture(src);
+		}
+
+		return false;
+	}
+
 	bool Texture::Create(const std::vector<TextureSource>& src)
 	{
 		SDE_RENDER_ASSERT(m_handle == -1);
@@ -303,7 +320,6 @@ namespace Render
 			return false;
 		}
 
-		bool createOk = false;
 		if (ShouldCreateCompressed(src[0].SourceFormat()))
 		{
 			if (src.size() == 1)
@@ -325,8 +341,7 @@ namespace Render
 				return CreateSimpleUncompressedTexture(src[0]);
 			}
 		}
-
-		return createOk;
+		return false;
 	}
 
 	void Texture::Destroy()

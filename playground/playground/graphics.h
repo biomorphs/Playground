@@ -16,14 +16,21 @@ namespace SDE
 	class ScriptSystem;
 	class RenderSystem;
 	class DebugCameraController;
+	class JobSystem;
 }
 
 namespace smol 
 {
 	class TextureManager;
 	class ModelManager;
+	class ShaderManager;
 	class Renderer;
 	class Renderer2D;
+}
+
+namespace DebugGui
+{
+	class DebugGuiSystem;
 }
 
 class Graphics : public Core::ISystem
@@ -41,7 +48,10 @@ private:
 	std::unique_ptr<smol::Renderer> m_render3d;
 	std::unique_ptr<smol::TextureManager> m_textures;
 	std::unique_ptr<smol::ModelManager> m_models;
+	std::unique_ptr<smol::ShaderManager> m_shaders;
+	DebugGui::DebugGuiSystem* m_debugGui = nullptr;
 	SDE::ScriptSystem* m_scriptSystem = nullptr;
 	SDE::RenderSystem* m_renderSystem = nullptr;
+	SDE::JobSystem* m_jobSystem = nullptr;
 	Input::InputSystem* m_inputSystem = nullptr;
 };

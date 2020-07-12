@@ -1,13 +1,34 @@
 #include "model_manager.h"
 #include "model.h"
 #include "texture_manager.h"
-#include "../model_asset.h"
+#include "sde/job_system.h"
+#include "kernel/assert.h"
 
 namespace smol
 {
-	ModelManager::ModelManager(TextureManager* tm)
+	ModelManager::ModelManager(TextureManager* tm, SDE::JobSystem* js)
 		: m_textureManager(tm)
+		, m_jobSystem(js)
 	{
+	}
+
+	void ModelManager::ProcessLoadedModels()
+	{
+		Kernel::ScopedMutex lock(m_loadedModelsMutex);
+		for (auto& loadedModel : m_loadedModels)
+		{
+			SDE_ASSERT(loadedModel.m_destinationHandle.m_index != -1, "Bad index");
+
+			if (loadedModel.m_model != nullptr)
+			{
+				auto renderModel = smol::Model::CreateFromAsset(*loadedModel.m_model, *m_textureManager);
+				if (renderModel != nullptr)
+				{
+					m_models[loadedModel.m_destinationHandle.m_index].m_model = std::move(renderModel);
+				}
+			}
+		}
+		m_loadedModels.clear();
 	}
 
 	ModelHandle ModelManager::LoadModel(const char* path)
@@ -16,21 +37,25 @@ namespace smol
 		{
 			if (m_models[i].m_name == path)
 			{
-				return { i };
+				return { static_cast<uint16_t>(i) };
 			}
 		}
 
-		auto loadedAsset = Assets::Model::Load(path);
-		if (loadedAsset != nullptr)
-		{
-			auto renderModel = smol::Model::CreateFromAsset(*loadedAsset, *m_textureManager);
-			if (renderModel != nullptr)
+		// always make a valid handle
+		m_models.push_back({nullptr, path });
+		auto newHandle = ModelHandle{ static_cast<uint16_t>(m_models.size() - 1) };
+
+		std::string pathString = path;
+		m_jobSystem->PushJob([this, pathString, newHandle]() {
+			auto loadedAsset = Assets::Model::Load(pathString.c_str());
+			if (loadedAsset != nullptr)
 			{
-				m_models.push_back({std::move(renderModel), path});
-				return { m_models.size() - 1 };
+				Kernel::ScopedMutex lock(m_loadedModelsMutex);
+				m_loadedModels.push_back({ std::move(loadedAsset), newHandle });
 			}
-		}
-		return ModelHandle::Invalid();
+		});
+		
+		return newHandle;
 	}
 
 	Model* ModelManager::GetModel(const ModelHandle& h)

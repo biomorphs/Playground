@@ -204,6 +204,7 @@
     <ClCompile Include="smol\model_manager.cpp" />
     <ClCompile Include="smol\renderer.cpp" />
     <ClCompile Include="smol\renderer_2d.cpp" />
+    <ClCompile Include="smol\shader_manager.cpp" />
     <ClCompile Include="smol\texture_manager.cpp" />
     <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
@@ -211,22 +212,26 @@
     <ClInclude Include="graphics.h" />
     <ClInclude Include="model_asset.h" />
     <ClInclude Include="playground.h" />
+    <ClInclude Include="smol\light.h" />
     <ClInclude Include="smol\mesh_instance.h" />
     <ClInclude Include="smol\model.h" />
     <ClInclude Include="smol\model_manager.h" />
     <ClInclude Include="smol\renderer.h" />
     <ClInclude Include="smol\renderer_2d.h" />
+    <ClInclude Include="smol\shader_manager.h" />
     <ClInclude Include="smol\texture_manager.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\data\config.lua" />
-    <None Include="..\data\cube.fs" />
-    <None Include="..\data\cube.vs" />
+    <None Include="..\data\basic.fs" />
+    <None Include="..\data\basic.vs" />
     <None Include="..\data\learnlua.lua" />
     <None Include="..\data\playground.lua" />
     <None Include="..\data\quad.fs" />
     <None Include="..\data\quad.vs" />
+    <None Include="..\data\simplediffuse.fs" />
+    <None Include="..\data\simplediffuse.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -47,6 +47,9 @@
     <ClCompile Include="smol\model_manager.cpp">
       <Filter>smol</Filter>
     </ClCompile>
+    <ClCompile Include="smol\shader_manager.cpp">
+      <Filter>smol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h">
@@ -79,6 +82,12 @@
     <ClInclude Include="smol\model_manager.h">
       <Filter>smol</Filter>
     </ClInclude>
+    <ClInclude Include="smol\shader_manager.h">
+      <Filter>smol</Filter>
+    </ClInclude>
+    <ClInclude Include="smol\light.h">
+      <Filter>smol</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\data\learnlua.lua" />
@@ -86,7 +95,9 @@
     <None Include="..\data\config.lua" />
     <None Include="..\data\quad.fs" />
     <None Include="..\data\quad.vs" />
-    <None Include="..\data\cube.vs" />
-    <None Include="..\data\cube.fs" />
+    <None Include="..\data\basic.vs" />
+    <None Include="..\data\basic.fs" />
+    <None Include="..\data\simplediffuse.vs" />
+    <None Include="..\data\simplediffuse.fs" />
   </ItemGroup>
 </Project>

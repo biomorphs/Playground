@@ -1,8 +1,15 @@
 #pragma once
 #include "model.h"
+#include "kernel/mutex.h"
+#include "../model_asset.h"
 #include <string>
 #include <vector>
 #include <memory>
+
+namespace SDE
+{
+	class JobSystem;
+}
 
 namespace smol
 {
@@ -10,20 +17,21 @@ namespace smol
 
 	struct ModelHandle
 	{
-		uint64_t m_index;
-		static ModelHandle Invalid() { return { (uint64_t)-1 }; };
+		uint16_t m_index;
+		static ModelHandle Invalid() { return { (uint16_t)-1 }; };
 	};
 
 	class ModelManager
 	{
 	public:
-		ModelManager(TextureManager* tm);
+		ModelManager(TextureManager* tm, SDE::JobSystem* js);
 		~ModelManager() = default;
 		ModelManager(const ModelManager&) = delete;
 		ModelManager(ModelManager&&) = delete;
 
 		ModelHandle LoadModel(const char* path);
 		Model* GetModel(const ModelHandle& h);
+		void ProcessLoadedModels();
 
 	private:
 		struct ModelDesc {
@@ -31,6 +39,15 @@ namespace smol
 			std::string m_name;
 		};
 		std::vector<ModelDesc> m_models;
+		
+		struct ModelLoadResult {
+			std::unique_ptr<Assets::Model> m_model;
+			ModelHandle m_destinationHandle;
+		};
+		Kernel::Mutex m_loadedModelsMutex;
+		std::vector<ModelLoadResult> m_loadedModels;	// models to process after successful load
+
 		TextureManager* m_textureManager;
+		SDE::JobSystem* m_jobSystem;
 	};
 }

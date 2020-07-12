@@ -4,89 +4,45 @@
 -- Shutdown
 
 Playground = {}
-local Sprites = {}
-local MyTexture = TextureHandle:new()
-local Gravity = -80
-local IslandModel = Graphics.LoadModel("islands.fbx")
 
-function Playground:InitSprite(i)
-	Sprites[i] = {}
-	Sprites[i].position = { math.random(-0,-0), math.random(12,12), math.random(0,0) }
-	Sprites[i].colour = {math.random(),math.random(),math.random(),1}
-	Sprites[i].velocity = {(-1.0 + (math.random() * 2.0)) * 20, math.random() * 40, (-1.0 + (math.random() * 2.0)) * 20}
-	local modelIndex = math.random(0,2)
-	if(modelIndex == 0) then 
-		Sprites[i].model = Graphics.LoadModel("cube.fbx")
-		Sprites[i].size = math.random(1,10) * 0.2
-	end
-	if(modelIndex == 1) then
-		Sprites[i].model = Graphics.LoadModel("container.fbx")
-		Sprites[i].size = math.random(1,10) * 0.1
-	end
-	
-	if(modelIndex == 2) then
-		Sprites[i].model = Graphics.LoadModel("cottage_blender.fbx")
-		Sprites[i].size = math.random(1,10) * 0.02
-		Sprites[i].position[2] = 20
-	end
-end
+local LightShader = Graphics.LoadShader("light", "basic.vs", "basic.fs")
+local LightModel = Graphics.LoadModel("sphere.fbx")
+
+local LightColour = {1.0,1.0,1.0}
+local LightAmbient = 0.05
+local LightPosition = {10.0,30.0,0.0}
+
+local DiffuseShader = Graphics.LoadShader("diffuse", "simplediffuse.vs", "simplediffuse.fs")
+
+local IslandModel = Graphics.LoadModel("islands.fbx")
+local ContainerModel = Graphics.LoadModel("container.fbx")
+
+local lightSpeed = {0.0,0.0,0.0}
+local lightCooldown = 0.0
 
 function Playground:Init()
 	print("Init!")
-
-	for i=1,2000 do
-		Playground:InitSprite(i)
-	 end
 end
 
 function Playground:Tick()
 	local timeDelta = Playground.DeltaTime * 0.25
 
-	for i=1,#Sprites do
-		-- gravity
-		Sprites[i].velocity[2] = Sprites[i].velocity[2] + Gravity * timeDelta
-	
-		if Sprites[i].position[2] < 0 then
-			Sprites[i].position[2] = 0
-			Sprites[i].velocity[2] = -Sprites[i].velocity[2] * 0.8
-		end
-	
-		if Sprites[i].position[1] < -1000 then
-			Sprites[i].position[1] = -1000
-			Sprites[i].velocity[1] = -Sprites[i].velocity[1] * 0.8
-		end
-	
-		if Sprites[i].position[1] > 1000 - Sprites[i].size then
-			Sprites[i].position[1] = 1000 - Sprites[i].size
-			Sprites[i].velocity[1] = -Sprites[i].velocity[1] * 0.8
-		end
-
-		if Sprites[i].position[3] < -1000 then
-			Sprites[i].position[3] = -1000
-			Sprites[i].velocity[3] = -Sprites[i].velocity[3] * 0.8
-		end
-	
-		if Sprites[i].position[3] > 1000 - Sprites[i].size then
-			Sprites[i].position[3] = 1000 - Sprites[i].size
-			Sprites[i].velocity[3] = -Sprites[i].velocity[3] * 0.8
-		end
-	
-		Sprites[i].size = Sprites[i].size - timeDelta
-		if Sprites[i].size < 0 then
-			Playground:InitSprite(i)
-		end
-	
-		-- update pos
-		Sprites[i].position[1] = Sprites[i].position[1] + Sprites[i].velocity[1] * timeDelta
-		Sprites[i].position[2] = Sprites[i].position[2] + Sprites[i].velocity[2] * timeDelta
-		Sprites[i].position[3] = Sprites[i].position[3] + Sprites[i].velocity[3] * timeDelta
-	
-		Graphics.DrawModel(Sprites[i].position[1], Sprites[i].position[2], Sprites[i].position[3],
-		Sprites[i].colour[1], Sprites[i].colour[2], Sprites[i].colour[3], Sprites[i].colour[4],
-		Sprites[i].size,Sprites[i].model)
+	lightCooldown = lightCooldown - timeDelta
+	local lightSpeedMulti = 100
+	if(lightCooldown <= 0.0) then
+		lightSpeed[1] = (math.random(-100,100) / 100.0)  * lightSpeedMulti
+		lightSpeed[3] = (math.random(-100,100) / 100.0)  * lightSpeedMulti
+		lightCooldown = math.random(10,100) / 100.0
 	end
+	LightPosition[1] = LightPosition[1] + lightSpeed[1] * timeDelta
+	LightPosition[2] = LightPosition[2] + lightSpeed[2] * timeDelta
+	LightPosition[3] = LightPosition[3] + lightSpeed[3] * timeDelta
 
-	Graphics.DrawModel(0.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,IslandModel)
+	Graphics.SetLight(LightPosition[1],LightPosition[2],LightPosition[3],LightColour[1],LightColour[2],LightColour[3], LightAmbient)
+	Graphics.DrawModel(LightPosition[1],LightPosition[2],LightPosition[3],1.0,1.0,1.0,1.0,5.0,LightModel,LightShader)
+
+	Graphics.DrawModel(0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,IslandModel,DiffuseShader)
+	Graphics.DrawModel(0.0,3,0.0,1.0,1.0,1.0,1.0,1.0,ContainerModel,DiffuseShader)
 end
 
 function Playground:Shutdown()

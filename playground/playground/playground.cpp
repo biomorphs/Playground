@@ -102,7 +102,7 @@ bool Playground::Tick()
 	}
 
 	bool forceOpen = true;
-	m_debugGui->BeginWindow(forceOpen, "Script");
+	m_debugGui->BeginWindow(forceOpen, "Scripts");
 	if (m_debugGui->Button("Reload"))
 	{
 		ReloadScript();

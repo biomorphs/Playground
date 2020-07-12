@@ -23,6 +23,7 @@ namespace Render
 
 		bool Update(const std::vector<TextureSource>& src);
 		bool Create(const std::vector<TextureSource>& src);
+		bool Create(const TextureSource& src);
 		void Destroy();
 
 		inline uint32_t GetHandle() const { return m_handle; }
