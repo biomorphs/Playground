@@ -6,40 +6,50 @@
 Playground = {}
 
 local LightShader = Graphics.LoadShader("light", "basic.vs", "basic.fs")
-local LightModel = Graphics.LoadModel("sphere.fbx")
-
-local LightColour = {1.0,1.0,1.0}
-local LightAmbient = 0.05
-local LightPosition = {10.0,30.0,0.0}
-
 local DiffuseShader = Graphics.LoadShader("diffuse", "simplediffuse.vs", "simplediffuse.fs")
 
+local LightModel = Graphics.LoadModel("sphere.fbx")
 local IslandModel = Graphics.LoadModel("islands.fbx")
 local ContainerModel = Graphics.LoadModel("container.fbx")
 
-local lightSpeed = {0.0,0.0,0.0}
-local lightCooldown = 0.0
+local Lights = {}
+local lightSpeedMulti = 100
+
+function Playground:InitLight(i)
+	Lights[i] = {}
+	Lights[i].Position = {math.random(-20,20),math.random(10,30),math.random(-20,20)}
+	Lights[i].Colour = {math.random(0,255)/255.0,math.random(0,255)/255.0,math.random(0,255)/255.0}
+	Lights[i].Ambient = 0.02;
+	Lights[i].Velocity = {0.0,0.0,0.0}
+	Lights[i].Cooldown = 0.0
+end
 
 function Playground:Init()
 	print("Init!")
+
+	for i=1,5 do
+		Playground:InitLight(i)
+	end
 end
 
 function Playground:Tick()
+	
 	local timeDelta = Playground.DeltaTime * 0.25
+	for i=1,#Lights do
+		Lights[i].Cooldown = Lights[i].Cooldown - timeDelta
+		
+		if(Lights[i].Cooldown <= 0.0) then
+			Lights[i].Velocity[1] = (math.random(-100,100) / 100.0)  * lightSpeedMulti
+			Lights[i].Velocity[3] = (math.random(-100,100) / 100.0)  * lightSpeedMulti
+			Lights[i].Cooldown = math.random(10,100) / 100.0
+		end
+		Lights[i].Position[1] = Lights[i].Position[1] + Lights[i].Velocity[1] * timeDelta
+		Lights[i].Position[2] = Lights[i].Position[2] + Lights[i].Velocity[2] * timeDelta
+		Lights[i].Position[3] = Lights[i].Position[3] + Lights[i].Velocity[3] * timeDelta
 
-	lightCooldown = lightCooldown - timeDelta
-	local lightSpeedMulti = 100
-	if(lightCooldown <= 0.0) then
-		lightSpeed[1] = (math.random(-100,100) / 100.0)  * lightSpeedMulti
-		lightSpeed[3] = (math.random(-100,100) / 100.0)  * lightSpeedMulti
-		lightCooldown = math.random(10,100) / 100.0
+		Graphics.SetLight(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3], LightAmbient)
+		Graphics.DrawModel(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0,5.0,LightModel,LightShader)
 	end
-	LightPosition[1] = LightPosition[1] + lightSpeed[1] * timeDelta
-	LightPosition[2] = LightPosition[2] + lightSpeed[2] * timeDelta
-	LightPosition[3] = LightPosition[3] + lightSpeed[3] * timeDelta
-
-	Graphics.SetLight(LightPosition[1],LightPosition[2],LightPosition[3],LightColour[1],LightColour[2],LightColour[3], LightAmbient)
-	Graphics.DrawModel(LightPosition[1],LightPosition[2],LightPosition[3],1.0,1.0,1.0,1.0,5.0,LightModel,LightShader)
 
 	Graphics.DrawModel(0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,IslandModel,DiffuseShader)
 	Graphics.DrawModel(0.0,3,0.0,1.0,1.0,1.0,1.0,1.0,ContainerModel,DiffuseShader)

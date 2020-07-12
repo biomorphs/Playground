@@ -14,22 +14,27 @@
 
 namespace smol
 {
+	const uint64_t c_maxInstances = 1024 * 128;
+	const uint64_t c_maxLights = 64;
+
 	struct LightInfo
 	{
 		glm::vec4 m_colourAndAmbient;	// rgb=colour, a=ambient multiplier
-		glm::vec3 m_position;
+		glm::vec4 m_position;
 	};
 
 	struct GlobalUniforms
 	{
 		glm::mat4 m_projectionMat;
 		glm::mat4 m_viewMat;
-		LightInfo m_light;
+		LightInfo m_lights[c_maxLights];
+		int m_lightCount;
 	};
 
 	void Renderer::Reset() 
 	{ 
 		m_instances.clear(); 
+		m_lights.clear();
 	}
 
 	void Renderer::SetCamera(const Render::Camera& c)
@@ -67,8 +72,10 @@ namespace smol
 
 	void Renderer::SetLight(glm::vec3 position, glm::vec3 colour, float ambientStr)
 	{
-		m_light.m_colour = glm::vec4(colour, ambientStr);
-		m_light.m_position = position;
+		Light newLight;
+		newLight.m_colour = glm::vec4(colour, ambientStr);
+		newLight.m_position = position;
+		m_lights.push_back(newLight);
 	}
 
 	void Renderer::PopulateInstanceBuffers()
@@ -128,8 +135,12 @@ namespace smol
 		GlobalUniforms globals;
 		globals.m_projectionMat = glm::perspectiveFov(glm::radians(75.0f), windowSize.x, windowSize.y, 0.1f, 1000.0f);
 		globals.m_viewMat = glm::lookAt(m_camera.Position(), m_camera.Target(), m_camera.Up());
-		globals.m_light.m_colourAndAmbient = m_light.m_colour;
-		globals.m_light.m_position = m_light.m_position;
+		for (int l = 0; l < m_lights.size() && l < c_maxLights; ++l)
+		{
+			globals.m_lights[l].m_colourAndAmbient = m_lights[l].m_colour;
+			globals.m_lights[l].m_position = glm::vec4(m_lights[l].m_position,0.0f);
+		}
+		globals.m_lightCount = static_cast<int>(std::min(m_lights.size(), c_maxLights));
 		m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
 
 		auto firstInstance = m_instances.begin();

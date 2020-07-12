@@ -9,14 +9,15 @@ layout(location = 7) in vec4 instance_colour;
 struct LightInfo
 {
 	vec4 ColourAndAmbient;
-	vec3 Position;
+	vec4 Position;
 };
 
 layout(std140, binding = 0) uniform Globals
 {
 	mat4 ProjectionMatrix;
 	mat4 ViewMatrix;
-	LightInfo Light;
+	LightInfo Lights[64];
+	int LightCount;
 };
 
 out vec4 out_colour;

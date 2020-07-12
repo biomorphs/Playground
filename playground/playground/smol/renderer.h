@@ -33,12 +33,12 @@ namespace smol
 		void SetLight(glm::vec3 position,glm::vec3 colour, float ambientStr);
 
 	private:
-		const uint64_t c_maxInstances = 1024 * 128;
 		void PopulateInstanceBuffers();
 
 		Render::Camera m_camera;
 		glm::vec2 m_windowSize;
-		std::vector<smol::MeshInstance> m_instances;
+		std::vector<MeshInstance> m_instances;
+		std::vector<Light> m_lights;
 		smol::TextureHandle m_whiteTexture;
 		smol::Light m_light;
 		ShaderManager* m_shaders;
