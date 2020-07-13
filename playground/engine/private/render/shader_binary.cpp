@@ -60,7 +60,7 @@ namespace Render
 		glGetShaderiv(m_handle, GL_COMPILE_STATUS, &compileResult);
 		glGetShaderiv(m_handle, GL_INFO_LOG_LENGTH, &resultLogSize);
 
-		char errorLogResult[1024] = { '\0' };
+		char errorLogResult[2048] = { '\0' };
 		SDE_ASSERT(resultLogSize < sizeof(errorLogResult));
 
 		glGetShaderInfoLog(m_handle, resultLogSize, nullptr, errorLogResult);
@@ -69,6 +69,59 @@ namespace Render
 		m_type = type;
 
 		return compileResult == GL_TRUE;
+	}
+
+	void ParseIncludes(std::string& src)
+	{
+		SDE_PROF_EVENT();
+
+		std::vector<std::string> includedFiles;		// make sure we don't include multiple times (also avoids circular dependencies)
+		const std::string c_includeDirectivePrefix = "#pragma sde include";
+		size_t foundInclude = 0;
+		while ((foundInclude = src.find(c_includeDirectivePrefix, foundInclude)) != std::string::npos)
+		{
+			size_t firstNewline = src.find("\n", foundInclude);
+			size_t firstQuote = src.find("\"", foundInclude + c_includeDirectivePrefix.length());
+			if (firstQuote == std::string::npos)
+			{
+				SDE_LOG("Malformed include path encountered (no quotes)\n%s", src.c_str()); 
+				return;
+			}
+			if (firstNewline != std::string::npos && firstNewline < firstQuote)
+			{
+				SDE_LOG("Malformed include path encountered (newline before quotes)\n%s", src.c_str());
+				return;
+			}
+			size_t secondQuote = src.find("\"", firstQuote + 1);
+			if (secondQuote == std::string::npos)
+			{
+				SDE_LOG("Malformed include path encountered (no closing quote)\n%s", src.c_str());
+				return;
+			}
+			if (firstNewline != std::string::npos && firstNewline < secondQuote)
+			{
+				SDE_LOG("Malformed include path encountered (newline in path?)\n%s", src.c_str());
+				return;
+			}
+			if (secondQuote > firstQuote)
+			{
+				std::string includePath = src.substr(firstQuote + 1, secondQuote - firstQuote - 1);
+				if (std::find(includedFiles.begin(), includedFiles.end(), includePath) == includedFiles.end())
+				{
+					std::string includeSrc;
+					if (!Kernel::FileIO::LoadTextFromFile(includePath.c_str(), includeSrc))
+					{
+						SDE_ASSERT(false, "Failed to include shader source from %s", includeSrc.c_str());
+						return;
+					}
+					std::string prefix = src.substr(0, secondQuote + 1);
+					std::string postfix = src.substr(secondQuote + 1);
+					src = prefix + "\n" + includeSrc + postfix;
+					includedFiles.push_back(includePath);
+				}
+			}
+			foundInclude = secondQuote;
+		}
 	}
 
 	bool ShaderBinary::CompileFromFile(ShaderType type, const char* srcLocation, std::string& resultText)
@@ -84,6 +137,7 @@ namespace Render
 			return false;
 		}
 
+		ParseIncludes(shaderSource);
 		return CompileSource(type, shaderSource, resultText);
 	}
 

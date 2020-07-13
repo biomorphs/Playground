@@ -116,6 +116,9 @@
       <AdditionalDependencies>$(SolutionDir)external\assimp-5.0.1\lib\Debug\assimp-vc142-mtd.lib;$(SolutionDir)external\lua-5.3.5_Win32_vc15_lib\lua53.lib;$(SolutionDir)external\SDL2-2.0.1\lib\x64\SDL2.lib;$(OutputPath)core.lib;$(OutputPath)debug_gui.lib;$(OutputPath)engine.lib;$(OutputPath)input.lib;$(OutputPath)kernel.lib;$(OutputPath)render.lib;$(OutputPath)sde.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkStatus>false</LinkStatus>
     </Link>
+    <Manifest>
+      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -142,6 +145,9 @@
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <LinkStatus>false</LinkStatus>
     </Link>
+    <Manifest>
+      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -167,6 +173,9 @@
       <AdditionalDependencies>$(SolutionDir)external\assimp-5.0.1\lib\release\assimp-vc142-mt.lib;$(SolutionDir)external\lua-5.3.5_Win32_vc15_lib\lua53.lib;$(SolutionDir)external\SDL2-2.0.1\lib\x64\SDL2.lib;$(OutputPath)core.lib;$(OutputPath)debug_gui.lib;$(OutputPath)engine.lib;$(OutputPath)input.lib;$(OutputPath)kernel.lib;$(OutputPath)render.lib;$(OutputPath)sde.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkStatus>false</LinkStatus>
     </Link>
+    <Manifest>
+      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -194,6 +203,9 @@
       </IgnoreSpecificDefaultLibraries>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
+    <Manifest>
+      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="graphics.cpp" />
@@ -209,6 +221,7 @@
     <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\data\global_uniforms.h" />
     <ClInclude Include="graphics.h" />
     <ClInclude Include="model_asset.h" />
     <ClInclude Include="playground.h" />
@@ -230,6 +243,8 @@
     <None Include="..\data\playground.lua" />
     <None Include="..\data\quad.fs" />
     <None Include="..\data\quad.vs" />
+    <None Include="..\data\shared.fs" />
+    <None Include="..\data\shared.vs" />
     <None Include="..\data\simplediffuse.fs" />
     <None Include="..\data\simplediffuse.vs" />
   </ItemGroup>

@@ -28,6 +28,7 @@ namespace smol
 	{
 		glm::mat4 m_projectionMat;
 		glm::mat4 m_viewMat;
+		glm::vec4 m_cameraPosition;		// world-space
 		LightInfo m_lights[c_maxLights];
 		int m_lightCount;
 	};
@@ -131,9 +132,6 @@ namespace smol
 		}
 
 		PopulateInstanceBuffers();
-
-		// global uniforms
-		Render::UniformBuffer ub;
 		auto windowSize = glm::vec2(m_windowSize.x, m_windowSize.y);
 
 		// render state
@@ -153,9 +151,11 @@ namespace smol
 				globals.m_lights[l].m_position = glm::vec4(m_lights[l].m_position, 0.0f);
 			}
 			globals.m_lightCount = static_cast<int>(std::min(m_lights.size(), c_maxLights));
+			globals.m_cameraPosition = glm::vec4(m_camera.Position(), 0.0);
 			m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
 		}
 
+		Render::UniformBuffer ub;	// hack for setting samplers
 		auto firstInstance = m_instances.begin();
 		while (firstInstance != m_instances.end())
 		{

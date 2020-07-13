@@ -88,6 +88,7 @@
     <ClInclude Include="smol\light.h">
       <Filter>smol</Filter>
     </ClInclude>
+    <ClInclude Include="..\data\global_uniforms.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\data\learnlua.lua" />
@@ -99,5 +100,7 @@
     <None Include="..\data\basic.fs" />
     <None Include="..\data\simplediffuse.vs" />
     <None Include="..\data\simplediffuse.fs" />
+    <None Include="..\data\shared.vs" />
+    <None Include="..\data\shared.fs" />
   </ItemGroup>
 </Project>

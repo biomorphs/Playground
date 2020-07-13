@@ -13,7 +13,7 @@ namespace Render
 	{
 		int windowPosX = SDL_WINDOWPOS_UNDEFINED;
 		int windowPosY = SDL_WINDOWPOS_UNDEFINED;
-		int windowFlags = SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL;	// Always start hidden, using opengl
+		int windowFlags = SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
 		
 		if (props.m_flags & CreateFullscreen)
 			windowFlags |= SDL_WINDOW_FULLSCREEN;

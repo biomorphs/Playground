@@ -1,18 +1,5 @@
 #version 430 
-
-struct LightInfo
-{
-	vec4 ColourAndAmbient;
-	vec4 Position;
-};
-
-layout(std140, binding = 0) uniform Globals
-{
-	mat4 ProjectionMatrix;
-	mat4 ViewMatrix;
-	LightInfo Lights[64];
-	int LightCount;
-};
+#pragma sde include "shared.fs"
 
 in vec4 out_colour;
 in vec3 out_normal;
@@ -21,18 +8,6 @@ in vec3 out_position;
 out vec4 colour;
 
 uniform sampler2D MyTexture;
-
-const float gamma = 2.2;
-
-vec4 srgbToLinear(vec4 v)
-{
-	return vec4(pow(v.rgb, vec3(gamma)), v.a);
-}
-
-vec4 linearToSRGB(vec4 v)
-{
-	return vec4(pow(v.rgb, vec3(1.0 / gamma)), v.a);
-}
  
 void main()
 {

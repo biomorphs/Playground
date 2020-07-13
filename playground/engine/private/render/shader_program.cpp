@@ -7,6 +7,7 @@ Matt Hoyle
 #include "utils.h"
 #include "core/string_hashing.h"
 #include "core/profiler.h"
+#include <memory>
 
 namespace Render
 {
@@ -43,14 +44,15 @@ namespace Render
 
 		// check the results
 		int32_t linkResult = 0, logLength = 0;
-		char resultTxt[1024] = { '\0' };
 		glGetProgramiv(m_handle, GL_LINK_STATUS, &linkResult);
 		glGetProgramiv(m_handle, GL_INFO_LOG_LENGTH, &logLength);
-
-		SDE_ASSERT(logLength < sizeof(resultTxt));
-		glGetProgramInfoLog(m_handle, logLength, NULL, resultTxt);
-		result = resultTxt;
-
+		if (logLength > 0)
+		{
+			std::unique_ptr<char[]> logResult(new char[logLength]);
+			glGetProgramInfoLog(m_handle, logLength, NULL, logResult.get());
+			result = logResult.get();
+		}
+		
 		return linkResult == GL_TRUE;
 	}
 
