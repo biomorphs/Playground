@@ -27,7 +27,7 @@ namespace Core
 
 		typedef std::function<void()> ThreadPoolFn;
 
-		void Start(const char* poolName, uint32_t threadCount, ThreadPoolFn threadfn);
+		void Start(const char* poolName, uint32_t threadCount, ThreadPoolFn threadfn, ThreadPoolFn threadStartFn = nullptr);
 		void Stop();
 
 	private:
@@ -35,5 +35,6 @@ namespace Core
 		std::vector<std::unique_ptr<PooledThread>> m_threads;
 		Kernel::AtomicInt32 m_stopRequested;
 		ThreadPoolFn m_fn;
+		ThreadPoolFn m_initFn;
 	};
 }

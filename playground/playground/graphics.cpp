@@ -14,7 +14,9 @@
 #include "smol/shader_manager.h"
 #include "smol/renderer.h"
 #include "smol/renderer_2d.h"
+#include "smol/debug_render.h"
 #include "core/profiler.h"
+#include "core/timer.h"
 #include <sol.hpp>
 
 Graphics::Graphics()
@@ -93,9 +95,19 @@ bool Graphics::PostInit()
 	graphics["SetLight"] = [this](float px, float py, float pz, float r, float g, float b, float ambient) {
 		m_render3d->SetLight(glm::vec3(px,py,pz),glm::vec3(r, g, b), ambient);
 	};
+	graphics["DebugDrawAxis"] = [this](float px, float py, float pz, float size) {
+		m_debugRender->AddAxisAtPoint({ px,py,pz,1.0f }, size);
+	};
+	graphics["DebugDrawBox"] = [this](float px, float py, float pz, float size, float r, float g, float b, float a) {
+		m_debugRender->AddBox({ px,py,pz }, { size,size,size }, { r, g, b, a });
+	};
+
+	m_debugRender = std::make_unique<smol::DebugRender>(m_shaders.get());
 
 	m_debugCameraController = std::make_unique<SDE::DebugCameraController>();
-	m_debugCameraController->SetPosition({0.0f,0.0f,0.0f});
+	m_debugCameraController->SetPosition({28.0f,60.0f,48.0f});
+	m_debugCameraController->SetPitch(-0.852f);
+	m_debugCameraController->SetYaw(0.592f);
 
 	return true;
 }
@@ -104,24 +116,44 @@ bool Graphics::Tick()
 {
 	SDE_PROF_EVENT();
 
-	// Process loaded data on main thread
-	m_textures->ProcessLoadedTextures();
-	m_models->ProcessLoadedModels();
+	static int framesPerSecond = 0;
+	static uint32_t framesThisSecond = 0;
+	static Core::Timer timer;
+	static double startTime = timer.GetSeconds();
 
-	// Use debug camera
+	double currentTime = timer.GetSeconds();
+	framesThisSecond++;
+	if (currentTime - startTime >= 1.0f)
+	{
+		framesPerSecond = framesThisSecond;
+		framesThisSecond = 0;
+		startTime = currentTime;
+	}
+
+	// update camera
 	Render::Camera c;
 	m_debugCameraController->Update(m_inputSystem->ControllerState(0), 0.016f);
 	m_debugCameraController->ApplyToCamera(c);
 	m_render3d->SetCamera(c);
 
+	// debug render
+	m_debugRender->PushToRenderer(*m_render3d);
+
 	// Debug gui
 	bool forceOpen = true;
-	m_debugGui->BeginWindow(forceOpen, "Shaders");
-	if (m_debugGui->Button("Reload"))
+	m_debugGui->BeginWindow(forceOpen, "Graphics");
+	if (m_debugGui->Button("Reload Shaders"))
 	{
 		m_shaders->ReloadAll();
 	}
+	char fpsTxt[256] = "";
+	sprintf_s(fpsTxt, "FPS: %d", framesPerSecond);
+	m_debugGui->Text(fpsTxt);
 	m_debugGui->EndWindow();
+
+	// Process loaded data on main thread
+	m_textures->ProcessLoadedTextures();
+	m_models->ProcessLoadedModels();
 
 	return true;
 }

@@ -30,6 +30,7 @@ namespace Render
 		Device(Window& theWindow);
 		~Device();
 		void Present();
+		void* CreateSharedGLContext();
 		void* GetGLContext();
 		void SetScissorEnabled(bool enabled);
 		void SetBlending(bool enabled);

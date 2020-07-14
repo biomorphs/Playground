@@ -25,7 +25,10 @@ namespace SDE
 
 	void ScriptSystem::RunScriptFromFile(const char* filename)
 	{
-		SDE_PROF_EVENT();
+		char debugName[1024] = { '\0' };
+		sprintf_s(debugName, "ScriptSystem::RunScriptFromFile(\"%s\")", filename);
+		SDE_PROF_EVENT_DYN(debugName);
+
 		std::string scriptText;
 		if (Kernel::FileIO::LoadTextFromFile(filename, scriptText))
 		{

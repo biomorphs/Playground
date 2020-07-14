@@ -29,14 +29,6 @@ inline const char* TranslateGLError(uint32_t errorCode)
 }
 
 #define SDE_RENDER_ASSERT(condition, ...)				\
-	if (!(condition))									\
-	{													\
-		const char* errorTxt = SDL_GetError();			\
-		if (errorTxt != nullptr)						\
-		{												\
-			SDE_LOGC(Engine, "SDL Error: %s", errorTxt);\
-		}												\
-	}													\
 	SDE_ASSERT(condition, ##__VA_ARGS__);
 
 #define SDE_RENDER_PROCESS_GL_ERRORS(...)	\
@@ -44,7 +36,8 @@ inline const char* TranslateGLError(uint32_t errorCode)
 		auto error = glGetError();	\
 		while (error  != GL_NO_ERROR)	\
 		{\
-			SDE_RENDER_ASSERT(false, "A GL Error Occured: %s returned %d (%s)", ##__VA_ARGS__, error, TranslateGLError(error)); \
+			SDE_LOGC(Render, "%s returned %d (%s)", ##__VA_ARGS__, error, TranslateGLError(error)); \
+			SDE_RENDER_ASSERT(false, "%s returned %d (%s)", ##__VA_ARGS__, error, TranslateGLError(error)); \
 			error = glGetError();	\
 		}\
 	}
@@ -56,7 +49,8 @@ inline const char* TranslateGLError(uint32_t errorCode)
 		auto error = glGetError();	\
 		while (error  != GL_NO_ERROR)	\
 		{\
-			SDE_RENDER_ASSERT(false, "A GL Error Occured: %s returned %d (%s)", ##__VA_ARGS__, error, TranslateGLError(error)); \
+			SDE_LOGC(Render, "%s returned %d (%s)", ##__VA_ARGS__, error, TranslateGLError(error)); \
+			SDE_RENDER_ASSERT(false, "%s returned %d (%s)", ##__VA_ARGS__, error, TranslateGLError(error)); \
 			error = glGetError();	\
 			shouldReturn = true;	\
 		}\

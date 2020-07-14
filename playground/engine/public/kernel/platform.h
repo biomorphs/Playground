@@ -19,6 +19,7 @@ namespace Kernel
 			ShutdownOK
 		};
 
+		int CPUCount();
 		InitResult Initialise(int argc, char* argv[]);
 		ShutdownResult Shutdown();
 	}

@@ -41,7 +41,8 @@ namespace Core
 
 	bool SystemManager::Initialise()
 	{
-		SDE_PROF_FRAME("SystemManager::Initialise");
+		SDE_PROF_FRAME("Main Thread");
+		SDE_PROF_EVENT();
 		{
 			SDE_PROF_EVENT("PreInit");
 			for (auto it = m_systems.begin(); it != m_systems.end(); ++it)
@@ -90,7 +91,8 @@ namespace Core
 	
 	void SystemManager::Shutdown()
 	{
-		SDE_PROF_FRAME("SystemManager::Shutdown");
+		SDE_PROF_FRAME("Main Thread");
+		SDE_PROF_EVENT();
 		for (auto it = m_systems.begin(); it != m_systems.end(); ++it)
 		{
 			(*it)->PreShutdown();

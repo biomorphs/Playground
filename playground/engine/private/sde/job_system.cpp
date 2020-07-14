@@ -4,14 +4,20 @@ Matt Hoyle
 */
 #include "job_system.h"
 #include "core/profiler.h"
+#include "kernel/platform.h"
 
 namespace SDE
 {
 	JobSystem::JobSystem()
-		: m_threadCount(3)
+		: m_threadCount(8)
 		, m_jobThreadTrigger(0)
 		, m_jobThreadStopRequested(0)
 	{
+		int cpuCount = Kernel::Platform::CPUCount();
+		if (cpuCount > 1)
+		{
+			m_threadCount = cpuCount - 1;
+		}
 	}
 
 	JobSystem::~JobSystem()

@@ -50,15 +50,25 @@ function Playground:Tick()
 
 		Graphics.SetLight(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3], Lights[i].Ambient)
 		Graphics.DrawModel(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0,2.0,LightModel,LightShader)
+		Graphics.DebugDrawBox(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],6, Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0)
 	end
 
 	Graphics.DrawModel(0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,IslandModel,DiffuseShader)
 	Graphics.DrawModel(0.0,2.0,0.0,1.0,1.0,1.0,1.0,8.0,MonsterModel,DiffuseShader)
 
-	for z=1,40,4 do
-		for x=1,40,2 do
-			Graphics.DrawModel(-80 + (x * 4),3,-80 + (z * 4),1.0,1.0,1.0,1.0,1.0,ContainerModel,DiffuseShader)
-			Graphics.DrawModel(-80 + (x * 4),10,-80 + (z*4),1.0,1.0,1.0,1.0,0.2,CottageModel,DiffuseShader)
+	local width = 180
+	local numPerWidth = 32
+	local scale = 0.7
+
+	local halfWidth = width / 2.0
+	local gap = width / numPerWidth
+	for z=1,numPerWidth do
+		for x=1,numPerWidth do
+			if((x % 2) == 0) then
+				Graphics.DrawModel(-halfWidth + (x * gap),1,-halfWidth + (z*gap),1.0,1.0,1.0,1.0,1.0 * scale,ContainerModel,DiffuseShader)
+			else
+				Graphics.DrawModel(-halfWidth + (x * gap),1,-halfWidth + (z*gap) + 8,1.0,1.0,1.0,1.0,0.2 * scale,CottageModel,DiffuseShader)
+			end			
 		end
 	end
 end

@@ -89,15 +89,11 @@ namespace Render
 		SDE_ASSERT(srcData != nullptr);
 		SDE_ASSERT(m_handle != 0);
 
-		SDE_RENDER_PROCESS_GL_ERRORS("PreglBindBuffer");
-		glBindBuffer(bufferType, m_handle);
-		SDE_RENDER_PROCESS_GL_ERRORS("glBindBuffer");
-
-		glBufferSubData(bufferType, offset, size, srcData);
-		SDE_RENDER_PROCESS_GL_ERRORS("glBufferSubData");
-
-		glBindBuffer(bufferType, 0);	// Reset state
-		SDE_RENDER_PROCESS_GL_ERRORS("glBindBuffer");
+		{
+			SDE_PROF_EVENT("glNamedBufferSubData");
+			glNamedBufferSubData(m_handle, offset, size, srcData);
+			SDE_RENDER_PROCESS_GL_ERRORS("glNamedBufferSubData");
+		}
 	}
 
 	bool RenderBuffer::Destroy()

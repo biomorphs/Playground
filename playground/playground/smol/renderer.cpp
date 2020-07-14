@@ -44,9 +44,26 @@ namespace smol
 		m_camera = c;
 	}
 
+	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const Render::Mesh& mesh, const struct ShaderHandle& shader)
+	{
+		SDE_PROF_EVENT();
+
+		// Shader - bits 64 - 48
+		const uint64_t shaderHash = static_cast<uint64_t>(shader.m_index) << 48;
+
+		// Then mesh - bits 48-24
+		const uint64_t meshHash = (reinterpret_cast<uintptr_t>(&mesh) & 0x0000000000ffffff) << 24;
+
+		// No textures
+
+		const uint64_t sortKey = meshHash | shaderHash;
+		m_instances.push_back({ sortKey, transform, colour, TextureHandle(), TextureHandle(), shader, &mesh });
+	}
+
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader)
 	{
 		SDE_PROF_EVENT();
+
 		const auto theModel = m_models->GetModel(model);
 		const auto theShader = m_shaders->GetShader(shader);
 		if (theModel != nullptr && theShader != nullptr)
@@ -67,7 +84,7 @@ namespace smol
 				// 1 byte spare
 
 				const uint64_t sortKey = textureHash | meshHash | modelHash | shaderHash;
-				m_instances.push_back({ sortKey, transform * part.m_transform, colour, part.m_diffuse, shader, part.m_mesh });
+				m_instances.push_back({ sortKey, transform * part.m_transform, colour, part.m_diffuse, part.m_normalMap, shader, part.m_mesh });
 			}
 			SDE_ASSERT(meshPartIndex <= 255, "Too many parts in mesh!");
 		}
@@ -203,6 +220,11 @@ namespace smol
 				if (diffusePtr != nullptr)
 				{
 					ub.SetSampler("MyTexture", diffusePtr->GetHandle());
+				}
+				auto normalPtr = m_textures->GetTexture(firstTexInstance->m_normalTexture);
+				if (normalPtr)
+				{
+					ub.SetSampler("NormalsTexture", normalPtr->GetHandle());
 				}
 				d.SetUniforms(*theShader, ub);
 

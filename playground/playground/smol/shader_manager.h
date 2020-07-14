@@ -13,7 +13,7 @@ namespace smol
 {
 	struct ShaderHandle
 	{
-		uint16_t m_index;
+		uint16_t m_index = -1;
 		static ShaderHandle Invalid() { return { (uint16_t)-1 }; };
 	};
 

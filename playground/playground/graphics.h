@@ -26,6 +26,7 @@ namespace smol
 	class ShaderManager;
 	class Renderer;
 	class Renderer2D;
+	class DebugRender;
 }
 
 namespace DebugGui
@@ -43,6 +44,7 @@ public:
 	virtual bool Tick();
 	virtual void Shutdown();
 private:
+	std::unique_ptr<smol::DebugRender> m_debugRender;
 	std::unique_ptr<SDE::DebugCameraController> m_debugCameraController;
 	std::unique_ptr<smol::Renderer2D> m_render2d;
 	std::unique_ptr<smol::Renderer> m_render3d;

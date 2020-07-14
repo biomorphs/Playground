@@ -212,6 +212,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model_asset.cpp" />
     <ClCompile Include="playground.cpp" />
+    <ClCompile Include="smol\debug_render.cpp" />
     <ClCompile Include="smol\model.cpp" />
     <ClCompile Include="smol\model_manager.cpp" />
     <ClCompile Include="smol\renderer.cpp" />
@@ -225,6 +226,7 @@
     <ClInclude Include="graphics.h" />
     <ClInclude Include="model_asset.h" />
     <ClInclude Include="playground.h" />
+    <ClInclude Include="smol\debug_render.h" />
     <ClInclude Include="smol\light.h" />
     <ClInclude Include="smol\mesh_instance.h" />
     <ClInclude Include="smol\model.h" />
@@ -239,6 +241,8 @@
     <None Include="..\data\config.lua" />
     <None Include="..\data\basic.fs" />
     <None Include="..\data\basic.vs" />
+    <None Include="..\data\debugrender.fs" />
+    <None Include="..\data\debugrender.vs" />
     <None Include="..\data\learnlua.lua" />
     <None Include="..\data\playground.lua" />
     <None Include="..\data\quad.fs" />

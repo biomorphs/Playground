@@ -8,6 +8,7 @@ in vec3 out_position;
 out vec4 colour;
 
 uniform sampler2D MyTexture;
+uniform sampler2D NormalsTexture;
  
 void main()
 {
@@ -24,7 +25,16 @@ void main()
 		// ambient light
 		vec3 ambient = diffuseTex.rgb * Lights[i].ColourAndAmbient.rgb * Lights[i].ColourAndAmbient.a;
 
-		finalColour += ambient + diffuse;
+		// specular light 
+		float specularStrength = 0.5;
+		float shininess = 24.0;
+		vec3 viewDir = normalize(CameraPosition.xyz - out_position);
+		vec3 reflectDir = reflect(-lightDir, normal);  
+		float specFactor = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+		vec3 specularColour = Lights[i].ColourAndAmbient.rgb;
+		vec3 specular = specularStrength * specFactor * specularColour; 
+
+		finalColour += ambient + diffuse + specular;
 	}
 	
 	colour = linearToSRGB(min(vec4(finalColour,1.0),1.0));

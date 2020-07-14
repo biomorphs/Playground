@@ -29,8 +29,10 @@ namespace Render
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
-		// Always doublebuffer + 24 bit depth
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		// We want all contexts created by us to share resources
+		SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+
+		//24 bit depth
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
 		m_context = SDL_GL_CreateContext(windowHandle);
@@ -63,10 +65,24 @@ namespace Render
 		m_context = nullptr;
 	}
 
+	void* Device::CreateSharedGLContext()
+	{
+		auto newContext = SDL_GL_CreateContext(m_window.GetWindowHandle());
+		SDE_RENDER_PROCESS_GL_ERRORS("SDL_GL_CreateContext");
+		return newContext;
+	}
+
 	void Device::Present()
 	{
 		SDE_PROF_EVENT();
 		SDL_GL_SwapWindow(m_window.GetWindowHandle());
+
+		// glFinish when profiling to show actual frame times
+		if (Optick::IsActive())
+		{
+			SDE_PROF_EVENT("glFinish")
+			glFinish();
+		}
 	}
 
 	SDL_GLContext Device::GetGLContext()

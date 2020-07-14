@@ -12,6 +12,11 @@ namespace Kernel
 {
 	namespace Platform
 	{
+		int CPUCount()
+		{
+			return SDL_GetCPUCount();
+		}
+
 		InitResult Platform::Initialise(int argc, char* argv[])
 		{
 			SDE_LOGC(Engine, "Initialising Platform");

@@ -30,6 +30,10 @@ namespace Render
 				windowFlags |= SDL_WINDOW_MAXIMIZED;
 		}
 
+		// properties to set before window creation
+		SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
 		m_windowHandle = SDL_CreateWindow(props.m_title.c_str(), windowPosX, windowPosY, props.m_sizeX, props.m_sizeY, windowFlags);
 		SDE_RENDER_ASSERT(m_windowHandle);
 	}

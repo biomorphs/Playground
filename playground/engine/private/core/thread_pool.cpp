@@ -23,6 +23,10 @@ namespace Core
 		void Start()
 		{
 			SDE_ASSERT(m_parent != nullptr);
+			if (m_parent->m_initFn != nullptr)
+			{
+				m_parent->m_initFn();
+			}
 			auto threadFnc = [this]()
 			{
 				SDE_PROF_THREAD(m_name.c_str());
@@ -55,11 +59,12 @@ namespace Core
 		Stop();
 	}
 
-	void ThreadPool::Start(const char* poolName, uint32_t threadCount, ThreadPoolFn threadfn)
+	void ThreadPool::Start(const char* poolName, uint32_t threadCount, ThreadPoolFn threadfn, ThreadPoolFn threadStartFn)
 	{
 		SDE_PROF_EVENT();
 		SDE_ASSERT(m_threads.size() == 0);
 		m_fn = threadfn;
+		m_initFn = threadStartFn;
 		m_threads.reserve(threadCount);
 		for (uint32_t t = 0;t < threadCount;++t)
 		{

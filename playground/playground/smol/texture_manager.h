@@ -16,7 +16,7 @@ namespace smol
 {
 	struct TextureHandle
 	{
-		uint16_t m_index;
+		uint16_t m_index = -1;
 		static TextureHandle Invalid() { return { (uint16_t)-1 }; };
 	};
 
@@ -26,7 +26,7 @@ namespace smol
 		TextureManager(SDE::JobSystem* js);
 		TextureManager(const TextureManager&) = delete;
 		TextureManager(TextureManager&&) = delete;
-		~TextureManager();
+		~TextureManager() = default;
 
 		TextureHandle LoadTexture(const char* path);
 		Render::Texture* GetTexture(const TextureHandle& h);

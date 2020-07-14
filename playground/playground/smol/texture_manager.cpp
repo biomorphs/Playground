@@ -97,12 +97,4 @@ namespace smol
 		}
 	}
 
-	TextureManager::~TextureManager()
-	{
-		for (auto& it : m_textures)
-		{
-			it.m_texture->Destroy();
-		}
-	}
-
 }

@@ -17,7 +17,7 @@ namespace smol
 
 	struct ModelHandle
 	{
-		uint16_t m_index;
+		uint16_t m_index = -1;
 		static ModelHandle Invalid() { return { (uint16_t)-1 }; };
 	};
 

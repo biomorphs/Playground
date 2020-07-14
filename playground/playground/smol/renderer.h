@@ -29,6 +29,7 @@ namespace smol
 		void Reset();
 		void RenderAll(Render::Device&);
 		void SetCamera(const Render::Camera& c);
+		void SubmitInstance(glm::mat4 transform, glm::vec4 colour, const Render::Mesh& mesh, const struct ShaderHandle& shader);
 		void SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader);
 		void SetLight(glm::vec3 position,glm::vec3 colour, float ambientStr);
 

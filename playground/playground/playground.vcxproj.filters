@@ -50,6 +50,9 @@
     <ClCompile Include="smol\shader_manager.cpp">
       <Filter>smol</Filter>
     </ClCompile>
+    <ClCompile Include="smol\debug_render.cpp">
+      <Filter>smol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h">
@@ -89,6 +92,9 @@
       <Filter>smol</Filter>
     </ClInclude>
     <ClInclude Include="..\data\global_uniforms.h" />
+    <ClInclude Include="smol\debug_render.h">
+      <Filter>smol</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\data\learnlua.lua" />
@@ -102,5 +108,7 @@
     <None Include="..\data\simplediffuse.fs" />
     <None Include="..\data\shared.vs" />
     <None Include="..\data\shared.fs" />
+    <None Include="..\data\debugrender.fs" />
+    <None Include="..\data\debugrender.vs" />
   </ItemGroup>
 </Project>
