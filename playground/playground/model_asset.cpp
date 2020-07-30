@@ -49,6 +49,10 @@ namespace Assets
 			{
 				newVertex.m_texCoord0 = glm::vec2(mesh->mTextureCoords[0][v].x, mesh->mTextureCoords[0][v].y);
 			}
+			if (mesh->mTangents != nullptr)
+			{
+				newVertex.m_tangent = glm::vec3(mesh->mBitangents[0].x, mesh->mBitangents[0].y, mesh->mBitangents[0].z);
+			}
 			boundsMin = glm::min(boundsMin, newVertex.m_position);
 			boundsMax = glm::max(boundsMax, newVertex.m_position);
 			vertices.push_back(newVertex);

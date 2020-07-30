@@ -1,17 +1,16 @@
 #version 430
 #pragma sde include "global_uniforms.h"
 
-layout(location = 0) in vec4 pos_modelSpace;
-layout(location = 1) in vec4 colour;
-layout(location = 2) in mat4 instance_modelmat;
-layout(location = 6) in vec4 instance_colour;
+layout(location = 0) in vec4 vs_in_pos_modelSpace;
+layout(location = 1) in vec4 vs_in_colour;
+layout(location = 2) in mat4 vs_in_instance_modelmat;
 
 out vec4 out_colour;
 
 void main()
 {
-	vec4 pos = vec4(pos_modelSpace.xyz,1);
-	vec4 v = ProjectionMatrix * ViewMatrix * instance_modelmat * pos; 
-    out_colour = colour;
+	vec4 pos = vec4(vs_in_pos_modelSpace.xyz,1);
+	vec4 v = ProjectionMatrix * ViewMatrix * vs_in_instance_modelmat * pos; 
+    out_colour = vs_in_colour;
     gl_Position = v;
 }

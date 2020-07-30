@@ -135,6 +135,7 @@ namespace smol
 			m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
 			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Static);
 			m_whiteTexture = m_textures->LoadTexture("white.bmp");
+			m_defaultNormalmap = m_textures->LoadTexture("default_normalmap.png");
 			s_firstFrame = false;
 		}
 
@@ -175,7 +176,8 @@ namespace smol
 			m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
 		}
 		const auto c_defaultTexture = m_textures->GetTexture(m_whiteTexture);
-		if (c_defaultTexture == nullptr)
+		const auto c_defaultNormalmap = m_textures->GetTexture(m_defaultNormalmap);
+		if (c_defaultTexture == nullptr || c_defaultNormalmap == nullptr)
 		{
 			return;
 		}
@@ -224,7 +226,7 @@ namespace smol
 				ub.SetSampler("DiffuseTexture", diffusePtr ? diffusePtr->GetHandle() : c_defaultTexture->GetHandle());
 				
 				auto normalPtr = m_textures->GetTexture(firstTexInstance->m_normalTexture);
-				ub.SetSampler("NormalsTexture", normalPtr ? normalPtr->GetHandle() : c_defaultTexture->GetHandle());
+				ub.SetSampler("NormalsTexture", normalPtr ? normalPtr->GetHandle() : c_defaultNormalmap->GetHandle());
 
 				auto specPtr = m_textures->GetTexture(firstTexInstance->m_specularTexture);
 				ub.SetSampler("SpecularTexture", specPtr ? specPtr->GetHandle() : c_defaultTexture->GetHandle());

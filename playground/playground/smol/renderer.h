@@ -41,6 +41,7 @@ namespace smol
 		std::vector<MeshInstance> m_instances;
 		std::vector<Light> m_lights;
 		smol::TextureHandle m_whiteTexture;
+		smol::TextureHandle m_defaultNormalmap;
 		smol::Light m_light;
 		ShaderManager* m_shaders;
 		smol::TextureManager* m_textures;

@@ -20,6 +20,7 @@ namespace smol
 			Render::MeshBuilder builder;
 			builder.AddVertexStream(3, mesh.Indices().size());		// position
 			builder.AddVertexStream(3, mesh.Indices().size());		// normal
+			builder.AddVertexStream(3, mesh.Indices().size());		// tangents
 			builder.AddVertexStream(2, mesh.Indices().size());		// uv
 			builder.BeginChunk();
 			const auto& vertices = mesh.Vertices();
@@ -34,7 +35,8 @@ namespace smol
 					builder.BeginTriangle();
 					builder.SetStreamData(0, v0.m_position, v1.m_position, v2.m_position);
 					builder.SetStreamData(1, v0.m_normal, v1.m_normal, v2.m_normal);
-					builder.SetStreamData(2, v0.m_texCoord0, v1.m_texCoord0, v2.m_texCoord0);
+					builder.SetStreamData(2, v0.m_tangent, v1.m_tangent, v2.m_tangent);
+					builder.SetStreamData(3, v0.m_texCoord0, v1.m_texCoord0, v2.m_texCoord0);
 					builder.EndTriangle();
 				}
 			}
