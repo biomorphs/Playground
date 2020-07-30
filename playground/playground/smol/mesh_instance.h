@@ -18,6 +18,7 @@ namespace smol
 		glm::vec4 m_colour;				// todo: how do we make this generic?
 		smol::TextureHandle m_texture;	// todo: generic samplers
 		smol::TextureHandle m_normalTexture;
+		smol::TextureHandle m_specularTexture;
 		smol::ShaderHandle m_shader;
 		const Render::Mesh* m_mesh;
 	};

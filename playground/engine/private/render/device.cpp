@@ -76,13 +76,7 @@ namespace Render
 	{
 		SDE_PROF_EVENT();
 		SDL_GL_SwapWindow(m_window.GetWindowHandle());
-
-		// glFinish when profiling to show actual frame times
-		if (Optick::IsActive())
-		{
-			SDE_PROF_EVENT("glFinish")
-			glFinish();
-		}
+		glFinish();
 	}
 
 	SDL_GLContext Device::GetGLContext()

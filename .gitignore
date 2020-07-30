@@ -31,6 +31,15 @@
 *.out
 *.app
 
+# Assets
+*.fbx
+*.png
+*.jpg
+*.bmp
+*.psd
+*.blend
+*.blend1
+
 playground/temp/
 playground/bin/
 .vs/

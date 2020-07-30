@@ -3,7 +3,7 @@ in vec4 out_colour;
 in vec2 out_uv;
 out vec4 colour;
 
-uniform sampler2D MyTexture;
+uniform sampler2D DiffuseTexture;
 
 const float gamma = 2.2;
 
@@ -18,5 +18,5 @@ vec4 linearToSRGB(vec4 v)
 }
  
 void main(){
-	colour = linearToSRGB(srgbToLinear(texture(MyTexture, out_uv)) * out_colour);
+	colour = linearToSRGB(srgbToLinear(texture(DiffuseTexture, out_uv)) * out_colour);
 }

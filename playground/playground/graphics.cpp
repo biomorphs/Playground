@@ -66,7 +66,7 @@ bool Graphics::PostInit()
 	m_scriptSystem->Globals().new_usertype<smol::ModelHandle>("ModelHandle",sol::constructors<smol::ModelHandle()>());	
 
 	// expose ShaderHandle to lua
-	m_scriptSystem->Globals().new_usertype<smol::ModelHandle>("ShaderHandle", sol::constructors<smol::ShaderHandle()>());
+	m_scriptSystem->Globals().new_usertype<smol::ShaderHandle>("ShaderHandle", sol::constructors<smol::ShaderHandle()>());
 
 	// expose Graphics namespace functions
 	auto graphics = m_scriptSystem->Globals()["Graphics"].get_or_create<sol::table>();
@@ -92,8 +92,11 @@ bool Graphics::PostInit()
 		auto transform = glm::scale(glm::translate(glm::identity<glm::mat4>(), glm::vec3(px, py, pz)), glm::vec3(scale));
 		m_render3d->SubmitInstance(transform, glm::vec4(r,g,b,a), h, sh);
 	};
-	graphics["SetLight"] = [this](float px, float py, float pz, float r, float g, float b, float ambient) {
-		m_render3d->SetLight(glm::vec3(px,py,pz),glm::vec3(r, g, b), ambient);
+	graphics["PointLight"] = [this](float px, float py, float pz, float r, float g, float b, float ambient, float attenConst, float attenLinear, float attenQuad) {
+		m_render3d->SetLight(glm::vec4(px, py, pz,1.0f), glm::vec3(r, g, b), ambient, { attenConst , attenLinear , attenQuad });
+	};
+	graphics["DirectionalLight"] = [this](float dx, float dy, float dz, float r, float g, float b, float ambient) {
+		m_render3d->SetLight(glm::vec4(dx, dy, dz, 0.0f), glm::vec3(r, g, b), ambient, { 0.0f,0.0f,0.0f });
 	};
 	graphics["DebugDrawAxis"] = [this](float px, float py, float pz, float size) {
 		m_debugRender->AddAxisAtPoint({ px,py,pz,1.0f }, size);

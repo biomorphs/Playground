@@ -29,6 +29,7 @@ namespace smol
 			Render::Mesh* m_mesh;
 			smol::TextureHandle m_diffuse;
 			smol::TextureHandle m_normalMap;
+			smol::TextureHandle m_specularMap;
 			glm::mat4 m_transform;
 		};
 		const std::vector<Part>& Parts() const { return m_parts; }

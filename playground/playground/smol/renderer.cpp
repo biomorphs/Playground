@@ -22,6 +22,7 @@ namespace smol
 	{
 		glm::vec4 m_colourAndAmbient;	// rgb=colour, a=ambient multiplier
 		glm::vec4 m_position;
+		glm::vec3 m_attenuation;		// const, linear, quad
 	};
 
 	struct GlobalUniforms
@@ -57,7 +58,7 @@ namespace smol
 		// No textures
 
 		const uint64_t sortKey = meshHash | shaderHash;
-		m_instances.push_back({ sortKey, transform, colour, TextureHandle(), TextureHandle(), shader, &mesh });
+		m_instances.push_back({ sortKey, transform, colour, TextureHandle(), TextureHandle(), TextureHandle(), shader, &mesh });
 	}
 
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader)
@@ -84,17 +85,18 @@ namespace smol
 				// 1 byte spare
 
 				const uint64_t sortKey = textureHash | meshHash | modelHash | shaderHash;
-				m_instances.push_back({ sortKey, transform * part.m_transform, colour, part.m_diffuse, part.m_normalMap, shader, part.m_mesh });
+				m_instances.push_back({ sortKey, transform * part.m_transform, colour, part.m_diffuse, part.m_normalMap, part.m_specularMap, shader, part.m_mesh });
 			}
 			SDE_ASSERT(meshPartIndex <= 255, "Too many parts in mesh!");
 		}
 	}
 
-	void Renderer::SetLight(glm::vec3 position, glm::vec3 colour, float ambientStr)
+	void Renderer::SetLight(glm::vec4 positionOrDir, glm::vec3 colour, float ambientStr, glm::vec3 attenuation)
 	{
 		Light newLight;
 		newLight.m_colour = glm::vec4(colour, ambientStr);
-		newLight.m_position = position;
+		newLight.m_position = positionOrDir;
+		newLight.m_attenuation = attenuation;
 		m_lights.push_back(newLight);
 	}
 
@@ -132,6 +134,7 @@ namespace smol
 			m_instanceTransforms.Create(c_maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
 			m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
 			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Static);
+			m_whiteTexture = m_textures->LoadTexture("white.bmp");
 			s_firstFrame = false;
 		}
 
@@ -142,7 +145,6 @@ namespace smol
 
 		{
 			SDE_PROF_EVENT("SortInstances");
-			// sort by generic sort key
 			std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
 				return q1.m_sortKey < q2.m_sortKey;
 				});
@@ -165,11 +167,17 @@ namespace smol
 			for (int l = 0; l < m_lights.size() && l < c_maxLights; ++l)
 			{
 				globals.m_lights[l].m_colourAndAmbient = m_lights[l].m_colour;
-				globals.m_lights[l].m_position = glm::vec4(m_lights[l].m_position, 0.0f);
+				globals.m_lights[l].m_position = m_lights[l].m_position;
+				globals.m_lights[l].m_attenuation = m_lights[l].m_attenuation;
 			}
 			globals.m_lightCount = static_cast<int>(std::min(m_lights.size(), c_maxLights));
 			globals.m_cameraPosition = glm::vec4(m_camera.Position(), 0.0);
 			m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
+		}
+		const auto c_defaultTexture = m_textures->GetTexture(m_whiteTexture);
+		if (c_defaultTexture == nullptr)
+		{
+			return;
 		}
 
 		Render::UniformBuffer ub;	// hack for setting samplers
@@ -211,21 +219,16 @@ namespace smol
 					return m.m_texture.m_index != texID;
 					});
 				
-				// Diffuse texture
+				// textures
 				auto diffusePtr = m_textures->GetTexture(firstTexInstance->m_texture);
-				if (diffusePtr == nullptr)
-				{
-					diffusePtr = m_textures->GetTexture(m_whiteTexture);
-				}
-				if (diffusePtr != nullptr)
-				{
-					ub.SetSampler("MyTexture", diffusePtr->GetHandle());
-				}
+				ub.SetSampler("DiffuseTexture", diffusePtr ? diffusePtr->GetHandle() : c_defaultTexture->GetHandle());
+				
 				auto normalPtr = m_textures->GetTexture(firstTexInstance->m_normalTexture);
-				if (normalPtr)
-				{
-					ub.SetSampler("NormalsTexture", normalPtr->GetHandle());
-				}
+				ub.SetSampler("NormalsTexture", normalPtr ? normalPtr->GetHandle() : c_defaultTexture->GetHandle());
+
+				auto specPtr = m_textures->GetTexture(firstTexInstance->m_specularTexture);
+				ub.SetSampler("SpecularTexture", specPtr ? specPtr->GetHandle() : c_defaultTexture->GetHandle());
+
 				d.SetUniforms(*theShader, ub);
 
 				for (const auto& chunk : theMesh->GetChunks())

@@ -7,6 +7,7 @@ namespace smol
 	{
 	public:
 		glm::vec4 m_colour;		// w = ambient strength
-		glm::vec3 m_position;
+		glm::vec4 m_position;	// w = 0, light is directional : w=1, point light
+		glm::vec3 m_attenuation;	// constant, linear, quadratic
 	};
 }

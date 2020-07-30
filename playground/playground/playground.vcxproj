@@ -243,7 +243,6 @@
     <None Include="..\data\basic.vs" />
     <None Include="..\data\debugrender.fs" />
     <None Include="..\data\debugrender.vs" />
-    <None Include="..\data\learnlua.lua" />
     <None Include="..\data\playground.lua" />
     <None Include="..\data\quad.fs" />
     <None Include="..\data\quad.vs" />

@@ -34,7 +34,7 @@ namespace smol
 		std::unique_ptr<glm::vec4, std::function<void(glm::vec4*)>> m_posBuffer;
 		std::unique_ptr<glm::vec4, std::function<void(glm::vec4*)>> m_colBuffer;
 		ShaderHandle m_shader;
-		static const uint32_t c_meshBuffers = 1;	// triple-buffered
+		static const uint32_t c_meshBuffers = 3;	// triple-buffered
 		std::unique_ptr<Render::Mesh> m_renderMesh[c_meshBuffers];		
 		uint32_t m_currentWriteMesh;
 	};

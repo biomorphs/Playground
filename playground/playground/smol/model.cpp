@@ -45,9 +45,11 @@ namespace smol
 
 			std::string diffuseTexturePath = mesh.Material().DiffuseMaps().size() > 0 ? mesh.Material().DiffuseMaps()[0] : "white.bmp";
 			std::string normalTexturePath = mesh.Material().NormalMaps().size() > 0 ? mesh.Material().NormalMaps()[0] : "";
+			std::string specTexturePath = mesh.Material().SpecularMaps().size() > 0 ? mesh.Material().SpecularMaps()[0] : "";
 			auto diffuseTexture = tm.LoadTexture(diffuseTexturePath.c_str());
 			auto normalTexture = tm.LoadTexture(normalTexturePath.c_str());
-			resultModel->m_parts.push_back({ newMesh, diffuseTexture, normalTexture, mesh.Transform() });
+			auto specularTexture = tm.LoadTexture(specTexturePath.c_str());
+			resultModel->m_parts.push_back({ newMesh, diffuseTexture, normalTexture, specularTexture, mesh.Transform() });
 		}
 		return resultModel;
 	}
