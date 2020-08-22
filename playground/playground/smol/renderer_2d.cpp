@@ -29,6 +29,7 @@ namespace smol
 		builder.EndTriangle();
 		builder.EndChunk();
 		builder.CreateMesh(*m_quadMesh);
+		builder.CreateVertexArray(*m_quadMesh);
 
 		// set up instance buffers
 		m_quadInstanceTransforms.Create(c_maxQuads * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);

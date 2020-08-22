@@ -40,6 +40,7 @@ namespace Render
 
 		// Step 5: Mesh creation
 		bool CreateMesh(Mesh& target, size_t minVbSize = 0);
+		bool CreateVertexArray(Mesh& mesh);	// this must happen on the main thread!
 
 	private:
 		bool ShouldRecreateMesh(Mesh& target, size_t minVbSize);

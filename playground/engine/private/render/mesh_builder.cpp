@@ -126,13 +126,8 @@ namespace Render
 		const size_t c_maximumWaste = minVbSize;
 		// If the mesh streams match, and the stream buffers are big enough, then we don't need to do anything
 		auto& streams = target.GetStreams();
-		auto& vertexArray = target.GetVertexArray();
 
 		if (streams.size() != m_streams.size())
-		{
-			return true;
-		}
-		if (vertexArray.GetStreamCount() != m_streams.size())
 		{
 			return true;
 		}
@@ -149,18 +144,6 @@ namespace Render
 			{
 				return true;
 			}
-			if (vertexArray.GetStreamAttributeIndex(streamIndex) != streamIndex)
-			{
-				return true;
-			}
-			if (vertexArray.GetStreamComponentCount(streamIndex) != m_streams[streamIndex].m_componentCount)
-			{
-				return true;
-			}
-			if (vertexArray.GetStreamDataType(streamIndex) != Render::VertexDataType::Float)
-			{
-				return true;
-			}
 		}
 
 		return false;
@@ -171,8 +154,6 @@ namespace Render
 		SDE_PROF_EVENT();
 
 		auto& streams = target.GetStreams();
-		auto& vertexArray = target.GetVertexArray();
-
 		for (auto& s : streams)
 		{
 			s.Destroy();
@@ -200,13 +181,6 @@ namespace Render
 		}
 
 		streamIndex = 0;
-		vertexArray.Destroy();
-		for (const auto& streamIt : m_streams)
-		{
-			vertexArray.AddBuffer(streamIndex, &streams[streamIndex], VertexDataType::Float, streamIt.m_componentCount);
-			++streamIndex;
-		}
-		vertexArray.Create();
 	}
 
 	bool MeshBuilder::CreateMesh(Mesh& target, size_t minVbSize)
@@ -214,7 +188,6 @@ namespace Render
 		SDE_PROF_EVENT();
 
 		auto& streams = target.GetStreams();
-		auto& vertexArray = target.GetVertexArray();
 		auto& chunks = target.GetChunks();
 
 		if (ShouldRecreateMesh(target, minVbSize))
@@ -241,5 +214,19 @@ namespace Render
 		}
 
 		return true;
+	}
+
+	bool MeshBuilder::CreateVertexArray(Mesh& mesh)
+	{
+		auto& va = mesh.GetVertexArray();
+		va.Destroy();
+		int32_t streamIndex = 0;
+		auto& streams = mesh.GetStreams();
+		for (const auto& streamIt : m_streams)
+		{
+			va.AddBuffer(streamIndex, &streams[streamIndex], VertexDataType::Float, streamIt.m_componentCount);
+			++streamIndex;
+		}
+		return va.Create();
 	}
 }
