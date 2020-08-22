@@ -12,9 +12,10 @@ namespace Core
 	class ThreadPool::PooledThread
 	{
 	public:
-		PooledThread(const std::string& name, ThreadPool* parent)
+		PooledThread(const std::string& name, ThreadPool* parent, uint32_t workerIndex)
 			: m_name(name)
 			, m_parent(parent)
+			, m_workerIndex(workerIndex)
 		{
 		}
 		~PooledThread()
@@ -23,16 +24,16 @@ namespace Core
 		void Start()
 		{
 			SDE_ASSERT(m_parent != nullptr);
-			if (m_parent->m_initFn != nullptr)
-			{
-				m_parent->m_initFn();
-			}
 			auto threadFnc = [this]()
 			{
 				SDE_PROF_THREAD(m_name.c_str());
+				if (m_parent->m_initFn != nullptr)
+				{
+					m_parent->m_initFn(m_workerIndex);
+				}
 				while (m_parent->m_stopRequested.Get() == 0)
 				{
-					m_parent->m_fn();
+					m_parent->m_fn(m_workerIndex);
 				}
 				return 0;
 			};
@@ -47,6 +48,7 @@ namespace Core
 		Kernel::Thread m_thread;
 		ThreadPool* m_parent;
 		std::string m_name;
+		uint32_t m_workerIndex;
 	};
 
 	ThreadPool::ThreadPool()
@@ -70,7 +72,7 @@ namespace Core
 		{
 			char threadNameBuffer[256] = { '\0' };
 			sprintf_s(threadNameBuffer, "%s_%d", poolName, t);
-			auto thisThread = std::make_unique<PooledThread>(threadNameBuffer, this);
+			auto thisThread = std::make_unique<PooledThread>(threadNameBuffer, this, t);
 			SDE_ASSERT(thisThread);
 			thisThread->Start();
 			m_threads.push_back(std::move(thisThread));

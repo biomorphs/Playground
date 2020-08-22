@@ -5,6 +5,9 @@ Matt Hoyle
 #include "job_system.h"
 #include "core/profiler.h"
 #include "kernel/platform.h"
+#include "core/system_enumerator.h"
+#include "render_system.h"
+#include "render/device.h"
 
 namespace SDE
 {
@@ -24,15 +27,34 @@ namespace SDE
 	{
 	}
 
-	bool JobSystem::Initialise()
+	bool JobSystem::PreInit(Core::ISystemEnumerator& systemEnumerator)
 	{
-		auto jobThread = [this]()
+		m_renderSystem = (RenderSystem*)systemEnumerator.GetSystem("Render");
+		return true;
+	}
+
+	bool JobSystem::PostInit()
+	{
+		// Create shared GL contexts for each job thread on the main thread
+		// This allows us to call *some* gl functions from workers
+		auto renderDevice = m_renderSystem->GetDevice();
+		std::vector<void*> workerContexts;
+		for (int w = 0; w < m_threadCount; ++w)
+		{
+			workerContexts.push_back(renderDevice->CreateSharedGLContext());
+		}
+		// Creating a context sets it by default, so make sure we reset the main thread context
+		renderDevice->SetGLContext(renderDevice->GetGLContext());
+		auto jobInit = [this, workerContexts](uint32_t threadIndex)
+		{
+			m_renderSystem->GetDevice()->SetGLContext(workerContexts[threadIndex]);
+		};
+
+		auto jobThread = [this](uint32_t threadIndex)
 		{
 			if (m_jobThreadStopRequested.Get() == 0)	// This is to stop deadlock on the semaphore when shutting down
 			{
-				{
-					m_jobThreadTrigger.Wait();		// Wait for jobs
-				}
+				m_jobThreadTrigger.Wait();		// Wait for jobs
 
 				Job currentJob;
 				if (m_pendingJobs.PopJob(currentJob))
@@ -47,7 +69,7 @@ namespace SDE
 				}
 			}
 		};
-		m_threadPool.Start("SDEJobSystem", m_threadCount, jobThread);
+		m_threadPool.Start("SDEJobSystem", m_threadCount, jobThread, jobInit);
 		return true;
 	}
 

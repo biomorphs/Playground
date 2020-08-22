@@ -25,9 +25,9 @@ namespace Render
 		SDL_Window* windowHandle = theWindow.GetWindowHandle();
 		SDE_RENDER_ASSERT(windowHandle);
 
-		// Request opengl 4.3 context.
+		// Request opengl 4.5 context.
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
 
 		// We want all contexts created by us to share resources
 		SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
@@ -63,6 +63,12 @@ namespace Render
 	{
 		SDL_GL_DeleteContext(m_context);
 		m_context = nullptr;
+	}
+
+	void Device::SetGLContext(void* context)
+	{
+		SDL_GL_MakeCurrent(m_window.GetWindowHandle(), context);
+		SDE_RENDER_PROCESS_GL_ERRORS("SDL_GL_MakeCurrent");
 	}
 
 	void* Device::CreateSharedGLContext()

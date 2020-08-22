@@ -32,6 +32,7 @@ namespace Render
 		void Present();
 		void* CreateSharedGLContext();
 		void* GetGLContext();
+		void SetGLContext(void* context);	// Sets context PER THREAD
 		void SetScissorEnabled(bool enabled);
 		void SetBlending(bool enabled);
 		void SetBackfaceCulling(bool enabled, bool frontFaceCCW);

@@ -18,12 +18,14 @@ namespace SDE
 		JobSystem();
 		virtual ~JobSystem();
 
-		virtual bool Initialise() override;
-		virtual void Shutdown() override;
+		bool PreInit(Core::ISystemEnumerator& systemEnumerator);
+		bool PostInit();
+		void Shutdown();
 
 		void PushJob(Job::JobThreadFunction threadFn);
 
 	private:
+		class RenderSystem* m_renderSystem;
 		Core::ThreadPool m_threadPool;
 		JobQueue m_pendingJobs;
 		Kernel::Semaphore m_jobThreadTrigger;
