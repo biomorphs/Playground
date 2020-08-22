@@ -15,7 +15,32 @@ namespace smol
 	{
 	}
 
-	std::unique_ptr<Model> ModelManager::ProcessModel(Assets::Model& model, const std::vector<std::unique_ptr<Render::MeshBuilder>>& meshBuilders)
+	// this must be called on main thread before rendering!
+	void ModelManager::FinaliseModel(Assets::Model& model, Model& renderModel, const std::vector<std::unique_ptr<Render::MeshBuilder>>& meshBuilders)
+	{
+		SDE_PROF_EVENT();
+		const auto meshCount = renderModel.Parts().size();
+		for (int index = 0; index < meshCount; ++index)
+		{
+			if (renderModel.Parts()[index].m_mesh != nullptr)
+			{
+				const auto& mesh = model.Meshes()[index];
+
+				// Load all textures for each part
+				std::string diffuseTexturePath = mesh.Material().DiffuseMaps().size() > 0 ? mesh.Material().DiffuseMaps()[0] : "white.bmp";
+				std::string normalTexturePath = mesh.Material().NormalMaps().size() > 0 ? mesh.Material().NormalMaps()[0] : "";
+				std::string specTexturePath = mesh.Material().SpecularMaps().size() > 0 ? mesh.Material().SpecularMaps()[0] : "";
+				renderModel.Parts()[index].m_diffuse = m_textureManager->LoadTexture(diffuseTexturePath.c_str());
+				renderModel.Parts()[index].m_normalMap = m_textureManager->LoadTexture(normalTexturePath.c_str());
+				renderModel.Parts()[index].m_specularMap = m_textureManager->LoadTexture(specTexturePath.c_str());
+
+				// Create render resources that cannot be shared across contexts
+				meshBuilders[index]->CreateVertexArray(*renderModel.Parts()[index].m_mesh);
+			}
+		}
+	}
+
+	std::unique_ptr<Model> ModelManager::CreateModel(Assets::Model& model, const std::vector<std::unique_ptr<Render::MeshBuilder>>& meshBuilders)
 	{
 		char debugName[1024] = { '\0' };
 		sprintf_s(debugName, "smol::ModelManager::ProcessModel(\"%s\")", model.GetPath().c_str());
@@ -32,14 +57,10 @@ namespace smol
 			auto newMesh = std::make_unique<Render::Mesh>();
 			meshBuilders[index]->CreateMesh(*newMesh);
 
-			std::string diffuseTexturePath = mesh.Material().DiffuseMaps().size() > 0 ? mesh.Material().DiffuseMaps()[0] : "white.bmp";
-			std::string normalTexturePath = mesh.Material().NormalMaps().size() > 0 ? mesh.Material().NormalMaps()[0] : "";
-			std::string specTexturePath = mesh.Material().SpecularMaps().size() > 0 ? mesh.Material().SpecularMaps()[0] : "";
-			auto diffuseTexture = m_textureManager->LoadTexture(diffuseTexturePath.c_str());
-			auto normalTexture = m_textureManager->LoadTexture(normalTexturePath.c_str());
-			auto specularTexture = m_textureManager->LoadTexture(specTexturePath.c_str());
-
-			resultModel->Parts().push_back({ std::move(newMesh), diffuseTexture, normalTexture, specularTexture, mesh.Transform() });
+			Model::Part newPart;
+			newPart.m_mesh = std::move(newMesh);
+			newPart.m_transform = mesh.Transform();
+			resultModel->Parts().push_back(std::move(newPart));
 		}
 
 		return resultModel;
@@ -58,10 +79,10 @@ namespace smol
 		for (auto& loadedModel : loadedModels)
 		{
 			SDE_ASSERT(loadedModel.m_destinationHandle.m_index != -1, "Bad index");
-			if (loadedModel.m_model != nullptr)
+			if (loadedModel.m_renderModel != nullptr)
 			{
-				auto renderModel = ProcessModel(*loadedModel.m_model, loadedModel.m_meshBuilders);
-				m_models[loadedModel.m_destinationHandle.m_index].m_model = std::move(renderModel);
+				FinaliseModel(*loadedModel.m_model, *loadedModel.m_renderModel, loadedModel.m_meshBuilders);
+				m_models[loadedModel.m_destinationHandle.m_index].m_model = std::move(loadedModel.m_renderModel);
 			}
 		}
 	}
@@ -122,8 +143,10 @@ namespace smol
 					meshBuilders.push_back(CreateBuilderForPart(part));
 				}
 
+				auto theModel = CreateModel(*loadedAsset, meshBuilders);	// this does not create VAOs as they cannot be shared across contexts
+
 				Core::ScopedMutex lock(m_loadedModelsMutex);
-				m_loadedModels.push_back({ std::move(loadedAsset), std::move(meshBuilders), newHandle });
+				m_loadedModels.push_back({ std::move(loadedAsset), std::move(theModel), std::move(meshBuilders), newHandle });
 			}
 		});
 		
