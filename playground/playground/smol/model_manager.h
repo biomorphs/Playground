@@ -2,6 +2,7 @@
 #include "model.h"
 #include "kernel/mutex.h"
 #include "../model_asset.h"
+#include "render/mesh_builder.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -34,16 +35,22 @@ namespace smol
 		void ProcessLoadedModels();
 
 	private:
-		struct ModelDesc {
+		struct ModelDesc 
+		{
 			std::unique_ptr<Model> m_model;
 			std::string m_name;
 		};
-		std::vector<ModelDesc> m_models;
-		
-		struct ModelLoadResult {
+		struct ModelLoadResult
+		{
 			std::unique_ptr<Assets::Model> m_model;
+			std::vector<std::unique_ptr<Render::MeshBuilder>> m_meshBuilders;
 			ModelHandle m_destinationHandle;
 		};
+		std::unique_ptr<Render::MeshBuilder> CreateBuilderForPart(const Assets::ModelMesh&);
+		std::unique_ptr<Model> ProcessModel(Assets::Model& model, const std::vector<std::unique_ptr<Render::MeshBuilder>>& meshBuilders);
+
+		std::vector<ModelDesc> m_models;
+	
 		Kernel::Mutex m_loadedModelsMutex;
 		std::vector<ModelLoadResult> m_loadedModels;	// models to process after successful load
 

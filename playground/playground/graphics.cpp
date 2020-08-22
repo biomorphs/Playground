@@ -19,6 +19,8 @@
 #include "core/timer.h"
 #include <sol.hpp>
 
+static glm::vec3 s_attenuation(1.0, 0.0, 0.02);
+
 Graphics::Graphics()
 {
 }
@@ -51,6 +53,11 @@ bool Graphics::PostInit()
 
 	const auto& windowProps = m_renderSystem->GetWindow()->GetProperties();
 	auto windowSize = glm::vec2(windowProps.m_sizeX, windowProps.m_sizeY);
+
+	m_scriptSystem->Globals()["Attenuation"].get_or_create<sol::table>();
+	m_scriptSystem->Globals()["Attenuation"][1] = s_attenuation.x;
+	m_scriptSystem->Globals()["Attenuation"][2] = s_attenuation.y;
+	m_scriptSystem->Globals()["Attenuation"][3] = s_attenuation.z;
 
 	// Init render passes
 	m_render2d = std::make_unique<smol::Renderer2D>(m_textures.get(), windowSize);
@@ -154,6 +161,26 @@ bool Graphics::Tick()
 	m_debugGui->Text(fpsTxt);
 	m_debugGui->EndWindow();
 
+	const int c_valueCount = 100;
+	static std::vector<float> s_values;
+	static float s_maxValue = 100.0f;
+	float c_valCountFloat = (float)c_valueCount;
+	s_values.resize(c_valueCount);
+	for (int i = 0; i < c_valueCount; ++i)
+	{
+		float dist = i * (s_maxValue / c_valCountFloat);
+		s_values[i] = 1.0f / (s_attenuation[0] + (s_attenuation[1] * dist) + (s_attenuation[2] * (dist * dist)));
+	}
+	m_debugGui->BeginWindow(forceOpen, "Curve Editor");
+	m_debugGui->DragFloat("Max Value", s_maxValue, 10.0f, 1.0f, 10000.0f);
+	m_debugGui->DragVector("Attenuation", s_attenuation, 0.01f, 0.0f, 100.0f);
+	m_debugGui->GraphLines("Curve", glm::vec2(c_valueCount * 5, 400.0f), s_values);
+	m_debugGui->EndWindow();
+
+	m_scriptSystem->Globals()["Attenuation"][1] = s_attenuation.x;
+	m_scriptSystem->Globals()["Attenuation"][2] = s_attenuation.y;
+	m_scriptSystem->Globals()["Attenuation"][3] = s_attenuation.z;
+
 	// Process loaded data on main thread
 	m_textures->ProcessLoadedTextures();
 	m_models->ProcessLoadedModels();
@@ -166,9 +193,10 @@ void Graphics::Shutdown()
 	SDE_PROF_EVENT();
 
 	m_scriptSystem->Globals()["Graphics"] = nullptr;
+	m_debugRender = nullptr;
 	m_render2d = nullptr;
 	m_render3d = nullptr;
 	m_models = nullptr;
-	m_shaders = nullptr;
 	m_textures = nullptr;
+	m_shaders = nullptr;
 }

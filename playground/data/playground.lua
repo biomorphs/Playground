@@ -20,7 +20,7 @@ local lightSpeedMulti = 100
 
 function Playground:InitLight(i)
 	Lights[i] = {}
-	Lights[i].Position = {math.random(-50,50),math.random(5,15),math.random(-50,50)}
+	Lights[i].Position = {math.random(-50,50),math.random(20,20),math.random(-50,50)}
 
 	local colour = {0.0,0.0,0.0}
 	while colour[1] == 0 and colour[2] == 0 and colour[3] == 0 do
@@ -28,32 +28,27 @@ function Playground:InitLight(i)
 	end
 
 	Lights[i].Colour = colour
-	Lights[i].Ambient = 0.02
+	Lights[i].Ambient = 0.0
 	Lights[i].Velocity = {0.0,0.0,0.0}
 	Lights[i].Cooldown = 0.0
-	Lights[i].Attenuation = {1.0,0.045,0.0075}
+	Lights[i].Attenuation = Attenuation
 end
 
 function Playground:Init()
-	local lightCount = 8
+	local lightCount = 5
 	local lightColourAccum = {0.0,0.0,0.0}
 	for i=1,lightCount do
 		Playground:InitLight(i)
-		lightColourAccum[1] = lightColourAccum[1] + Lights[i].Colour[1]
-		lightColourAccum[2] = lightColourAccum[2] + Lights[i].Colour[2]
-		lightColourAccum[3] = lightColourAccum[3] + Lights[i].Colour[3]
 	end
-	lightColourAccum[1] = lightColourAccum[1] / lightCount
-	lightColourAccum[2] = lightColourAccum[2] / lightCount
-	lightColourAccum[3] = lightColourAccum[3] / lightCount
 
-	Graphics.SetClearColour(lightColourAccum[1],lightColourAccum[2],lightColourAccum[3])
+	Graphics.SetClearColour(0,0,0)
 end
 
 function Playground:Tick()
 	local timeDelta = Playground.DeltaTime * 0.25
 	for i=1,#Lights do
 		Lights[i].Cooldown = Lights[i].Cooldown - timeDelta
+		Lights[i].Attenuation = Attenuation
 		
 		if(Lights[i].Cooldown <= 0.0) then
 			Lights[i].Velocity[1] = (math.random(-100,100) / 100.0)  * lightSpeedMulti
@@ -69,8 +64,8 @@ function Playground:Tick()
 		Graphics.DebugDrawBox(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],6, Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0)
 	end
 
-	local sunMulti = 1.0
-	Graphics.DirectionalLight(-0.2,-0.8,0.2,	sunMulti*0.25, sunMulti*0.611, sunMulti*1.0,0.04)
+	local sunMulti = 0.1
+	Graphics.DirectionalLight(-0.2,-0.8,0.2,	sunMulti*0.25, sunMulti*0.611, sunMulti*1.0,0.02)
 
 	Graphics.DrawModel(0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,IslandModel,DiffuseShader)
 	Graphics.DrawModel(0.0,2.0,0.0,1.0,1.0,1.0,1.0,1.0,SkeletonModel,DiffuseShader)

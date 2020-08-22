@@ -85,7 +85,7 @@ namespace smol
 				// 1 byte spare
 
 				const uint64_t sortKey = textureHash | meshHash | modelHash | shaderHash;
-				m_instances.push_back({ sortKey, transform * part.m_transform, colour, part.m_diffuse, part.m_normalMap, part.m_specularMap, shader, part.m_mesh });
+				m_instances.push_back({ sortKey, transform * part.m_transform, colour, part.m_diffuse, part.m_normalMap, part.m_specularMap, shader, part.m_mesh.get() });
 			}
 			SDE_ASSERT(meshPartIndex <= 255, "Too many parts in mesh!");
 		}
@@ -133,7 +133,7 @@ namespace smol
 			SDE_PROF_EVENT("Create Instance Buffers");
 			m_instanceTransforms.Create(c_maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
 			m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic);
-			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Static);
+			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Dynamic);
 			m_whiteTexture = m_textures->LoadTexture("white.bmp");
 			m_defaultNormalmap = m_textures->LoadTexture("default_normalmap.png");
 			s_firstFrame = false;

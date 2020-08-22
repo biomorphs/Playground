@@ -108,6 +108,12 @@ namespace DebugGui
 		ImGui::Separator();
 	}
 
+	void DebugGuiSystem::GraphLines(const char* label, glm::vec2 size, const std::vector<float>& values)
+	{
+		ImVec2 graphSize(size.x, size.y);
+		ImGui::PlotLines("", values.data(), values.size(), 0, label, FLT_MAX, FLT_MAX, graphSize);
+	}
+
 	void DebugGuiSystem::GraphLines(const char* label, glm::vec2 size, GraphDataBuffer& buffer)
 	{
 		ImVec2 graphSize(size.x, size.y);

@@ -26,13 +26,14 @@ namespace smol
 
 		struct Part
 		{
-			Render::Mesh* m_mesh;
+			std::unique_ptr<Render::Mesh> m_mesh;
 			smol::TextureHandle m_diffuse;
 			smol::TextureHandle m_normalMap;
 			smol::TextureHandle m_specularMap;
 			glm::mat4 m_transform;
 		};
 		const std::vector<Part>& Parts() const { return m_parts; }
+		std::vector<Part>& Parts() { return m_parts; }
 	private:
 		std::vector<Part> m_parts;
 	};
