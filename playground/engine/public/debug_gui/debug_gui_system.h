@@ -8,6 +8,7 @@ Matt Hoyle
 #include "kernel/base_types.h"
 #include "math/glm_headers.h"
 #include <memory>
+#include <vector>
 
 namespace SDE
 {
@@ -42,6 +43,7 @@ namespace DebugGui
 		bool Button(const char* txt);
 		void Separator();
 		void Image(Render::Texture& src, glm::vec2 size, glm::vec2 uv0 = glm::vec2(0.0f,0.0f), glm::vec2 uv1 = glm::vec2(1.0f,1.0f));
+		void GraphLines(const char* label, glm::vec2 size, const std::vector<float>& values);
 		void GraphLines(const char* label, glm::vec2 size, GraphDataBuffer& buffer);
 		void GraphHistogram(const char* label, glm::vec2 size, GraphDataBuffer& buffer);
 		bool Checkbox(const char* text, bool* val);

@@ -30,6 +30,7 @@ namespace Render
 		~RenderBuffer();
 
 		bool Create(size_t bufferSize, RenderBufferType type, RenderBufferModification modification);
+		bool Create(void* sourceData, size_t bufferSize, RenderBufferType type, RenderBufferModification modification);
 		bool Destroy();
 		void SetData(size_t offset, size_t size, void* srcData);
 
@@ -37,6 +38,7 @@ namespace Render
 		inline size_t GetSize() const { return m_bufferSize; }
 
 	private:
+		uint32_t TranslateStorageType(RenderBufferModification type) const;
 		uint32_t TranslateBufferType(RenderBufferType type) const;
 		uint32_t TranslateModificationType(RenderBufferModification type) const;
 		size_t m_bufferSize;	// size in bytes

@@ -195,7 +195,7 @@ namespace Render
 				streamSize += (streamSize % minVbSize);
 			}
 
-			theBuffer.Create(streamSize, RenderBufferType::VertexData, RenderBufferModification::Static);
+			theBuffer.Create(streamSize, RenderBufferType::VertexData, RenderBufferModification::Dynamic);
 			++streamIndex;
 		}
 

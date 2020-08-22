@@ -6,6 +6,7 @@ Matt Hoyle
 #include "utils.h"
 #include <glew.h>
 #include "core/profiler.h"
+#include <cstring>
 
 namespace Render
 {
@@ -48,7 +49,20 @@ namespace Render
 		}
 	}
 
-	bool RenderBuffer::Create(size_t bufferSize, RenderBufferType type, RenderBufferModification modification)
+	uint32_t RenderBuffer::TranslateStorageType(RenderBufferModification type) const
+	{
+		switch (type)
+		{
+		case RenderBufferModification::Static:
+			return 0;
+		case RenderBufferModification::Dynamic:
+			return GL_DYNAMIC_STORAGE_BIT;
+		default:
+			return -1;
+		}
+	}
+
+	bool RenderBuffer::Create(void* sourceData, size_t bufferSize, RenderBufferType type, RenderBufferModification modification)
 	{
 		SDE_PROF_EVENT();
 		SDE_RENDER_ASSERT(bufferSize > 0, "Buffer size must be >0");
@@ -57,20 +71,19 @@ namespace Render
 		{
 			auto bufferType = TranslateBufferType(type);
 
-			glGenBuffers(1, &m_handle);
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glGenBuffers");
+			{
+				SDE_PROF_EVENT("glCreateBuffers");
+				glCreateBuffers(1, &m_handle);	// create + init an unbound buffer object
+				SDE_RENDER_PROCESS_GL_ERRORS_RET("glCreateBuffers");
+			}
 
-			glBindBuffer(bufferType, m_handle);
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindBuffer");
-
-			// We initialise the buffer memory to the correct size, but we do NOT populate it
-			auto usageType = TranslateModificationType(modification);
-			glBufferData(bufferType, bufferSize, nullptr, usageType);
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glBufferData");
-
-			// Reset state
-			glBindBuffer(bufferType, 0);
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindBuffer");
+			{
+				SDE_PROF_EVENT("glNamedBufferStorage");
+				SDE_RENDER_ASSERT(!(modification == RenderBufferModification::Static && sourceData == nullptr), "Buffer must be dynamic");
+				auto storageType = TranslateStorageType(modification);
+				glNamedBufferStorage(m_handle, bufferSize, sourceData, storageType);
+				SDE_RENDER_PROCESS_GL_ERRORS_RET("glNamedBufferStorage");
+			}
 
 			m_bufferSize = bufferSize;
 			m_type = type;
@@ -79,16 +92,20 @@ namespace Render
 		return true;
 	}
 
+	bool RenderBuffer::Create(size_t bufferSize, RenderBufferType type, RenderBufferModification modification)
+	{
+		return Create(nullptr, bufferSize, type, modification);
+	}
+
 	void RenderBuffer::SetData(size_t offset, size_t size, void* srcData)
 	{
 		SDE_PROF_EVENT();
-		auto bufferType = TranslateBufferType(m_type);
-
 		SDE_ASSERT(offset < m_bufferSize);
 		SDE_ASSERT((size + offset) <= m_bufferSize);
 		SDE_ASSERT(srcData != nullptr);
 		SDE_ASSERT(m_handle != 0);
-
+		
+		auto bufferType = TranslateBufferType(m_type);
 		{
 			SDE_PROF_EVENT("glNamedBufferSubData");
 			glNamedBufferSubData(m_handle, offset, size, srcData);
