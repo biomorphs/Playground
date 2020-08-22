@@ -41,7 +41,7 @@ namespace smol
 
 		struct LoadedTexture
 		{
-			Render::TextureSource m_texture;
+			std::unique_ptr<Render::Texture> m_texture;
 			TextureHandle m_destination;
 		};
 		Kernel::Mutex m_loadedTexturesMutex;

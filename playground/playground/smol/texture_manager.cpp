@@ -25,12 +25,11 @@ namespace smol
 
 		{
 			SDE_PROF_EVENT("CreateTextures");
-			for (const auto& src : loadedTextures)
+			for (auto& tex : loadedTextures)
 			{
-				auto newTex = std::make_unique<Render::Texture>();
-				if (newTex->Create(src.m_texture))
+				if(tex.m_texture != nullptr)
 				{
-					m_textures[src.m_destination.m_index].m_texture = std::move(newTex);
+					m_textures[tex.m_destination.m_index].m_texture = std::move(tex.m_texture);
 				}
 			}
 		}
@@ -71,13 +70,13 @@ namespace smol
 			std::vector<Render::TextureSource::MipDesc> mip;
 			mip.push_back({ (uint32_t)w,(uint32_t)h,0,w * h * (size_t)4 });
 			Render::TextureSource ts((uint32_t)w, (uint32_t)h, Render::TextureSource::Format::RGBA8, { mip }, rawDataBuffer);
-
+			auto newTex = std::make_unique<Render::Texture>();
+			if (newTex->Create(ts))
 			{
 				SDE_PROF_EVENT("PushToResultsList");
 				Core::ScopedMutex lock(m_loadedTexturesMutex);
 				{
-					SDE_PROF_EVENT("PushBack");
-					m_loadedTextures.push_back({ std::move(ts), newHandle });
+					m_loadedTextures.push_back({ std::move(newTex), newHandle });
 				}
 			}
 		});
