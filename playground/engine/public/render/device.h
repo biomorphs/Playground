@@ -32,6 +32,7 @@ namespace Render
 		void Present();
 		void* CreateSharedGLContext();
 		void* GetGLContext();
+		static void FlushContext();
 		void SetGLContext(void* context);	// Sets context PER THREAD
 		void SetScissorEnabled(bool enabled);
 		void SetBlending(bool enabled);

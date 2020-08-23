@@ -62,7 +62,7 @@ function Playground:Tick()
 	    Graphics.DebugDrawBox(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],6, Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0)
 	end
 
-	local sunMulti = 0.1
+	local sunMulti = 0.8
 	Graphics.DirectionalLight(-0.2,-0.8,0.2,	sunMulti*0.25, sunMulti*0.611, sunMulti*1.0,0.02)
 
 	Graphics.DrawModel(0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,IslandModel,DiffuseShader)

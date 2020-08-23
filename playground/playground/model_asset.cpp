@@ -138,7 +138,7 @@ namespace Assets
 			aiProcess_Triangulate |
 			aiProcess_JoinIdenticalVertices |
 			aiProcess_SortByPType
-		);
+			);
 		if (!scene)
 		{
 			return nullptr;

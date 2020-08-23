@@ -5,6 +5,7 @@
 #include "core/scoped_mutex.h"
 #include "kernel/thread.h"
 #include "debug_gui/debug_gui_system.h"
+#include "render/device.h"
 
 namespace smol
 {
@@ -24,7 +25,10 @@ namespace smol
 		for (int t=0;t<m_textures.size();++t)
 		{
 			sprintf_s(text, "%d: %s (0x%p)", t, m_textures[t].m_path.c_str(), m_textures[t].m_texture.get());
-			gui.Text(text);
+			if (gui.Button(text))
+			{
+				m_textures[t].m_texture = nullptr;
+			}
 		}
 		gui.EndWindow();
 		return s_showWindow;
@@ -117,6 +121,9 @@ namespace smol
 			auto newTex = std::make_unique<Render::Texture>();
 			if (newTex->Create(ts))
 			{
+				// Ensure any writes are shared with all contexts
+				Render::Device::FlushContext();
+
 				SDE_PROF_EVENT("PushToResultsList");
 				Core::ScopedMutex lock(m_loadedTexturesMutex);
 				{

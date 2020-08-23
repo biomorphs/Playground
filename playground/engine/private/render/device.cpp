@@ -65,6 +65,11 @@ namespace Render
 		m_context = nullptr;
 	}
 
+	void Device::FlushContext()
+	{
+		glFlush();	// Ensures any writes in shared contexts are pushed to all of them
+	}
+
 	void Device::SetGLContext(void* context)
 	{
 		SDL_GL_MakeCurrent(m_window.GetWindowHandle(), context);

@@ -17,9 +17,8 @@
 #include "smol/debug_render.h"
 #include "core/profiler.h"
 #include "core/timer.h"
+#include "debug_gui/debug_gui_menubar.h"
 #include <sol.hpp>
-
-static glm::vec3 s_attenuation(1.0, 0.0, 0.02);
 
 Graphics::Graphics()
 {
@@ -42,6 +41,10 @@ bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
 	return true;
 }
 
+DebugGui::MenuBar g_graphicsMenu;
+bool g_showTextureGui = false;
+bool g_showModelGui = false;
+
 bool Graphics::PostInit()
 {
 	SDE_PROF_EVENT();
@@ -53,11 +56,6 @@ bool Graphics::PostInit()
 
 	const auto& windowProps = m_renderSystem->GetWindow()->GetProperties();
 	auto windowSize = glm::vec2(windowProps.m_sizeX, windowProps.m_sizeY);
-
-	m_scriptSystem->Globals()["Attenuation"].get_or_create<sol::table>();
-	m_scriptSystem->Globals()["Attenuation"][1] = s_attenuation.x;
-	m_scriptSystem->Globals()["Attenuation"][2] = s_attenuation.y;
-	m_scriptSystem->Globals()["Attenuation"][3] = s_attenuation.z;
 
 	// Init render passes
 	m_render2d = std::make_unique<smol::Renderer2D>(m_textures.get(), windowSize);
@@ -119,6 +117,13 @@ bool Graphics::PostInit()
 	m_debugCameraController->SetPitch(-0.852f);
 	m_debugCameraController->SetYaw(0.592f);
 
+	auto& gMenu = g_graphicsMenu.AddSubmenu(ICON_FK_TELEVISION " Graphics");
+	gMenu.AddItem("Reload Shaders", [this]() { m_shaders->ReloadAll(); });
+	gMenu.AddItem("Reload Textures", [this]() { m_textures->ReloadAll(); });
+	gMenu.AddItem("Reload Models", [this]() { m_render3d->Reset(); m_models->ReloadAll(); });
+	gMenu.AddItem("TextureManager", [this]() { g_showTextureGui = true; });
+	gMenu.AddItem("ModelManager", [this]() { g_showModelGui = true; });
+
 	return true;
 }
 
@@ -148,38 +153,15 @@ bool Graphics::Tick()
 
 	// debug render
 	m_debugRender->PushToRenderer(*m_render3d);
-
-	// Debug gui
-	bool forceOpen = true;
-	m_debugGui->BeginWindow(forceOpen, "Graphics");
-	if (m_debugGui->Button("Reload Shaders"))
+	m_debugGui->MainMenuBar(g_graphicsMenu);
+	if (g_showTextureGui)
 	{
-		m_shaders->ReloadAll();
+		g_showTextureGui = m_textures->ShowGui(*m_debugGui);
 	}
-	char fpsTxt[256] = "";
-	sprintf_s(fpsTxt, "FPS: %d", framesPerSecond);
-	m_debugGui->Text(fpsTxt);
-	m_debugGui->EndWindow();
-
-	const int c_valueCount = 100;
-	static std::vector<float> s_values;
-	static float s_maxValue = 100.0f;
-	float c_valCountFloat = (float)c_valueCount;
-	s_values.resize(c_valueCount);
-	for (int i = 0; i < c_valueCount; ++i)
+	if (g_showModelGui)
 	{
-		float dist = i * (s_maxValue / c_valCountFloat);
-		s_values[i] = 1.0f / (s_attenuation[0] + (s_attenuation[1] * dist) + (s_attenuation[2] * (dist * dist)));
+		g_showModelGui = m_models->ShowGui(*m_debugGui);
 	}
-	m_debugGui->BeginWindow(forceOpen, "Curve Editor");
-	m_debugGui->DragFloat("Max Value", s_maxValue, 10.0f, 1.0f, 10000.0f);
-	m_debugGui->DragVector("Attenuation", s_attenuation, 0.01f, 0.0f, 100.0f);
-	m_debugGui->GraphLines("Curve", glm::vec2(c_valueCount * 5, 400.0f), s_values);
-	m_debugGui->EndWindow();
-
-	m_scriptSystem->Globals()["Attenuation"][1] = s_attenuation.x;
-	m_scriptSystem->Globals()["Attenuation"][2] = s_attenuation.y;
-	m_scriptSystem->Globals()["Attenuation"][3] = s_attenuation.z;
 
 	// Process loaded data on main thread
 	m_textures->ProcessLoadedTextures();

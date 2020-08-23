@@ -7,6 +7,7 @@
 #include "core/scoped_mutex.h"
 #include "kernel/thread.h"
 #include "debug_gui/debug_gui_system.h"
+#include "render/device.h"
 
 namespace smol
 {
@@ -104,6 +105,9 @@ namespace smol
 			newPart.m_transform = mesh.Transform();
 			resultModel->Parts().push_back(std::move(newPart));
 		}
+
+		// Ensure any writes are shared with all contexts
+		Render::Device::FlushContext();
 
 		return resultModel;
 	}
