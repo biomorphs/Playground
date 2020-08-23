@@ -16,6 +16,7 @@ namespace Input
 	public:
 		InputSystem();
 		virtual ~InputSystem();
+		virtual bool PreInit(Core::ISystemEnumerator& systemEnumerator);
 		virtual bool Initialise();
 		virtual bool Tick();
 
@@ -28,6 +29,7 @@ namespace Input
 		void EnumerateControllers();
 		float ApplyDeadZone(float input, float deadZone) const;
 		void UpdateMouseState();
+		void OnSystemEvent(void*);
 
 		struct ControllerDesc
 		{
@@ -37,6 +39,7 @@ namespace Input
 		std::vector<ControllerDesc> m_controllers;
 		float m_controllerAxisDeadZone;
 
+		int32_t m_currentMouseScroll = 0;
 		MouseRawState m_mouseState;
 	};
 }

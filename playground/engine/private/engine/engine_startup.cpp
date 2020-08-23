@@ -7,6 +7,7 @@ SDLEngine
 #include "core/system_manager.h"
 #include "kernel/platform.h"
 #include "kernel/assert.h"
+#include "event_system.h"
 
 namespace Engine
 {
@@ -23,6 +24,7 @@ namespace Engine
 
 		// Create the system manager and register systems
 		Core::SystemManager sysManager;
+		sysManager.RegisterSystem("Events", new Engine::EventSystem);
 
 		SDE_LOGC(Engine, "Registering systems...");
 		sysRegistrar.RegisterSystems(sysManager);

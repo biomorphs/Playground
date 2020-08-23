@@ -8,7 +8,7 @@ Matt Hoyle
 #include "render/texture.h"
 #include "core/system_enumerator.h"
 #include "sde/render_system.h"
-#include "sde/event_system.h"
+#include "engine/event_system.h"
 #include <imgui\imgui.h>
 #include "core/profiler.h"
 #include "debug_gui_menubar.h"
@@ -29,7 +29,7 @@ namespace DebugGui
 		SDE_PROF_EVENT();
 
 		m_renderSystem = (SDE::RenderSystem*)systemEnumerator.GetSystem("Render");
-		auto EventSystem = (SDE::EventSystem*)systemEnumerator.GetSystem("Events");
+		auto EventSystem = (Engine::EventSystem*)systemEnumerator.GetSystem("Events");
 		EventSystem->RegisterEventHandler([this](void* e)
 		{
 			this->m_imguiPass->HandleEvent(e);

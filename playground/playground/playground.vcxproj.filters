@@ -53,6 +53,9 @@
     <ClCompile Include="smol\debug_render.cpp">
       <Filter>smol</Filter>
     </ClCompile>
+    <ClCompile Include="arcball.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h">
@@ -94,6 +97,9 @@
     <ClInclude Include="..\data\global_uniforms.h" />
     <ClInclude Include="smol\debug_render.h">
       <Filter>smol</Filter>
+    </ClInclude>
+    <ClInclude Include="arcball.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

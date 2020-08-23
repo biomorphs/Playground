@@ -4,10 +4,10 @@ Matt Hoyle
 */
 #include "event_system.h"
 #include <algorithm>
-#include <SDL.h>
+#include <SDL_events.h>
 #include "core/profiler.h"
 
-namespace SDE
+namespace Engine
 {
 	EventSystem::EventSystem()
 	{

@@ -8,7 +8,7 @@ Matt Hoyle
 #include <vector>
 #include <functional>
 
-namespace SDE
+namespace Engine
 {
 	// This class handles polling system events and controls the lifetime of the engine
 	class EventSystem : public Core::ISystem

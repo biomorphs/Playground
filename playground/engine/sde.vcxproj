@@ -14,7 +14,6 @@
   <ItemGroup>
     <ClInclude Include="public\sde\camera_controller.h" />
     <ClInclude Include="public\sde\config_system.h" />
-    <ClInclude Include="public\sde\event_system.h" />
     <ClInclude Include="public\sde\script_system.h" />
     <ClInclude Include="public\sde\debug_camera_controller.h" />
     <ClInclude Include="public\sde\debug_render.h" />
@@ -25,7 +24,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\sde\config_system.cpp" />
-    <ClCompile Include="private\sde\event_system.cpp" />
     <ClCompile Include="private\sde\script_system.cpp" />
     <ClCompile Include="private\sde\debug_camera_controller.cpp" />
     <ClCompile Include="private\sde\debug_render.cpp" />

@@ -18,6 +18,7 @@
 #include "core/profiler.h"
 #include "core/timer.h"
 #include "debug_gui/debug_gui_menubar.h"
+#include "arcball.h"
 #include <sol.hpp>
 
 Graphics::Graphics()
@@ -44,6 +45,8 @@ bool Graphics::PreInit(Core::ISystemEnumerator& systemEnumerator)
 DebugGui::MenuBar g_graphicsMenu;
 bool g_showTextureGui = false;
 bool g_showModelGui = false;
+bool g_useArcballCam = true;
+Arcball g_arcball({ 1600, 900 }, { 0.0f,0.0f,4.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
 
 bool Graphics::PostInit()
 {
@@ -123,6 +126,8 @@ bool Graphics::PostInit()
 	gMenu.AddItem("Reload Models", [this]() { m_render3d->Reset(); m_models->ReloadAll(); });
 	gMenu.AddItem("TextureManager", [this]() { g_showTextureGui = true; });
 	gMenu.AddItem("ModelManager", [this]() { g_showModelGui = true; });
+	auto& camMenu = g_graphicsMenu.AddSubmenu(ICON_FK_CAMERA " Camera");
+	camMenu.AddItem("Toggle Camera Mode", [this]() { g_useArcballCam = !g_useArcballCam; });
 
 	return true;
 }
@@ -145,11 +150,19 @@ bool Graphics::Tick()
 		startTime = currentTime;
 	}
 
-	// update camera
 	Render::Camera c;
-	m_debugCameraController->Update(m_inputSystem->ControllerState(0), 0.016f);
-	m_debugCameraController->ApplyToCamera(c);
-	m_render3d->SetCamera(c);
+	if (g_useArcballCam)
+	{
+		g_arcball.Update(m_inputSystem->MouseState(), 0.066f);
+		c.LookAt(g_arcball.GetPosition(), g_arcball.GetTarget(), g_arcball.GetUp());
+		m_render3d->SetCamera(c);
+	}
+	else
+	{
+		m_debugCameraController->Update(m_inputSystem->ControllerState(0), 0.016f);
+		m_debugCameraController->ApplyToCamera(c);
+		m_render3d->SetCamera(c);
+	}	
 
 	// debug render
 	m_debugRender->PushToRenderer(*m_render3d);

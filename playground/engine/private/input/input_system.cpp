@@ -5,9 +5,12 @@ Matt Hoyle
 #include "input_system.h"
 #include "kernel/assert.h"
 #include "core/profiler.h"
+#include "core/system_enumerator.h"
+#include "engine/event_system.h"
 #include <SDL_joystick.h>
 #include <SDL_gamecontroller.h>
 #include <SDL_mouse.h>
+#include <SDL_events.h>
 #include <algorithm>
 
 namespace Input
@@ -21,10 +24,28 @@ namespace Input
 	{
 	}
 
+	void InputSystem::OnSystemEvent(void* e)
+	{
+		auto theEvent = (SDL_Event*)e;
+		if (theEvent->type == SDL_MOUSEWHEEL)
+		{
+			m_currentMouseScroll = theEvent->wheel.y;
+		}
+	}
+
+	bool InputSystem::PreInit(Core::ISystemEnumerator& systemEnumerator)
+	{
+		auto eventSystem = (Engine::EventSystem*)systemEnumerator.GetSystem("Events");
+		eventSystem->RegisterEventHandler([this](void* e) { OnSystemEvent(e); });
+
+		return true;
+	}
+
 	bool InputSystem::Tick()
 	{
 		SDE_PROF_EVENT();
-
+		m_mouseState.m_wheelScroll = m_currentMouseScroll;
+		m_currentMouseScroll = 0;
 		EnumerateControllers();
 		UpdateControllerState();
 		UpdateMouseState();

@@ -20,5 +20,6 @@ namespace Input
 		int32_t m_cursorX;	// position relative to window/viewport in pixels
 		int32_t m_cursorY;
 		uint32_t m_buttonState;	// mask of buttons
+		int32_t m_wheelScroll;
 	};
 }

@@ -12,9 +12,15 @@
     <ClInclude Include="public\engine\engine_startup.h">
       <Filter>public</Filter>
     </ClInclude>
+    <ClInclude Include="public\engine\event_system.h">
+      <Filter>public</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\engine\engine_startup.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\engine\event_system.cpp">
       <Filter>private</Filter>
     </ClCompile>
   </ItemGroup>

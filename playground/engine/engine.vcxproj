@@ -9,12 +9,14 @@
   <Import Project="props/library_build.props" />
   <Import Project="props/shared_preprocessor.props" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)external\Optick_1.3.0\include;$(ProjectDir)public\;$(ProjectDir)public\engine\;$(ProjectDir)private\engine\;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\external\SDL2-2.0.1\include;$(SolutionDir)external\Optick_1.3.0\include;$(ProjectDir)public\;$(ProjectDir)public\engine\;$(ProjectDir)private\engine\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="public\engine\engine_startup.h" />
+    <ClInclude Include="public\engine\event_system.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\engine\engine_startup.cpp" />
+    <ClCompile Include="private\engine\event_system.cpp" />
   </ItemGroup>
 </Project>
