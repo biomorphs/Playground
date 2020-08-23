@@ -3,6 +3,7 @@
 #include "kernel/log.h"
 #include "core/system_enumerator.h"
 #include "debug_gui/debug_gui_system.h"
+#include "debug_gui/debug_gui_menubar.h"
 #include "sde/script_system.h"
 #include "core/profiler.h"
 #include <sol.hpp>
@@ -87,12 +88,21 @@ void Playground::ReloadScript()
 	}
 }
 
+DebugGui::MenuBar g_menuBar;
+bool g_keepRunning = true;
+
 bool Playground::PreInit(Core::ISystemEnumerator& systemEnumerator)
 {
 	SDE_PROF_EVENT();
 	m_debugGui = (DebugGui::DebugGuiSystem*)systemEnumerator.GetSystem("DebugGui");
 	m_scriptSystem = (SDE::ScriptSystem*)systemEnumerator.GetSystem("Script");
 	m_lastFrameTime = m_timer.GetSeconds();
+
+	auto& fileMenu = g_menuBar.AddSubmenu(ICON_FK_FILE_O " File");
+	fileMenu.AddItem("Exit", []() { g_keepRunning = false; });
+
+	auto& scriptMenu = g_menuBar.AddSubmenu(ICON_FK_COG " Scripts");
+	scriptMenu.AddItem("Reload", [this]() {ReloadScript(); }, "R");
 
 	return true;
 }
@@ -107,25 +117,14 @@ bool Playground::Tick()
 		ReloadScript();
 	}
 
-	bool forceOpen = true;
-	m_debugGui->BeginWindow(forceOpen, "Scripts");
-	if (m_debugGui->Button("Reload"))
-	{
-		ReloadScript();
-	}
-	if (m_scriptErrorText.length() > 0)
-	{
-		m_debugGui->Separator();
-		m_debugGui->Text(m_scriptErrorText.c_str());
-	}
-	m_debugGui->EndWindow();
+	m_debugGui->MainMenuBar(g_menuBar);
 
 	double thisFrameTime = m_timer.GetSeconds();
 	m_deltaTime = thisFrameTime - m_lastFrameTime;
 	TickScript();
 	m_lastFrameTime = thisFrameTime;
 
-	return true;
+	return g_keepRunning;
 }
 
 void Playground::Shutdown()

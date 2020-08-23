@@ -1,15 +1,57 @@
 #include "texture_manager.h"
-
 #include "sde/job_system.h"
 #include "../stb_image.h"
 #include "core/profiler.h"
 #include "core/scoped_mutex.h"
+#include "kernel/thread.h"
+#include "debug_gui/debug_gui_system.h"
 
 namespace smol
 {
 	TextureManager::TextureManager(SDE::JobSystem* js)
 		: m_jobSystem(js)
 	{
+	}
+
+	bool TextureManager::ShowGui(DebugGui::DebugGuiSystem& gui)
+	{
+		static bool s_showWindow = true;
+		gui.BeginWindow(s_showWindow, "TextureManager");
+		char text[1024] = { '\0' };
+		sprintf_s(text, "Loading: %d", m_inFlightTextures.Get());
+		gui.Text(text);
+		gui.Separator();
+		for (int t=0;t<m_textures.size();++t)
+		{
+			sprintf_s(text, "%d: %s (0x%p)", t, m_textures[t].m_path.c_str(), m_textures[t].m_texture.get());
+			gui.Text(text);
+		}
+		gui.EndWindow();
+		return s_showWindow;
+	}
+
+	void TextureManager::ReloadAll()
+	{
+		SDE_PROF_EVENT();
+
+		// wait until all jobs finish, not great but eh
+		while (m_inFlightTextures.Get() > 0)
+		{
+			int v = m_inFlightTextures.Get();
+			Kernel::Thread::Sleep(1);
+		}
+		// clear out the old results
+		{
+			Core::ScopedMutex lock(m_loadedTexturesMutex);
+			m_loadedTextures.clear();
+		}
+		// now load the textures again
+		auto currentTextures = std::move(m_textures);
+		for (int t=0;t<currentTextures.size();++t)
+		{
+			auto newHandle = LoadTexture(currentTextures[t].m_path.c_str());
+			SDE_ASSERT(t == newHandle.m_index, "Bum");
+		}
 	}
 
 	void TextureManager::ProcessLoadedTextures()
@@ -47,6 +89,7 @@ namespace smol
 
 		m_textures.push_back({nullptr, path });
 		auto newHandle = TextureHandle{ static_cast<uint16_t>(m_textures.size() - 1) };
+		m_inFlightTextures.Add(1);
 
 		std::string pathString = path;
 		m_jobSystem->PushJob([this, pathString, newHandle]() {
@@ -59,6 +102,7 @@ namespace smol
 			unsigned char* loadedData = stbi_load(pathString.c_str(), &w, &h, &components, 4);		// we always want rgba
 			if (loadedData == nullptr)
 			{
+				m_inFlightTextures.Add(-1);
 				return;
 			}
 
@@ -79,6 +123,7 @@ namespace smol
 					m_loadedTextures.push_back({ std::move(newTex), newHandle });
 				}
 			}
+			m_inFlightTextures.Add(-1);
 		});
 
 		return newHandle;

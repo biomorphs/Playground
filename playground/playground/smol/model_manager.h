@@ -12,6 +12,11 @@ namespace SDE
 	class JobSystem;
 }
 
+namespace DebugGui
+{
+	class DebugGuiSystem;
+}
+
 namespace smol
 {
 	class TextureManager;
@@ -34,6 +39,10 @@ namespace smol
 		Model* GetModel(const ModelHandle& h);
 		void ProcessLoadedModels();
 
+		bool ShowGui(DebugGui::DebugGuiSystem& gui);
+
+		void ReloadAll();
+
 	private:
 		struct ModelDesc 
 		{
@@ -55,6 +64,7 @@ namespace smol
 	
 		Kernel::Mutex m_loadedModelsMutex;
 		std::vector<ModelLoadResult> m_loadedModels;	// models to process after successful load
+		Kernel::AtomicInt32 m_inFlightModels = 0;
 
 		TextureManager* m_textureManager;
 		SDE::JobSystem* m_jobSystem;

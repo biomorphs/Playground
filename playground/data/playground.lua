@@ -31,7 +31,7 @@ function Playground:InitLight(i)
 	Lights[i].Ambient = 0.0
 	Lights[i].Velocity = {0.0,0.0,0.0}
 	Lights[i].Cooldown = 0.0
-	Lights[i].Attenuation = Attenuation
+	Lights[i].Attenuation = {1.0, 0.0, 0.02}
 end
 
 function Playground:Init()
@@ -47,9 +47,7 @@ end
 function Playground:Tick()
 	local timeDelta = Playground.DeltaTime * 0.25
 	for i=1,#Lights do
-		Lights[i].Cooldown = Lights[i].Cooldown - timeDelta
-		Lights[i].Attenuation = Attenuation
-		
+		Lights[i].Cooldown = Lights[i].Cooldown - timeDelta		
 		if(Lights[i].Cooldown <= 0.0) then
 			Lights[i].Velocity[1] = (math.random(-100,100) / 100.0)  * lightSpeedMulti
 			Lights[i].Velocity[3] = (math.random(-100,100) / 100.0)  * lightSpeedMulti
@@ -61,7 +59,7 @@ function Playground:Tick()
 
 		Graphics.PointLight(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3], Lights[i].Ambient, Lights[i].Attenuation[1], Lights[i].Attenuation[2], Lights[i].Attenuation[3])
 		Graphics.DrawModel(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0,2.0,LightModel,LightShader)
-		Graphics.DebugDrawBox(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],6, Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0)
+	    Graphics.DebugDrawBox(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],6, Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0)
 	end
 
 	local sunMulti = 0.1

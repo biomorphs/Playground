@@ -13,7 +13,7 @@ namespace smol
 		for (auto &s : currentShaders)
 		{
 			auto newHandle = LoadShader(s.m_name.c_str(), s.m_vsPath.c_str(), s.m_fsPath.c_str());
-			if (newHandle.m_index == ShaderHandle::Invalid().m_index)
+			if (newHandle.m_index == ShaderHandle::Invalid().m_index)	// if compilation failed use the old shader
 			{
 				m_shaders.emplace_back(std::move(s));
 			}

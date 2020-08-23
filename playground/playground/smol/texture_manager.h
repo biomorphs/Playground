@@ -6,10 +6,16 @@
 #include "render/texture.h"
 #include "render/texture_source.h"
 #include "kernel/mutex.h"
+#include "kernel/atomics.h"
 
 namespace SDE
 {
 	class JobSystem;
+}
+
+namespace DebugGui
+{
+	class DebugGuiSystem;
 }
 
 namespace smol
@@ -32,6 +38,10 @@ namespace smol
 		Render::Texture* GetTexture(const TextureHandle& h);
 		void ProcessLoadedTextures();
 
+		bool ShowGui(DebugGui::DebugGuiSystem& gui);
+
+		void ReloadAll();
+
 	private:
 		struct TextureDesc {
 			std::unique_ptr<Render::Texture> m_texture;
@@ -46,7 +56,7 @@ namespace smol
 		};
 		Kernel::Mutex m_loadedTexturesMutex;
 		std::vector<LoadedTexture> m_loadedTextures;
-
-		SDE::JobSystem* m_jobSystem;
+		Kernel::AtomicInt32 m_inFlightTextures = 0;
+		SDE::JobSystem* m_jobSystem = nullptr;
 	};
 }

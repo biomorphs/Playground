@@ -9,7 +9,7 @@
   <Import Project="props/library_build.props" />
   <Import Project="props/shared_preprocessor.props" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)external\Optick_1.3.0\include;$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)..\external\glew-1.12.0-win32\glew-1.12.0\include\GL;$(ProjectDir)..\external\imgui-1.69;$(ProjectDir)..\external\glm\;$(ProjectDir)public\;$(ProjectDir)public\debug_gui\;$(ProjectDir)private\debug_gui\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)external\fork-awesome\;$(SolutionDir)external\Optick_1.3.0\include;$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)..\external\glew-1.12.0-win32\glew-1.12.0\include\GL;$(ProjectDir)..\external\imgui-1.69;$(ProjectDir)..\external\glm\;$(ProjectDir)public\;$(ProjectDir)public\debug_gui\;$(ProjectDir)private\debug_gui\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="..\external\imgui-1.69\imgui\examples\imgui_impl_opengl3.h" />
@@ -21,6 +21,7 @@
     <ClInclude Include="..\external\imgui-1.69\imgui\imstb_textedit.h" />
     <ClInclude Include="..\external\imgui-1.69\imgui\imstb_truetype.h" />
     <ClInclude Include="private\debug_gui\imgui_sdl_gl3_render.h" />
+    <ClInclude Include="public\debug_gui\debug_gui_menubar.h" />
     <ClInclude Include="public\debug_gui\debug_gui_system.h" />
     <ClInclude Include="public\debug_gui\graph_data_buffer.h" />
   </ItemGroup>
@@ -31,6 +32,7 @@
     <ClCompile Include="..\external\imgui-1.69\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\external\imgui-1.69\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\external\imgui-1.69\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="private\debug_gui\debug_gui_menubar.cpp" />
     <ClCompile Include="private\debug_gui\debug_gui_system.cpp" />
     <ClCompile Include="private\debug_gui\graph_data_buffer.cpp" />
     <ClCompile Include="private\debug_gui\imgui_sdl_gl3_render.cpp" />

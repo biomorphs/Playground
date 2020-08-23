@@ -5,7 +5,8 @@
 #include "kernel/assert.h"
 #include "core/profiler.h"
 #include "core/scoped_mutex.h"
-
+#include "kernel/thread.h"
+#include "debug_gui/debug_gui_system.h"
 
 namespace smol
 {
@@ -13,6 +14,47 @@ namespace smol
 		: m_textureManager(tm)
 		, m_jobSystem(js)
 	{
+	}
+
+	bool ModelManager::ShowGui(DebugGui::DebugGuiSystem& gui)
+	{
+		static bool s_showWindow = true;
+		gui.BeginWindow(s_showWindow, "ModelManager");
+		char text[1024] = { '\0' };
+		sprintf_s(text, "Loading: %d", m_inFlightModels.Get());
+		gui.Text(text);
+		gui.Separator();
+		for (int t = 0; t < m_models.size(); ++t)
+		{
+			sprintf_s(text, "%d: %s (0x%p)", t, m_models[t].m_name.c_str(), m_models[t].m_model.get());
+			gui.Text(text);
+		}
+		gui.EndWindow();
+		return s_showWindow;
+	}
+
+	void ModelManager::ReloadAll()
+	{
+		SDE_PROF_EVENT();
+
+		// wait until all jobs finish, not great but eh
+		while (m_inFlightModels.Get() > 0)
+		{
+			int v = m_inFlightModels.Get();
+			Kernel::Thread::Sleep(1);
+		}
+		// clear out the old results
+		{
+			Core::ScopedMutex lock(m_loadedModelsMutex);
+			m_loadedModels.clear();
+		}
+		// now load the models again
+		auto currentModels = std::move(m_models);
+		for (int m = 0; m < currentModels.size(); ++m)
+		{
+			auto newHandle = LoadModel(currentModels[m].m_name.c_str());
+			SDE_ASSERT(m == newHandle.m_index, "Bum");
+		}
 	}
 
 	// this must be called on main thread before rendering!
@@ -131,6 +173,7 @@ namespace smol
 		// always make a valid handle
 		m_models.push_back({nullptr, path });
 		auto newHandle = ModelHandle{ static_cast<uint16_t>(m_models.size() - 1) };
+		m_inFlightModels.Add(1);
 
 		std::string pathString = path;
 		m_jobSystem->PushJob([this, pathString, newHandle]() {
@@ -147,6 +190,7 @@ namespace smol
 
 				Core::ScopedMutex lock(m_loadedModelsMutex);
 				m_loadedModels.push_back({ std::move(loadedAsset), std::move(theModel), std::move(meshBuilders), newHandle });
+				m_inFlightModels.Add(-1);
 			}
 		});
 		

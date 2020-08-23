@@ -27,6 +27,7 @@
     <ClInclude Include="private\debug_gui\imgui_sdl_gl3_render.h" />
     <ClInclude Include="..\external\imgui-1.69\imgui\examples\imgui_impl_opengl3.h" />
     <ClInclude Include="..\external\imgui-1.69\imgui\examples\imgui_impl_sdl.h" />
+    <ClInclude Include="public\debug_gui\debug_gui_menubar.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\debug_gui\debug_gui_system.cpp">
@@ -42,5 +43,6 @@
     <ClCompile Include="private\debug_gui\imgui_sdl_gl3_render.cpp" />
     <ClCompile Include="..\external\imgui-1.69\imgui\examples\imgui_impl_sdl.cpp" />
     <ClCompile Include="..\external\imgui-1.69\imgui\examples\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="private\debug_gui\debug_gui_menubar.cpp" />
   </ItemGroup>
 </Project>

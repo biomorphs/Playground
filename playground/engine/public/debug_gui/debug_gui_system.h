@@ -7,6 +7,7 @@ Matt Hoyle
 #include "core/system.h"
 #include "kernel/base_types.h"
 #include "math/glm_headers.h"
+#include <IconsForkAwesome.h>	// expose fork-awesome icons to all users
 #include <memory>
 #include <vector>
 
@@ -24,6 +25,7 @@ namespace DebugGui
 {
 	class ImguiSdlGL3RenderPass;
 	class GraphDataBuffer;
+	class MenuBar;
 	class DebugGuiSystem : public Core::ISystem
 	{
 	public:
@@ -51,6 +53,7 @@ namespace DebugGui
 		bool DragVector(const char* label, glm::vec4& v, float step = 1.0f, float min = 0.0f, float max = 0.0f);
 		bool DragVector(const char* label, glm::vec3& v, float step = 1.0f, float min = 0.0f, float max = 0.0f);
 		bool ColourEdit(const char* label, glm::vec4& c, bool showAlpha = true);
+		void MainMenuBar(MenuBar&);
 
 	private:
 		SDE::RenderSystem* m_renderSystem;

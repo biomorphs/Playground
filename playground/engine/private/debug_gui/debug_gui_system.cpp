@@ -11,6 +11,7 @@ Matt Hoyle
 #include "sde/event_system.h"
 #include <imgui\imgui.h>
 #include "core/profiler.h"
+#include "debug_gui_menubar.h"
 
 namespace DebugGui
 {
@@ -51,7 +52,48 @@ namespace DebugGui
 		m_imguiPass = std::make_unique<ImguiSdlGL3RenderPass>(m_renderSystem->GetWindow(), m_renderSystem->GetDevice());
 		m_renderSystem->AddPass(*m_imguiPass, 0x10000000);	// high pass sort key so debug gui always renders last
 
+		// merge awesome-fork icons with main font
+		// allows use of icons in IconsForkAwesome.h
+		ImGuiIO& io = ImGui::GetIO();
+		io.Fonts->AddFontDefault();
+
+		// merge in icons from Font Awesome
+		static const ImWchar icons_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
+		ImFontConfig icons_config; icons_config.MergeMode = true; icons_config.PixelSnapH = true;
+		io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FK, 16.0f, &icons_config, icons_ranges);
+
 		return true;
+	}
+
+	void DoSubMenu(SubMenu& b)
+	{
+		if (ImGui::BeginMenu(b.m_label.c_str(), b.m_enabled))
+		{
+			for (auto item : b.m_menuItems)
+			{
+				if (ImGui::MenuItem(item.m_label.c_str(), item.m_shortcut.c_str(), item.m_selected, item.m_enabled))
+				{
+					item.m_onSelected();
+				}
+			}
+			for (auto submenu : b.m_subMenus)
+			{
+				DoSubMenu(submenu);
+			}
+			ImGui::EndMenu();
+		}
+	}
+
+	void DebugGuiSystem::MainMenuBar(MenuBar& bar)
+	{
+		if (ImGui::BeginMainMenuBar())
+		{
+			for (auto sm : bar.m_subMenus)
+			{
+				DoSubMenu(sm);
+			}
+			ImGui::EndMainMenuBar();
+		}
 	}
 
 	void DebugGuiSystem::BeginWindow(bool& windowOpen, const char* windowName, glm::vec2 size)
