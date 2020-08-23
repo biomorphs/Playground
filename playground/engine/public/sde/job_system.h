@@ -12,6 +12,8 @@ Matt Hoyle
 
 namespace SDE
 {
+	class ConfigSystem;
+
 	class JobSystem : public Core::ISystem
 	{
 	public:
@@ -25,6 +27,8 @@ namespace SDE
 		void PushJob(Job::JobThreadFunction threadFn);
 
 	private:
+		void LoadConfig(ConfigSystem* cfg);
+		ConfigSystem* m_configSystem;
 		class RenderSystem* m_renderSystem;
 		Core::ThreadPool m_threadPool;
 		JobQueue m_pendingJobs;

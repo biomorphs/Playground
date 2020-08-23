@@ -35,7 +35,7 @@ function Playground:InitLight(i)
 end
 
 function Playground:Init()
-	local lightCount = 5
+	local lightCount = 8
 	local lightColourAccum = {0.0,0.0,0.0}
 	for i=1,lightCount do
 		Playground:InitLight(i)

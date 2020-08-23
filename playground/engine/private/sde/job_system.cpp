@@ -8,6 +8,7 @@ Matt Hoyle
 #include "core/system_enumerator.h"
 #include "render_system.h"
 #include "render/device.h"
+#include "sde/config_system.h"
 
 namespace SDE
 {
@@ -27,14 +28,29 @@ namespace SDE
 	{
 	}
 
+	void JobSystem::LoadConfig(ConfigSystem* cfg)
+	{
+		SDE_PROF_EVENT();
+
+		auto values = cfg->Values();
+		auto jobSys = values["JobSystem"];
+		if (jobSys.valid())
+		{
+			m_threadCount = jobSys["ThreadCount"].get_or(m_threadCount);
+		}
+	}
+
 	bool JobSystem::PreInit(Core::ISystemEnumerator& systemEnumerator)
 	{
 		m_renderSystem = (RenderSystem*)systemEnumerator.GetSystem("Render");
+		m_configSystem = (SDE::ConfigSystem*)systemEnumerator.GetSystem("Config");
 		return true;
 	}
 
 	bool JobSystem::PostInit()
 	{
+		LoadConfig(m_configSystem);
+
 		// Create shared GL contexts for each job thread on the main thread
 		// This allows us to call *some* gl functions from workers
 		auto renderDevice = m_renderSystem->GetDevice();
