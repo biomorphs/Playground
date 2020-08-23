@@ -96,13 +96,14 @@ namespace DebugGui
 		}
 	}
 
-	void DebugGuiSystem::BeginWindow(bool& windowOpen, const char* windowName, glm::vec2 size)
+	bool DebugGuiSystem::BeginWindow(bool& windowOpen, const char* windowName, glm::vec2 size)
 	{
-		ImGui::Begin(windowName, &windowOpen, 0);
+		bool ret = ImGui::Begin(windowName, &windowOpen, 0);
 		if (size.x > 0 && size.y > 0)
 		{
 			ImGui::SetWindowSize(ImVec2(size.x, size.y));
 		}
+		return ret;
 	}
 
 	void DebugGuiSystem::EndWindow()
@@ -133,6 +134,11 @@ namespace DebugGui
 	bool DebugGuiSystem::TextInput(const char* label, char* textBuffer, size_t bufferSize)
 	{
 		return ImGui::InputText(label, textBuffer, bufferSize);
+	}
+
+	bool DebugGuiSystem::Selectable(const char* txt, bool selected)
+	{
+		return ImGui::Selectable(txt, selected);
 	}
 
 	bool DebugGuiSystem::Button(const char* txt)

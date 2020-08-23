@@ -17,6 +17,7 @@ namespace smol
 	bool TextureManager::ShowGui(DebugGui::DebugGuiSystem& gui)
 	{
 		static bool s_showWindow = true;
+		static TextureHandle s_showTexture;
 		gui.BeginWindow(s_showWindow, "TextureManager");
 		char text[1024] = { '\0' };
 		sprintf_s(text, "Loading: %d", m_inFlightTextures.Get());
@@ -27,10 +28,27 @@ namespace smol
 			sprintf_s(text, "%d: %s (0x%p)", t, m_textures[t].m_path.c_str(), m_textures[t].m_texture.get());
 			if (gui.Button(text))
 			{
-				m_textures[t].m_texture = nullptr;
+				s_showTexture = { static_cast<uint16_t>(t) };
 			}
 		}
 		gui.EndWindow();
+
+		if(s_showTexture.m_index != -1)
+		{ 
+			auto previewTexture = GetTexture(s_showTexture);
+			if (previewTexture != nullptr)
+			{
+				bool show = true;
+				gui.BeginWindow(show, m_textures[s_showTexture.m_index].m_path.c_str());
+				gui.Image(*previewTexture, glm::vec2(512, 512));
+				gui.EndWindow();
+				if (!show)
+				{
+					s_showTexture = {(uint16_t)-1};
+				}
+			}
+		}
+
 		return s_showWindow;
 	}
 
