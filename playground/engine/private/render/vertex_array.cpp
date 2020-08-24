@@ -9,6 +9,11 @@ Matt Hoyle
 
 namespace Render
 {
+	// this must match the enum VertexDataType
+	constexpr size_t VertexDataTypeSizes[] = {
+		sizeof(float)
+	};
+
 	VertexArray::VertexArray()
 		: m_handle(0)
 	{
@@ -30,7 +35,14 @@ namespace Render
 		newDesc.m_dataType = srcType;
 		newDesc.m_componentCount = components;
 		newDesc.m_offset = offset;
-		newDesc.m_stride = stride;
+		if (stride == 0)
+		{
+			newDesc.m_stride = VertexDataTypeSizes[(int)srcType] * components;
+		}
+		else
+		{
+			newDesc.m_stride = stride;
+		}
 		newDesc.m_attribIndex = attribIndex;
 
 		m_descriptors.push_back(newDesc);
@@ -53,37 +65,26 @@ namespace Render
 
 		SDE_ASSERT(m_handle == 0);
 
-		glGenVertexArrays(1, &m_handle);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glGenVertexArrays");
-
-		glBindVertexArray(m_handle);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindVertexArray");
+		glCreateVertexArrays(1, &m_handle);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glCreateVertexArrays");
 
 		for (auto it = m_descriptors.begin(); it != m_descriptors.end(); ++it)
 		{
-			// We bind the VBs now, so we don't have to do it for each draw call
-			// Whenever we bind this VAO from now on, these buffers will also be bound
-			glBindBuffer(GL_ARRAY_BUFFER, it->m_srcBuffer->GetHandle());
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindBuffer");
+			// bind the VBs
+			glVertexArrayVertexBuffer(m_handle, it->m_attribIndex, it->m_srcBuffer->GetHandle(), it->m_offset, it->m_stride);
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glVertexArrayVertexBuffer");
 
 			uint32_t glDataType = TranslateDataType(it->m_dataType);
 			SDE_ASSERT(glDataType != -1);
 
-			// cache the attributes in this VAO
-			glVertexAttribPointer(it->m_attribIndex, it->m_componentCount, glDataType, false, it->m_stride, reinterpret_cast<void*>(it->m_offset));
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glVertexAttribPointer");
+			// set the array format
+			glVertexArrayAttribFormat(m_handle, it->m_attribIndex, it->m_componentCount, glDataType, false, (GLuint)it->m_offset);
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glVertexArrayAttribFormat");
 
-			// Enable the stream
-			glEnableVertexAttribArray(it->m_attribIndex);
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glEnableVertexAttribArray");
+			// enable the stream
+			glEnableVertexArrayAttrib(m_handle, it->m_attribIndex);
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glEnableVertexArrayAttrib");
 		}
-
-		// Reset state
-		glBindVertexArray(0);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindVertexArray");
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);	
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindBuffer");
 
 		return true;
 	}
