@@ -136,6 +136,7 @@ namespace smol
 			std::vector<Render::TextureSource::MipDesc> mip;
 			mip.push_back({ (uint32_t)w,(uint32_t)h,0,w * h * (size_t)4 });
 			Render::TextureSource ts((uint32_t)w, (uint32_t)h, Render::TextureSource::Format::RGBA8, { mip }, rawDataBuffer);
+			ts.SetGenerateMips(true);
 			auto newTex = std::make_unique<Render::Texture>();
 			if (newTex->Create(ts))
 			{

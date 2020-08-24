@@ -77,11 +77,23 @@ namespace Render
 	{
 		SDE_PROF_EVENT();
 
-		glGenTextures(1, &m_handle);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glGenTextures");
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_handle);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glCreateTextures");
 
-		glBindTexture(GL_TEXTURE_2D, m_handle);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindTexture");
+		const uint32_t mipCount = src.MipCount();
+		const bool shouldGenerateMips = mipCount == 1 && src.ShouldGenerateMips();
+		glTextureParameteri(m_handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
+		if (mipCount > 1 || shouldGenerateMips)
+		{
+			glTextureParameteri(m_handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		}
+		else
+		{
+			glTextureParameteri(m_handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		}
+		
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
 
 		uint32_t glStorageFormat = SourceFormatToGLStorageFormat(src.SourceFormat());
 		uint32_t glInternalFormat = SourceFormatToGLInternalFormat(src.SourceFormat());
@@ -89,16 +101,12 @@ namespace Render
 		SDE_RENDER_ASSERT(glStorageFormat != -1);
 		SDE_RENDER_ASSERT(glInternalFormat != -1);
 		SDE_RENDER_ASSERT(glInternalType != -1);
-
-		const uint32_t mipCount = src.MipCount();
-
 		{
 			SDE_PROF_EVENT("AllocateStorage");
 			// This preallocates the entire mip-chain
-			glTexStorage2D(GL_TEXTURE_2D, mipCount, glStorageFormat, src.Width(), src.Height());
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glTexStorage2D");
+			glTextureStorage2D(m_handle, mipCount, glStorageFormat, src.Width(), src.Height());
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureStorage2D");
 		}
-
 		{
 			SDE_PROF_EVENT("CopyData");
 			for (uint32_t m = 0; m < mipCount; ++m)
@@ -108,41 +116,38 @@ namespace Render
 				const uint8_t* mipData = src.MipLevel(m, w, h, size);
 				SDE_ASSERT(mipData);
 
-				glTexSubImage2D(GL_TEXTURE_2D, m, 0, 0, w, h, glInternalFormat, glInternalType, mipData);
-				SDE_RENDER_PROCESS_GL_ERRORS_RET("glCompressedTexSubImage2D");
+				glTextureSubImage2D(m_handle, m, 0, 0, w, h, glInternalFormat, glInternalType, mipData);
+				SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureSubImage2D");
 			}
 		}
-
-		// This should probably be tied to sampler state, but for now we will just use bilinear for everything
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTexParameteri");
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipCount > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTexParameteri");
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindTexture");
-
-		return true;
+		if (shouldGenerateMips)
+		{
+			SDE_PROF_EVENT("GenerateMips");
+			glGenerateTextureMipmap(m_handle);
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glGenerateTextureMipmap");
+		}
+		return m_handle != 0;
 	}
 
 	bool Texture::CreateSimpleCompressedTexture(const TextureSource& src)
 	{
 		SDE_PROF_EVENT();
 
-		glGenTextures(1, &m_handle);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glGenTextures");
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_handle);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glCreateTextures");
 
-		glBindTexture(GL_TEXTURE_2D, m_handle);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindTexture");
+		const uint32_t mipCount = src.MipCount();
+		glTextureParameteri(m_handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
+		glTextureParameteri(m_handle, GL_TEXTURE_MIN_FILTER, mipCount > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
 
 		uint32_t glFormat = SourceFormatToGLStorageFormat(src.SourceFormat());
 		SDE_RENDER_ASSERT(glFormat != -1);
 
-		const uint32_t mipCount = src.MipCount();
-
 		// This preallocates the entire mip-chain
-		glTexStorage2D(GL_TEXTURE_2D, mipCount, glFormat, src.Width(), src.Height());
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTexStorage2D");
+		glTextureStorage2D(m_handle, mipCount, glFormat, src.Width(), src.Height());
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureStorage2D");
 
 		for (uint32_t m = 0; m < mipCount; ++m)
 		{
@@ -151,19 +156,9 @@ namespace Render
 			const uint8_t* mipData = src.MipLevel(m, w, h, size);
 			SDE_ASSERT(mipData);
 
-			glCompressedTexSubImage2D(GL_TEXTURE_2D, m, 0, 0, w, h, glFormat, (GLsizei)size, mipData);
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glCompressedTexSubImage2D");
+			glCompressedTextureSubImage2D(m_handle, m, 0, 0, w, h, glFormat, (GLsizei)size, mipData);
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glCompressedTextureSubImage2D");
 		}
-
-		// This should probably be tied to sampler state, but for now we will just use bilinear for everything
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTexParameteri");
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipCount > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTexParameteri");
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindTexture");
-
 		return true;
 	}
 
@@ -171,20 +166,21 @@ namespace Render
 	{
 		SDE_PROF_EVENT();
 
-		glGenTextures(1, &m_handle);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glGenTextures");
-
-		glBindTexture(GL_TEXTURE_2D_ARRAY, m_handle);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindTexture");
+		glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &m_handle);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glCreateTextures");
 
 		uint32_t glFormat = SourceFormatToGLStorageFormat(src[0].SourceFormat());
 		SDE_RENDER_ASSERT(glFormat != -1);
 
 		const uint32_t mipCount = src[0].MipCount();
+		glTextureParameteri(m_handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
+		glTextureParameteri(m_handle, GL_TEXTURE_MIN_FILTER, mipCount > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
 
 		// This preallocates the entire mip-chain for all textures in the array
-		glTexStorage3D(GL_TEXTURE_2D_ARRAY, mipCount, glFormat, src[0].Width(), src[0].Height(), (GLsizei)src.size());
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTexStorage3D");
+		glTextureStorage3D(m_handle, mipCount, glFormat, src[0].Width(), src[0].Height(), (GLsizei)src.size());
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureStorage3D");
 
 		// Now, since opengl is retarded and requires that glCompressedTexSubImage3D is passed all data for a mip level,
 		// we must manually pack all data for a particular mip into one buffer
@@ -207,19 +203,10 @@ namespace Render
 			auto bytesWritten = (size_t)(dataPtr - mipBuffer.data());
 			SDE_ASSERT(bytesWritten <= mipBuffer.size());
 
-			glCompressedTexSubImage3D(GL_TEXTURE_2D_ARRAY, m, 0, 0, 0, w, h, (GLsizei)src.size(), glFormat, (GLsizei)(bytesWritten), mipBuffer.data());
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glCompressedTexSubImage3D");
+			glCompressedTextureSubImage3D(m_handle, m, 0, 0, 0, w, h, (GLsizei)src.size(), glFormat, (GLsizei)(bytesWritten), mipBuffer.data());
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glCompressedTextureSubImage3D");
 		}
 		mipBuffer.clear();
-
-		// This should probably be tied to sampler state, but for now we will just use bilinear for everything
-		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTexParameteri");
-		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, mipCount > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTexParameteri");
-
-		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindTexture");
 
 		return true;
 	}
@@ -279,16 +266,12 @@ namespace Render
 			return false;
 		}
 
-		glBindTexture(GL_TEXTURE_2D, m_handle);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindTexture");
-
 		uint32_t glStorageFormat = SourceFormatToGLStorageFormat(src[0].SourceFormat());
 		uint32_t glInternalFormat = SourceFormatToGLInternalFormat(src[0].SourceFormat());
 		uint32_t glInternalType = SourceFormatToGLInternalType(src[0].SourceFormat());
 		SDE_RENDER_ASSERT(glStorageFormat != -1);
 		SDE_RENDER_ASSERT(glInternalFormat != -1);
 		SDE_RENDER_ASSERT(glInternalType != -1);
-
 		const uint32_t mipCount = src[0].MipCount();
 		for (uint32_t m = 0; m < mipCount; ++m)
 		{
@@ -297,12 +280,9 @@ namespace Render
 			const uint8_t* mipData = src[0].MipLevel(m, w, h, size);
 			SDE_ASSERT(mipData);
 
-			glTexSubImage2D(GL_TEXTURE_2D, m, 0, 0, w, h, glInternalFormat, glInternalType, mipData);
-			SDE_RENDER_PROCESS_GL_ERRORS_RET("glCompressedTexSubImage2D");
+			glTextureSubImage2D(m_handle, m, 0, 0, w, h, glInternalFormat, glInternalType, mipData);
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureSubImage2D");
 		}
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-		SDE_RENDER_PROCESS_GL_ERRORS_RET("glBindTexture");
 
 		return true;
 	}

@@ -40,6 +40,8 @@ namespace Render
 		inline uint32_t MipCount() const { return static_cast<uint32_t>(m_mipDescriptors.size()); }
 		inline Format SourceFormat() const { return m_format; }
 		const uint8_t* MipLevel(uint32_t mip, uint32_t& w, uint32_t& h, size_t& size) const;
+		inline void SetGenerateMips(bool g) { m_generateMips = g; }
+		inline bool ShouldGenerateMips() const { return m_generateMips; }
 
 	private:
 		Format m_format;
@@ -47,6 +49,7 @@ namespace Render
 		uint32_t m_height;
 		std::vector<MipDesc> m_mipDescriptors;
 		std::vector<uint8_t> m_rawBuffer;
+		bool m_generateMips = false;
 	};
 }
 
