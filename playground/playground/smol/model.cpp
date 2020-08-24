@@ -52,7 +52,7 @@ namespace smol
 			auto diffuseTexture = tm.LoadTexture(diffuseTexturePath.c_str());
 			auto normalTexture = tm.LoadTexture(normalTexturePath.c_str());
 			auto specularTexture = tm.LoadTexture(specTexturePath.c_str());
-			resultModel->m_parts.push_back({ std::move(newMesh), diffuseTexture, normalTexture, specularTexture, mesh.Transform() });
+			resultModel->m_parts.push_back({ std::move(newMesh), diffuseTexture, normalTexture, specularTexture, mesh.Transform(), mesh.Bounds() });
 		}
 		return resultModel;
 	}

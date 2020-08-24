@@ -44,6 +44,15 @@ function Playground:Init()
 	Graphics.SetClearColour(0,0,0)
 end
 
+function DrawGrid(startX,endX,stepX,startZ,endZ,stepZ,yAxis)
+	for x=startX,endX,stepX do
+		Graphics.DebugDrawLine(x,yAxis,startZ,x,yAxis,endZ,0.4,0.4,0.4,0.4,0.4,0.4)
+	end
+	for z=startZ,endZ,stepZ do
+		Graphics.DebugDrawLine(startX,yAxis,z,endX,yAxis,z,0.4,0.4,0.4,0.4,0.4,0.4)
+	end
+end
+
 function Playground:Tick()
 	local timeDelta = Playground.DeltaTime * 0.25
 	for i=1,#Lights do
@@ -61,6 +70,8 @@ function Playground:Tick()
 		Graphics.DrawModel(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0,2.0,LightModel,LightShader)
 	    Graphics.DebugDrawBox(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],6, Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0)
 	end
+
+	DrawGrid(-128,128,4,-128,128,4,0.0)
 
 	local sunMulti = 0.8
 	Graphics.DirectionalLight(-0.2,-0.8,0.2,	sunMulti*0.25, sunMulti*0.611, sunMulti*1.0,0.02)

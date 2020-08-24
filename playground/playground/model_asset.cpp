@@ -57,8 +57,9 @@ namespace Assets
 			boundsMax = glm::max(boundsMax, newVertex.m_position);
 			vertices.push_back(newVertex);
 		}
-		SDE_LOG("Mesh bounds: [%2.2f, %2.2f, %2.2f] -> [%2.2f, %2.2f, %2.2f]",
-			boundsMin.x, boundsMin.y, boundsMin.z, boundsMax.x, boundsMax.y, boundsMax.z);
+		boundsMin = glm::vec3(transform * glm::vec4(boundsMin, 1.0f));
+		boundsMax = glm::vec3(transform * glm::vec4(boundsMax, 1.0f));
+		newMesh.Bounds() = Math::Box3(boundsMin, boundsMax);
 
 		// Process indices
 		auto& indices = newMesh.Indices();
@@ -137,7 +138,8 @@ namespace Assets
 			aiProcess_CalcTangentSpace |
 			aiProcess_Triangulate |
 			aiProcess_JoinIdenticalVertices |
-			aiProcess_SortByPType
+			aiProcess_SortByPType |
+			aiProcess_PreTransformVertices
 			);
 		if (!scene)
 		{

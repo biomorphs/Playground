@@ -103,6 +103,7 @@ namespace smol
 			Model::Part newPart;
 			newPart.m_mesh = std::move(newMesh);
 			newPart.m_transform = mesh.Transform();
+			newPart.m_bounds = mesh.Bounds();
 			resultModel->Parts().push_back(std::move(newPart));
 		}
 

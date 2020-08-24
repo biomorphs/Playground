@@ -1,5 +1,6 @@
 #pragma once
 #include "math/glm_headers.h"
+#include "math/box3.h"
 #include "texture_manager.h"
 #include <memory>
 
@@ -31,6 +32,7 @@ namespace smol
 			smol::TextureHandle m_normalMap;
 			smol::TextureHandle m_specularMap;
 			glm::mat4 m_transform;
+			Math::Box3 m_bounds;
 		};
 		const std::vector<Part>& Parts() const { return m_parts; }
 		std::vector<Part>& Parts() { return m_parts; }

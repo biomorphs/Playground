@@ -22,6 +22,8 @@ namespace Math
 		glm::vec3& Max();
 		const glm::vec3& Min() const;
 		const glm::vec3& Max() const;
+		inline glm::vec3 GetCenter() const { return (m_max - m_min) * 0.5f; }
+		inline glm::vec3 GetDimensions() const { return m_max - m_min; }
 
 		glm::vec3 Size() const;
 

@@ -9,6 +9,7 @@
 // Apply unit + transformation
 
 #include "math/glm_headers.h"
+#include "math/box3.h"
 
 #include <vector>
 #include <string>
@@ -71,11 +72,15 @@ namespace Assets
 		glm::mat4& Transform() { return m_transform; }
 		const glm::mat4& Transform() const { return m_transform; }
 
+		Math::Box3& Bounds() { return m_bounds; }
+		const Math::Box3& Bounds() const { return m_bounds; }
+
 	private:
 		std::vector<MeshVertex> m_vertices;
 		std::vector<uint32_t> m_indices;
 		MeshMaterial m_material;
 		glm::mat4 m_transform;
+		Math::Box3 m_bounds;
 	};
 
 	// A render-agnostic model
