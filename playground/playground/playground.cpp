@@ -90,6 +90,7 @@ void Playground::ReloadScript()
 
 DebugGui::MenuBar g_menuBar;
 bool g_keepRunning = true;
+bool g_pauseScriptDelta = false;
 
 bool Playground::PreInit(Core::ISystemEnumerator& systemEnumerator)
 {
@@ -103,6 +104,7 @@ bool Playground::PreInit(Core::ISystemEnumerator& systemEnumerator)
 
 	auto& scriptMenu = g_menuBar.AddSubmenu(ICON_FK_COG " Scripts");
 	scriptMenu.AddItem("Reload", [this]() {ReloadScript(); }, "R");
+	scriptMenu.AddItem("Toggle Paused", [] { g_pauseScriptDelta = !g_pauseScriptDelta; });
 
 	return true;
 }
@@ -120,7 +122,14 @@ bool Playground::Tick()
 	m_debugGui->MainMenuBar(g_menuBar);
 
 	double thisFrameTime = m_timer.GetSeconds();
-	m_deltaTime = thisFrameTime - m_lastFrameTime;
+	if (!g_pauseScriptDelta)
+	{
+		m_deltaTime = thisFrameTime - m_lastFrameTime;
+	}
+	else
+	{
+		m_deltaTime = 0.0f;
+	}
 	TickScript();
 	m_lastFrameTime = thisFrameTime;
 

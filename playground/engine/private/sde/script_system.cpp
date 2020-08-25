@@ -20,7 +20,7 @@ namespace SDE
 	void ScriptSystem::OpenDefaultLibraries(sol::state& state)
 	{
 		SDE_PROF_EVENT();
-		state.open_libraries(sol::lib::base, sol::lib::math);
+		state.open_libraries(sol::lib::base, sol::lib::math, sol::lib::table);
 	}
 
 	void ScriptSystem::RunScriptFromFile(const char* filename)

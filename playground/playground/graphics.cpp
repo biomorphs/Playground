@@ -46,7 +46,7 @@ DebugGui::MenuBar g_graphicsMenu;
 bool g_showTextureGui = false;
 bool g_showModelGui = false;
 bool g_useArcballCam = true;
-Arcball g_arcball({ 1600, 900 }, { 0.0f,0.0f,4.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
+Arcball g_arcball({ 1600, 900 }, { 7.1f,8.0f,15.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
 
 bool Graphics::PostInit()
 {
