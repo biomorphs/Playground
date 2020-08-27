@@ -149,7 +149,7 @@ namespace Render
 		return false;
 	}
 
-	void MeshBuilder::RecreateMesh(Mesh& target, size_t minVbSize)
+	void MeshBuilder::RecreateMesh(Mesh& target, bool createDynamicMesh, size_t minVbSize)
 	{
 		SDE_PROF_EVENT();
 
@@ -176,14 +176,22 @@ namespace Render
 				streamSize += (streamSize % minVbSize);
 			}
 
-			theBuffer.Create(streamSize, RenderBufferType::VertexData, RenderBufferModification::Dynamic);
+			auto streamBuffer = (void*)streamIt.m_streamData.data();
+			if (createDynamicMesh)
+			{
+				theBuffer.Create(streamBuffer,streamSize, RenderBufferType::VertexData, RenderBufferModification::Dynamic);
+			}
+			else
+			{
+				theBuffer.Create(streamBuffer,streamSize, RenderBufferType::VertexData, RenderBufferModification::Static);
+			}
 			++streamIndex;
 		}
 
 		streamIndex = 0;
 	}
 
-	bool MeshBuilder::CreateMesh(Mesh& target, size_t minVbSize)
+	bool MeshBuilder::CreateMesh(Mesh& target, bool createDynamicMesh, size_t minVbSize)
 	{
 		SDE_PROF_EVENT();
 
@@ -192,17 +200,18 @@ namespace Render
 
 		if (ShouldRecreateMesh(target, minVbSize))
 		{
-			RecreateMesh(target, minVbSize);
+			RecreateMesh(target, createDynamicMesh, minVbSize);
 		}
-
-		// Fill buffers
-		int32_t streamIndex = 0;
-		for (const auto& streamIt : m_streams)
+		else
 		{
-			auto& theBuffer = streams[streamIndex];
-			auto streamSize = streamIt.m_streamData.size() * sizeof(float);
-			theBuffer.SetData(0, streamSize, (void*)streamIt.m_streamData.data());
-			++streamIndex;
+			int32_t streamIndex = 0;
+			for (const auto& streamIt : m_streams)
+			{
+				auto& theBuffer = streams[streamIndex];
+				auto streamSize = streamIt.m_streamData.size() * sizeof(float);
+				theBuffer.SetData(0, streamSize, (void*)streamIt.m_streamData.data());
+				++streamIndex;
+			}
 		}
 
 		// Populate chunks. We always rebuild this data

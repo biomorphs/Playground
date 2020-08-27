@@ -53,12 +53,12 @@ namespace smol
 			// init vertex streams and vertex array
 			streams.resize(2);
 			Render::RenderBuffer& posBuffer = streams[0], & colourBuffer = streams[1];
-			if (!posBuffer.Create(c_maxLines * sizeof(glm::vec4) * 2, Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic))
+			if (!posBuffer.Create(c_maxLines * sizeof(glm::vec4) * 2, Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true))
 			{
 				SDE_LOGC(SDE, "Failed to create debug pos buffer");
 				return false;
 			}
-			if (!colourBuffer.Create(c_maxLines * sizeof(glm::vec4) * 2, Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic))
+			if (!colourBuffer.Create(c_maxLines * sizeof(glm::vec4) * 2, Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true))
 			{
 				SDE_LOGC(SDE, "Failed to create debug colour buffer");
 				return false;

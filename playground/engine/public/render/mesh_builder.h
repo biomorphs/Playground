@@ -39,12 +39,12 @@ namespace Render
 		void EndChunk();
 
 		// Step 5: Mesh creation
-		bool CreateMesh(Mesh& target, size_t minVbSize = 0);
+		bool CreateMesh(Mesh& target, bool createDynamicMesh=true, size_t minVbSize = 0);
 		bool CreateVertexArray(Mesh& mesh);	// this must happen on the main thread!
 
 	private:
 		bool ShouldRecreateMesh(Mesh& target, size_t minVbSize);
-		void RecreateMesh(Mesh& target, size_t minVbSize);
+		void RecreateMesh(Mesh& target, bool createDynamicMesh, size_t minVbSize);
 
 		struct StreamDesc
 		{

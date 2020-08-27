@@ -15,6 +15,12 @@
     <Filter Include="smol">
       <UniqueIdentifier>{7530bba8-f22c-42d8-838e-9ec395304182}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{dea03559-7e3a-4f72-b844-fe4859ec9dd0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Script">
+      <UniqueIdentifier>{acb9de32-b25c-4d37-847a-fb1d9bb9dcb8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -94,26 +100,52 @@
     <ClInclude Include="smol\light.h">
       <Filter>smol</Filter>
     </ClInclude>
-    <ClInclude Include="..\data\global_uniforms.h" />
     <ClInclude Include="smol\debug_render.h">
       <Filter>smol</Filter>
     </ClInclude>
     <ClInclude Include="arcball.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\data\global_uniforms.h">
+      <Filter>Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\data\playground.lua" />
-    <None Include="..\data\config.lua" />
-    <None Include="..\data\quad.fs" />
-    <None Include="..\data\quad.vs" />
-    <None Include="..\data\basic.vs" />
-    <None Include="..\data\basic.fs" />
-    <None Include="..\data\simplediffuse.vs" />
-    <None Include="..\data\simplediffuse.fs" />
-    <None Include="..\data\shared.vs" />
-    <None Include="..\data\shared.fs" />
-    <None Include="..\data\debugrender.fs" />
-    <None Include="..\data\debugrender.vs" />
+    <None Include="..\data\basic.fs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\basic.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\debugrender.fs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\debugrender.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\quad.fs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\quad.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\shared.fs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\playground.lua">
+      <Filter>Script</Filter>
+    </None>
+    <None Include="..\data\config.lua">
+      <Filter>Script</Filter>
+    </None>
+    <None Include="..\data\shared.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\simplediffuse.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\simplediffuse.fs">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -29,8 +29,8 @@ namespace Render
 		RenderBuffer();
 		~RenderBuffer();
 
-		bool Create(size_t bufferSize, RenderBufferType type, RenderBufferModification modification);
-		bool Create(void* sourceData, size_t bufferSize, RenderBufferType type, RenderBufferModification modification);
+		bool Create(size_t bufferSize, RenderBufferType type, RenderBufferModification modification, bool usePersistentMapping=false);
+		bool Create(void* sourceData, size_t bufferSize, RenderBufferType type, RenderBufferModification modification, bool usePersistentMapping = false);
 		bool Destroy();
 		void SetData(size_t offset, size_t size, void* srcData);
 
@@ -44,5 +44,6 @@ namespace Render
 		size_t m_bufferSize;	// size in bytes
 		uint32_t m_handle;
 		RenderBufferType m_type;
+		void* m_persistentMappedBuffer;	// if set, read/write directly
 	};
 }
