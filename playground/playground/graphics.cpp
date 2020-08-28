@@ -46,6 +46,7 @@ DebugGui::MenuBar g_graphicsMenu;
 bool g_showTextureGui = false;
 bool g_showModelGui = false;
 bool g_useArcballCam = true;
+bool g_showCameraInfo = false;
 Arcball g_arcball({ 1600, 900 }, { 7.1f,8.0f,15.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
 
 bool Graphics::PostInit()
@@ -137,6 +138,7 @@ bool Graphics::PostInit()
 	gMenu.AddItem("ModelManager", [this]() { g_showModelGui = true; });
 	auto& camMenu = g_graphicsMenu.AddSubmenu(ICON_FK_CAMERA " Camera");
 	camMenu.AddItem("Toggle Camera Mode", [this]() { g_useArcballCam = !g_useArcballCam; });
+	camMenu.AddItem("Show Camera Info", [this]() {g_showCameraInfo = true; });
 
 	return true;
 }
@@ -157,6 +159,14 @@ bool Graphics::Tick()
 		framesPerSecond = framesThisSecond;
 		framesThisSecond = 0;
 		startTime = currentTime;
+	}
+
+	if (g_showCameraInfo)
+	{
+		m_debugGui->BeginWindow(g_showCameraInfo, "Camera");
+		glm::vec3 posVec = g_useArcballCam ? g_arcball.GetPosition() : m_debugCameraController->GetPosition();
+		m_debugGui->DragVector("Position", posVec);
+		m_debugGui->EndWindow();
 	}
 
 	Render::Camera c;

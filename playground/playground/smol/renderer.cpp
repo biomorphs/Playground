@@ -34,6 +34,23 @@ namespace smol
 		int m_lightCount;
 	};
 
+	Renderer::Renderer(TextureManager* ta, ModelManager* mm, ShaderManager* sm, glm::vec2 windowSize)
+		: m_textures(ta)
+		, m_models(mm)
+		, m_shaders(sm)
+		, m_windowSize(windowSize)
+	{
+		m_whiteTexture = m_textures->LoadTexture("white.bmp");
+		m_defaultNormalmap = m_textures->LoadTexture("default_normalmap.png");
+
+		{
+			SDE_PROF_EVENT("Create Instance Buffers");
+			m_instanceTransforms.Create(c_maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
+			m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
+			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Dynamic, true);
+		}
+	}
+
 	void Renderer::Reset() 
 	{ 
 		m_instances.clear(); 
@@ -126,19 +143,6 @@ namespace smol
 	void Renderer::RenderAll(Render::Device& d)
 	{
 		SDE_PROF_EVENT();
-
-		static bool s_firstFrame = true;
-		if (s_firstFrame)
-		{
-			SDE_PROF_EVENT("Create Instance Buffers");
-			m_instanceTransforms.Create(c_maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
-			m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
-			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Dynamic, true);
-			m_whiteTexture = m_textures->LoadTexture("white.bmp");
-			m_defaultNormalmap = m_textures->LoadTexture("default_normalmap.png");
-			s_firstFrame = false;
-		}
-
 		if (m_instances.size() == 0)
 		{
 			return;
@@ -159,7 +163,6 @@ namespace smol
 		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
 		d.SetBlending(true);				// enable blending (we might want to do it manually instead)
 		d.SetScissorEnabled(false);			// (don't) scissor me timbers
-
 		{
 			SDE_PROF_EVENT("Update Globals UBO");
 			GlobalUniforms globals;

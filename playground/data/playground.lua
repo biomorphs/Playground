@@ -7,26 +7,43 @@ Playground = {}
 
 local LightShader = Graphics.LoadShader("light",  "basic.vs", "basic.fs")
 local DiffuseShader = Graphics.LoadShader("diffuse", "simplediffuse.vs", "simplediffuse.fs")
+local Sponza = Graphics.LoadModel("sponza.obj")
 local MonsterModel = Graphics.LoadModel("udim-monster.fbx")
 local LightModel = Graphics.LoadModel("sphere.fbx")
 local IslandModel = Graphics.LoadModel("islands_low.fbx")
 local ContainerModel = Graphics.LoadModel("container.fbx")
 local CottageModel = Graphics.LoadModel("cottage_blender.fbx")
-local Kitchen = Graphics.LoadModel("Kitchen_PUP.fbx")
 
 local Lights = {}
-local lightCount = 24
-local lightBoxMin = {-180,-36,-128}
-local lightBoxMax = {64,80,8}
+local lightCount = 32
+local lightBoxMin = {-284,2,-125}
+local lightBoxMax = {256,228,113}
+local lightRadiusRange = {32,128}
 local lightGravity = -4096.0
 local lightBounceMul = 0.9
 local lightFriction = 0.95
-local lightHistoryMaxValues = 64
-local lightHistoryMaxDistance = 1.0		-- distance between history points
+local lightHistoryMaxValues = 32
+local lightHistoryMaxDistance = 0.25		-- distance between history points
 local lightXZSpeed = 200
 local lightYSpeed = 200
-local lightBrightness = 4.0
+local lightBrightness = 1.0
 local lightSphereSize = 2.0
+
+-- ~distance, const, linear, quad
+local lightAttenuationTable = {
+	{7, 1.0, 0.7,1.8},
+	{13,1.0,0.35 ,0.44},
+	{20,1.0,0.22 ,0.20},
+	{32,1.0,0.14,0.07},
+	{50,1.0,0.09,0.032},
+	{65,1.0,0.07,0.017},
+	{100,1.0,0.045,0.0075},
+	{160,1.0,0.027,0.0028},
+	{200,1.0,0.022,0.0019},
+	{325,1.0,0.014,0.0007},
+	{600,1.0,0.007,0.0002},
+	{3250,1.0,0.0014,0.000007}
+}
 
 function Playground:Vec3Length(v)
 	return math.sqrt((v[1] * v[1]) + (v[2] * v[2]) + (v[3] * v[3]));
@@ -34,16 +51,23 @@ end
 
 function Playground:pushLightHistory(i,x,y,z)
 	local historySize = #Lights[i].History
-
 	if(historySize == lightHistoryMaxValues) then
 		table.remove(Lights[i].History,1)
 	end
 	Lights[i].History[#Lights[i].History + 1] = {x,y,z}
+end
 
-	-- print("History After",#Lights[i].History)
-	-- for h=1,#Lights[i].History do
-	-- 	print(Lights[i].History[h][1],Lights[i].History[h][2],Lights[i].History[h][3])
-	-- end
+function Playground:GetAttenuation(lightRadius)
+	local closestDistance = 10000
+	local closestValue = {1,1,0.1,0.1}
+	for i=1,#lightAttenuationTable do
+		local distanceToRadInTable = math.abs(lightRadius - lightAttenuationTable[i][1])
+		if(distanceToRadInTable<closestDistance) then
+			closestValue = lightAttenuationTable[i];
+			closestDistance = distanceToRadInTable
+		end
+	end
+	return { closestValue[2], closestValue[3], closestValue[4] }
 end
 
 function Playground:GenerateLightCol(i)
@@ -60,7 +84,7 @@ function Playground:InitLight(i)
 	Playground:GenerateLightCol(i)
 	Lights[i].Ambient = 0.0
 	Lights[i].Velocity = {0.0,0.0,0.0}
-	Lights[i].Attenuation = {1.0, 0.14, 0.07}
+	Lights[i].Attenuation = Playground:GetAttenuation(math.random(lightRadiusRange[1],lightRadiusRange[2]))
 	Lights[i].History = {}
 	Playground:pushLightHistory(i,Lights[i].Position[1], Lights[i].Position[2], Lights[i].Position[3])
 end
@@ -71,7 +95,7 @@ function Playground:Init()
 		Playground:InitLight(i)
 	end
 
-	Graphics.SetClearColour(0,0,0)
+	Graphics.SetClearColour(0.1,0.1,0.1)
 end
 
 function DrawGrid(startX,endX,stepX,startZ,endZ,stepZ,yAxis)
@@ -149,13 +173,13 @@ function Playground:Tick()
 
 	DrawGrid(-256,256,32,-256,256,32,-40.0)
 
-	local sunMulti = 0.3
-	Graphics.DirectionalLight(0.7,-0.4,-0.2, sunMulti*0.25, sunMulti*0.611, sunMulti*1.0, 0.01)
+	local sunMulti = 0.1
+	Graphics.DirectionalLight(0.7,-0.4,-0.2, sunMulti*0.25, sunMulti*0.611, sunMulti*1.0, 0.05)
 
 	Graphics.DebugDrawAxis(0.0,8.0,0.0,8.0);
 	Graphics.DrawModel(0.0,1.0,0.0,1.0,1.0,1.0,1.0,0.15,IslandModel,DiffuseShader)
 	Graphics.DrawModel(0.0,1.3,0.0,1.0,1.0,1.0,1.0,1.0,MonsterModel,DiffuseShader)
-	Graphics.DrawModel(-96.0,-40.5,-95.0,1.0,1.0,1.0,1.0,0.5,Kitchen,DiffuseShader)
+	Graphics.DrawModel(0.0,0.5,0.0,1.0,1.0,1.0,1.0,0.2,Sponza,DiffuseShader)
 
 	local width = 32
 	local numPerWidth = 32

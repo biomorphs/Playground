@@ -17,13 +17,7 @@ namespace smol
 	class Renderer : public Render::RenderPass
 	{
 	public:
-		Renderer(TextureManager* ta, ModelManager* mm, ShaderManager* sm, glm::vec2 windowSize)
-			: m_textures(ta)
-			, m_models(mm)
-			, m_shaders(sm)
-			, m_windowSize(windowSize)
-		{
-		}
+		Renderer(TextureManager* ta, ModelManager* mm, ShaderManager* sm, glm::vec2 windowSize);			
 		virtual ~Renderer() = default;
 
 		void Reset();

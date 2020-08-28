@@ -86,6 +86,10 @@ void Playground::ReloadScript()
 	{
 		InitScript();
 	}
+	else
+	{
+		SDE_LOG("Lua Error - %s", m_scriptErrorText.c_str());
+	}
 }
 
 DebugGui::MenuBar g_menuBar;
