@@ -15,7 +15,7 @@ local ContainerModel = Graphics.LoadModel("container.fbx")
 local CottageModel = Graphics.LoadModel("cottage_blender.fbx")
 
 local Lights = {}
-local lightCount = 32
+local lightCount = 16
 local lightBoxMin = {-284,2,-125}
 local lightBoxMax = {256,228,113}
 local lightRadiusRange = {32,128}

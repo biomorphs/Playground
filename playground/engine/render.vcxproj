@@ -9,13 +9,14 @@
   <Import Project="props/engine_lib_paths.props" />
   <Import Project="props/library_build.props" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)external\Optick_1.3.0\include;$(ProjectDir)..\external\glm;$(ProjectDir)..\external\glew-1.12.0-win32\glew-1.12.0\include\GL;$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)public\;$(ProjectDir)public\render\;$(ProjectDir)private\render\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)external\Optick_1.3.0\include;$(ProjectDir)..\external\glm;$(ProjectDir)..\external\glew-2.2.0\include\GL;$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)public\;$(ProjectDir)public\render\;$(ProjectDir)private\render\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="private\render\utils.h" />
     <ClInclude Include="public\render\camera.h" />
     <ClInclude Include="public\render\dds_loader.h" />
     <ClInclude Include="public\render\device.h" />
+    <ClInclude Include="public\render\frame_buffer.h" />
     <ClInclude Include="public\render\material.h" />
     <ClInclude Include="public\render\mesh.h" />
     <ClInclude Include="public\render\mesh_builder.h" />
@@ -35,6 +36,7 @@
   <ItemGroup>
     <ClCompile Include="private\render\dds_loader.cpp" />
     <ClCompile Include="private\render\device.cpp" />
+    <ClCompile Include="private\render\frame_buffer.cpp" />
     <ClCompile Include="private\render\material.cpp" />
     <ClCompile Include="private\render\mesh.cpp" />
     <ClCompile Include="private\render\mesh_builder.cpp" />

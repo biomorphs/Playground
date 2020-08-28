@@ -59,13 +59,13 @@ bool Graphics::PostInit()
 	m_models = std::make_unique<smol::ModelManager>(m_textures.get(), m_jobSystem);
 
 	const auto& windowProps = m_renderSystem->GetWindow()->GetProperties();
-	auto windowSize = glm::vec2(windowProps.m_sizeX, windowProps.m_sizeY);
+	m_windowSize = glm::vec2(windowProps.m_sizeX, windowProps.m_sizeY);
 
 	// Init render passes
-	m_render2d = std::make_unique<smol::Renderer2D>(m_textures.get(), windowSize);
+	m_render2d = std::make_unique<smol::Renderer2D>(m_textures.get(), m_windowSize);
 	m_renderSystem->AddPass(*m_render2d);
 	
-	m_render3d = std::make_unique<smol::Renderer>(m_textures.get(), m_models.get(), m_shaders.get(), windowSize);
+	m_render3d = std::make_unique<smol::Renderer>(m_textures.get(), m_models.get(), m_shaders.get(), m_windowSize);
 	m_renderSystem->AddPass(*m_render3d);
 
 	// expose TextureHandle to lua
@@ -168,6 +168,11 @@ bool Graphics::Tick()
 		m_debugGui->DragVector("Position", posVec);
 		m_debugGui->EndWindow();
 	}
+	
+	bool forceOpen = true;
+	m_debugGui->BeginWindow(forceOpen, "Rendertargets");
+	m_debugGui->Image(m_render3d->GetMainFramebuffer().GetColourAttachment(0), m_windowSize * 0.5f, glm::vec2(0.0f,1.0f), glm::vec2(1.0f,0.0f));
+	m_debugGui->EndWindow();
 
 	Render::Camera c;
 	if (g_useArcballCam)

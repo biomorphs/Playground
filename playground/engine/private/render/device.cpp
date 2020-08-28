@@ -9,11 +9,12 @@ Matt Hoyle
 #include "vertex_array.h"
 #include "shader_program.h"
 #include "render_buffer.h"
+#include "frame_buffer.h"
+#include "uniform_buffer.h"
+#include "math/glm_headers.h"
+#include "core/profiler.h"
 #include <SDL.h>
 #include <glew.h>
-#include "math/glm_headers.h"
-#include "uniform_buffer.h"
-#include "core/profiler.h"
 
 namespace Render
 {
@@ -63,6 +64,34 @@ namespace Render
 	{
 		SDL_GL_DeleteContext(m_context);
 		m_context = nullptr;
+	}
+
+	void Device::ClearFramebufferColourDepth(const FrameBuffer& fb, const glm::vec4& colour, float depth)
+	{
+		int colourAttachments= fb.GetColourAttachmentCount();
+		for (int i = 0; i < colourAttachments; ++i)
+		{
+			glClearNamedFramebufferfv(fb.GetHandle(), GL_COLOR, i, glm::value_ptr(colour));
+			SDE_RENDER_PROCESS_GL_ERRORS("glClearNamedFramebufferfv");
+		}
+
+		if (fb.GetDepthStencil() != nullptr)
+		{
+			glClearNamedFramebufferfi(fb.GetHandle(), GL_DEPTH_STENCIL, 0, depth, 0);
+			SDE_RENDER_PROCESS_GL_ERRORS("glClearNamedFramebufferfi");
+		}
+	}
+
+	void Device::DrawToBackbuffer()
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		SDE_RENDER_PROCESS_GL_ERRORS("glBindFramebuffer");
+	}
+
+	void Device::DrawToFramebuffer(const FrameBuffer& fb)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, fb.GetHandle());
+		SDE_RENDER_PROCESS_GL_ERRORS("glBindFramebuffer");
 	}
 
 	void Device::FlushContext()
@@ -174,11 +203,11 @@ namespace Render
 		SDE_RENDER_PROCESS_GL_ERRORS("glDepthMask");
 	}
 
-	void Device::ClearColourDepthTarget(const glm::vec4& colour)
+	void Device::ClearColourDepthTarget(const glm::vec4& colour, float depth)
 	{
 		SDE_PROF_EVENT();
-
 		glClearColor(colour.r, colour.g, colour.b, colour.a);
+		glClearDepth(depth);
 		SDE_RENDER_PROCESS_GL_ERRORS("glClearColor");
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		SDE_RENDER_PROCESS_GL_ERRORS("glClear");

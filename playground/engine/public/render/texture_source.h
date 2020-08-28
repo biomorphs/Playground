@@ -18,6 +18,7 @@ namespace Render
 			DXT3,
 			DXT5,
 			RGBA8,
+			Depth24Stencil8,
 			Unsupported
 		};
 		struct MipDesc
@@ -29,6 +30,7 @@ namespace Render
 		};
 
 		TextureSource();
+		TextureSource(uint32_t w, uint32_t h, Format f);	// empty texture with no mips
 		TextureSource(uint32_t w, uint32_t h, Format f, std::vector<MipDesc>& mips, std::vector<uint8_t>& data);
 		TextureSource(uint32_t w, uint32_t h, Format f, std::vector<MipDesc>& mips, std::vector<uint32_t>& data);
 		~TextureSource();
@@ -42,6 +44,7 @@ namespace Render
 		const uint8_t* MipLevel(uint32_t mip, uint32_t& w, uint32_t& h, size_t& size) const;
 		inline void SetGenerateMips(bool g) { m_generateMips = g; }
 		inline bool ShouldGenerateMips() const { return m_generateMips; }
+		inline bool ContainsSourceData() const { return m_rawBuffer.size() > 0; }
 
 	private:
 		Format m_format;

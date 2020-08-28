@@ -6,6 +6,7 @@ Matt Hoyle
 #include "texture_source.h"
 #include "utils.h"
 #include "core/profiler.h"
+#include <algorithm>
 
 namespace Render
 {
@@ -31,6 +32,8 @@ namespace Render
 			return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 		case TextureSource::Format::RGBA8:
 			return GL_RGBA8;
+		case TextureSource::Format::Depth24Stencil8:
+			return GL_DEPTH24_STENCIL8;
 		default:
 			return -1;
 		}
@@ -81,7 +84,7 @@ namespace Render
 		SDE_RENDER_PROCESS_GL_ERRORS_RET("glCreateTextures");
 
 		const uint32_t mipCount = src.MipCount();
-		const bool shouldGenerateMips = mipCount == 1 && src.ShouldGenerateMips();
+		const bool shouldGenerateMips = mipCount <=1 && src.ShouldGenerateMips();
 		glTextureParameteri(m_handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
 		if (mipCount > 1 || shouldGenerateMips)
@@ -92,23 +95,23 @@ namespace Render
 		{
 			glTextureParameteri(m_handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		}
-		
 		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
 
 		uint32_t glStorageFormat = SourceFormatToGLStorageFormat(src.SourceFormat());
-		uint32_t glInternalFormat = SourceFormatToGLInternalFormat(src.SourceFormat());
-		uint32_t glInternalType = SourceFormatToGLInternalType(src.SourceFormat());
 		SDE_RENDER_ASSERT(glStorageFormat != -1);
-		SDE_RENDER_ASSERT(glInternalFormat != -1);
-		SDE_RENDER_ASSERT(glInternalType != -1);
 		{
 			SDE_PROF_EVENT("AllocateStorage");
 			// This preallocates the entire mip-chain
-			glTextureStorage2D(m_handle, mipCount, glStorageFormat, src.Width(), src.Height());
+			glTextureStorage2D(m_handle, std::max(mipCount,1u), glStorageFormat, src.Width(), src.Height());
 			SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureStorage2D");
 		}
+		if(src.ContainsSourceData())
 		{
 			SDE_PROF_EVENT("CopyData");
+			uint32_t glInternalFormat = SourceFormatToGLInternalFormat(src.SourceFormat());
+			uint32_t glInternalType = SourceFormatToGLInternalType(src.SourceFormat());
+			SDE_RENDER_ASSERT(glInternalFormat != -1);
+			SDE_RENDER_ASSERT(glInternalType != -1);
 			for (uint32_t m = 0; m < mipCount; ++m)
 			{
 				uint32_t w = 0, h = 0;

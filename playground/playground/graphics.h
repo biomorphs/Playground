@@ -56,4 +56,5 @@ private:
 	SDE::RenderSystem* m_renderSystem = nullptr;
 	SDE::JobSystem* m_jobSystem = nullptr;
 	Input::InputSystem* m_inputSystem = nullptr;
+	glm::vec2 m_windowSize;
 };

@@ -39,6 +39,7 @@ namespace smol
 		, m_models(mm)
 		, m_shaders(sm)
 		, m_windowSize(windowSize)
+		, m_mainFramebuffer(windowSize)
 	{
 		m_whiteTexture = m_textures->LoadTexture("white.bmp");
 		m_defaultNormalmap = m_textures->LoadTexture("default_normalmap.png");
@@ -48,6 +49,16 @@ namespace smol
 			m_instanceTransforms.Create(c_maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
 			m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
 			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Dynamic, true);
+		}
+
+		{
+			SDE_PROF_EVENT("Create framebuffers");
+			m_mainFramebuffer.AddColourAttachment();
+			m_mainFramebuffer.AddDepthStencil();
+			if (!m_mainFramebuffer.Create())
+			{
+				SDE_LOG("Failed to create framebuffer!");
+			}
 		}
 	}
 
@@ -158,6 +169,10 @@ namespace smol
 		PopulateInstanceBuffers();
 		auto windowSize = glm::vec2(m_windowSize.x, m_windowSize.y);
 
+		// render to main target
+		d.DrawToFramebuffer(m_mainFramebuffer);
+		d.ClearFramebufferColourDepth(m_mainFramebuffer, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), FLT_MAX);
+
 		// render state
 		d.SetDepthState(true, true);		// enable z-test, enable write
 		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
@@ -246,5 +261,6 @@ namespace smol
 			}
 			firstInstance = lastMeshInstance;
 		}
+		d.DrawToBackbuffer();
 	}
 }

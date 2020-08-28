@@ -80,7 +80,7 @@ namespace SDE
 	{
 		SDE_PROF_EVENT();
 
-		m_device->ClearColourDepthTarget(m_clearColour);
+		m_device->ClearColourDepthTarget(m_clearColour,FLT_MAX);
 
 		for (auto renderPass : m_passes)
 		{

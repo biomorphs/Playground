@@ -15,6 +15,7 @@ namespace Render
 	class ShaderProgram;
 	class UniformBuffer;
 	class RenderBuffer;
+	class FrameBuffer;
 
 	enum class PrimitiveType : uint32_t
 	{
@@ -34,11 +35,15 @@ namespace Render
 		void* GetGLContext();
 		static void FlushContext();
 		void SetGLContext(void* context);	// Sets context PER THREAD
+
 		void SetScissorEnabled(bool enabled);
 		void SetBlending(bool enabled);
 		void SetBackfaceCulling(bool enabled, bool frontFaceCCW);
 		void SetDepthState(bool enabled, bool writeEnabled);
-		void ClearColourDepthTarget(const glm::vec4& colour);
+		void ClearColourDepthTarget(const glm::vec4& colour, float depth);
+		void ClearFramebufferColourDepth(const FrameBuffer& fb, const glm::vec4& colour, float depth);
+		void DrawToFramebuffer(const FrameBuffer& fb);
+		void DrawToBackbuffer();
 		void SetUniformValue(uint32_t uniformHandle, const glm::mat4& matrix);
 		void SetUniformValue(uint32_t uniformHandle, const glm::vec4& val);
 		void SetSampler(uint32_t uniformHandle, uint32_t textureHandle, uint32_t textureUnit);

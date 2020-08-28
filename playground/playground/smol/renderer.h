@@ -1,6 +1,7 @@
 #pragma once
 #include "render/render_pass.h"
 #include "render/render_buffer.h"
+#include "render/frame_buffer.h"
 #include "render/camera.h"
 #include "math/glm_headers.h"
 #include "mesh_instance.h"
@@ -26,7 +27,7 @@ namespace smol
 		void SubmitInstance(glm::mat4 transform, glm::vec4 colour, const Render::Mesh& mesh, const struct ShaderHandle& shader);
 		void SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader);
 		void SetLight(glm::vec4 positionOrDir,glm::vec3 colour, float ambientStr, glm::vec3 attenuation);
-
+		Render::FrameBuffer& GetMainFramebuffer() { return m_mainFramebuffer; }
 	private:
 		void PopulateInstanceBuffers();
 
@@ -43,5 +44,6 @@ namespace smol
 		Render::RenderBuffer m_instanceTransforms;
 		Render::RenderBuffer m_instanceColours;
 		Render::RenderBuffer m_globalsUniformBuffer;
+		Render::FrameBuffer m_mainFramebuffer;
 	};
 }
