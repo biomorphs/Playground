@@ -12,7 +12,13 @@ namespace Render
 		FrameBuffer(glm::vec2 size);
 		~FrameBuffer();
 
-		bool AddColourAttachment();
+		enum ColourAttachmentFormat
+		{
+			RGBA_U8,
+			RGBA_F16
+		};
+
+		bool AddColourAttachment(ColourAttachmentFormat format = RGBA_U8);
 		bool AddDepthStencil();
 		bool Create();
 		void Destroy();

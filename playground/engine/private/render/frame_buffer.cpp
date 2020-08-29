@@ -15,9 +15,21 @@ namespace Render
 		Destroy();
 	}
 
-	bool FrameBuffer::AddColourAttachment()
+	bool FrameBuffer::AddColourAttachment(ColourAttachmentFormat format)
 	{
-		TextureSource ts(m_dimensions.x, m_dimensions.y, Render::TextureSource::Format::RGBA8);
+		auto textureFormat = Render::TextureSource::Format::Unsupported;
+		switch (format)
+		{
+		case RGBA_U8:
+			textureFormat = Render::TextureSource::Format::RGBA8;
+			break;
+		case RGBA_F16:
+			textureFormat = Render::TextureSource::Format::RGBAF16;
+			break;
+		default:
+			SDE_ASSERT(false, "Unsupported");
+		}
+		TextureSource ts(m_dimensions.x, m_dimensions.y, textureFormat);
 		auto newTexture = std::make_unique<Render::Texture>();
 		if (newTexture->Create(ts))
 		{

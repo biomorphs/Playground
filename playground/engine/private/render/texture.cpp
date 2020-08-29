@@ -32,6 +32,8 @@ namespace Render
 			return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 		case TextureSource::Format::RGBA8:
 			return GL_RGBA8;
+		case TextureSource::Format::RGBAF16:
+			return GL_RGBA16F;
 		case TextureSource::Format::Depth24Stencil8:
 			return GL_DEPTH24_STENCIL8;
 		default:

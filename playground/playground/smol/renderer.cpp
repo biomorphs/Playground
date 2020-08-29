@@ -53,7 +53,7 @@ namespace smol
 
 		{
 			SDE_PROF_EVENT("Create framebuffers");
-			m_mainFramebuffer.AddColourAttachment();
+			m_mainFramebuffer.AddColourAttachment(Render::FrameBuffer::RGBA_F16);
 			m_mainFramebuffer.AddDepthStencil();
 			if (!m_mainFramebuffer.Create())
 			{

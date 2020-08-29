@@ -18,6 +18,7 @@ namespace Render
 			DXT3,
 			DXT5,
 			RGBA8,
+			RGBAF16,
 			Depth24Stencil8,
 			Unsupported
 		};

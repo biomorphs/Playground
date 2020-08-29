@@ -171,7 +171,7 @@ bool Graphics::Tick()
 	
 	bool forceOpen = true;
 	m_debugGui->BeginWindow(forceOpen, "Rendertargets");
-	m_debugGui->Image(m_render3d->GetMainFramebuffer().GetColourAttachment(0), m_windowSize * 0.5f, glm::vec2(0.0f,1.0f), glm::vec2(1.0f,0.0f));
+	m_debugGui->Image(m_render3d->GetMainFramebuffer().GetColourAttachment(0), m_windowSize * 0.8f, glm::vec2(0.0f,1.0f), glm::vec2(1.0f,0.0f));
 	m_debugGui->EndWindow();
 
 	Render::Camera c;

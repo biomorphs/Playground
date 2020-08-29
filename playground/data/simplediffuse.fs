@@ -61,5 +61,8 @@ void main()
 		finalColour += attenuation * (ambient + diffuse + specular);
 	}
 	
-	fs_out_colour = linearToSRGB(min(vec4(finalColour,1.0),1.0));
+	// tonemap
+	float exposure = 1.0;
+	finalColour = Tonemap_ACESFilm(finalColour * exposure);
+	fs_out_colour = linearToSRGB(vec4(finalColour,1.0));
 }

@@ -15,10 +15,10 @@ local ContainerModel = Graphics.LoadModel("container.fbx")
 local CottageModel = Graphics.LoadModel("cottage_blender.fbx")
 
 local Lights = {}
-local lightCount = 16
+local lightCount = 32
 local lightBoxMin = {-284,2,-125}
 local lightBoxMax = {256,228,113}
-local lightRadiusRange = {32,128}
+local lightRadiusRange = {32,32}
 local lightGravity = -4096.0
 local lightBounceMul = 0.9
 local lightFriction = 0.95
@@ -26,8 +26,9 @@ local lightHistoryMaxValues = 32
 local lightHistoryMaxDistance = 0.25		-- distance between history points
 local lightXZSpeed = 200
 local lightYSpeed = 200
-local lightBrightness = 1.0
+local lightBrightness = 2.0
 local lightSphereSize = 2.0
+local SunMulti = 0.0
 
 -- ~distance, const, linear, quad
 local lightAttenuationTable = {
@@ -173,8 +174,7 @@ function Playground:Tick()
 
 	DrawGrid(-256,256,32,-256,256,32,-40.0)
 
-	local sunMulti = 0.1
-	Graphics.DirectionalLight(0.7,-0.4,-0.2, sunMulti*0.25, sunMulti*0.611, sunMulti*1.0, 0.05)
+	Graphics.DirectionalLight(0.7,-0.4,-0.2, SunMulti*0.25, SunMulti*0.611, SunMulti*1.0, 0.05)
 
 	Graphics.DebugDrawAxis(0.0,8.0,0.0,8.0);
 	Graphics.DrawModel(0.0,1.0,0.0,1.0,1.0,1.0,1.0,0.15,IslandModel,DiffuseShader)

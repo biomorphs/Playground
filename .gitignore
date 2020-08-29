@@ -39,6 +39,9 @@
 *.psd
 *.blend
 *.blend1
+*.mtl
+*.obj
+*.txt
 
 playground/temp/
 playground/bin/

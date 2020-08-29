@@ -6,5 +6,5 @@ out vec4 colour;
  
 void main()
 {
-	colour = linearToSRGB(out_colour);
+	colour = linearToSRGB(vec4(Tonemap_ACESFilm(out_colour.rgb),out_colour.a));
 }
