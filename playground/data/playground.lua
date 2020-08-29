@@ -15,10 +15,10 @@ local ContainerModel = Graphics.LoadModel("container.fbx")
 local CottageModel = Graphics.LoadModel("cottage_blender.fbx")
 
 local Lights = {}
-local lightCount = 32
-local lightBoxMin = {-284,2,-125}
+local lightCount = 16
+local lightBoxMin = {-284,1,-125}
 local lightBoxMax = {256,228,113}
-local lightRadiusRange = {32,32}
+local lightRadiusRange = {64,100}
 local lightGravity = -4096.0
 local lightBounceMul = 0.9
 local lightFriction = 0.95
@@ -26,9 +26,9 @@ local lightHistoryMaxValues = 32
 local lightHistoryMaxDistance = 0.25		-- distance between history points
 local lightXZSpeed = 200
 local lightYSpeed = 200
-local lightBrightness = 2.0
-local lightSphereSize = 2.0
-local SunMulti = 0.1
+local lightBrightness = 8.0
+local lightSphereSize = 1.0
+local SunMulti = 0.3
 
 -- ~distance, const, linear, quad
 local lightAttenuationTable = {
@@ -174,13 +174,13 @@ function Playground:Tick()
 			local alpha = 1.0 - (((#Lights[i].History - h) / #Lights[i].History))
 			Graphics.DebugDrawLine(Lights[i].History[h][1],Lights[i].History[h][2],Lights[i].History[h][3],
 								   Lights[i].History[h+1][1],Lights[i].History[h+1][2],Lights[i].History[h+1][3],
-								   alpha * Lights[i].Colour[1],alpha * Lights[i].Colour[2],alpha * Lights[i].Colour[3],
-								   alpha * Lights[i].Colour[1],alpha * Lights[i].Colour[2],alpha * Lights[i].Colour[3])
+								   Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],alpha,
+								   Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],alpha)
 		end
 	end
 
 	DrawGrid(-256,256,32,-256,256,32,-40.0)
-	Graphics.DebugDrawAxis(0.0,0.0,0.0,32.0)
+	Graphics.DebugDrawAxis(0.0,32.0,0.0,8.0)
 
 	Graphics.DrawModel(0.0,1.0,0.0,1.0,1.0,1.0,1.0,0.15,IslandModel,DiffuseShader)
 	Graphics.DrawModel(0.0,1.3,0.0,1.0,1.0,1.0,1.0,1.0,MonsterModel,DiffuseShader)
