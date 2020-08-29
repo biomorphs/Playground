@@ -5,8 +5,6 @@ Matt Hoyle
 #pragma once
 #include "job.h"
 #include "kernel/mutex.h"
-#include "core/list.h"
-#include "core/object_pool.h"
 #include <queue>
 
 namespace SDE

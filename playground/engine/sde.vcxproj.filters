@@ -18,9 +18,6 @@
     <ClInclude Include="public\sde\render_system.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="public\sde\debug_render.h">
-      <Filter>public</Filter>
-    </ClInclude>
     <ClInclude Include="public\sde\job_system.h">
       <Filter>public</Filter>
     </ClInclude>
@@ -42,9 +39,6 @@
       <Filter>private</Filter>
     </ClCompile>
     <ClCompile Include="private\sde\render_system.cpp">
-      <Filter>private</Filter>
-    </ClCompile>
-    <ClCompile Include="private\sde\debug_render.cpp">
       <Filter>private</Filter>
     </ClCompile>
     <ClCompile Include="private\sde\job.cpp">

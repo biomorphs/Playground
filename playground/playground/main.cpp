@@ -9,10 +9,10 @@
 #include "playground.h"
 #include "graphics.h"
 
-class SystemRegistration : public Engine::IAppSystemRegistrar
+class AppSystems : public Engine::SystemCreator
 {
 public:
-	void RegisterSystems(Core::ISystemRegistrar& systemManager)
+	void Create(Core::ISystemRegistrar& systemManager)
 	{
 		systemManager.RegisterSystem("Jobs", new SDE::JobSystem());
 		systemManager.RegisterSystem("Input", new Input::InputSystem());
@@ -28,6 +28,6 @@ public:
 
 int main()
 {
-	SystemRegistration sysRegistration;
-	return Engine::Run(sysRegistration, 0, nullptr);
+	AppSystems s;
+	return Engine::Run(s, 0, nullptr);
 }

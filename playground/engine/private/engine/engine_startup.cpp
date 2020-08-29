@@ -12,7 +12,7 @@ SDLEngine
 namespace Engine
 {
 	// Application entry point
-	int Run(IAppSystemRegistrar& sysRegistrar, int argc, char* args[])
+	int Run(SystemCreator& sysRegistrar, int argc, char* args[])
 	{
 		// Initialise platform stuff
 		Kernel::Platform::InitResult result = Kernel::Platform::Initialise(argc, args);
@@ -26,8 +26,8 @@ namespace Engine
 		Core::SystemManager sysManager;
 		sysManager.RegisterSystem("Events", new Engine::EventSystem);
 
-		SDE_LOGC(Engine, "Registering systems...");
-		sysRegistrar.RegisterSystems(sysManager);
+		SDE_LOGC(Engine, "Creating systems...");
+		sysRegistrar.Create(sysManager);
 
 		// Run the engine
 		SDE_LOGC(Engine, "Initialising systems...");

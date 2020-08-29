@@ -13,12 +13,12 @@ namespace Core
 namespace Engine
 {
 	// This interface should be defined for each application / game / whatever
-	class IAppSystemRegistrar
+	class SystemCreator
 	{
 	public:
-		virtual void RegisterSystems(Core::ISystemRegistrar& registrar) = 0;
+		virtual void Create(Core::ISystemRegistrar& registrar) = 0;
 	};
 
 	// This runs everything. Call it from main()!
-	int Run(IAppSystemRegistrar& sysRegistrar, int argc, char* args[]);
+	int Run(SystemCreator& sysRegistrar, int argc, char* args[]);
 }

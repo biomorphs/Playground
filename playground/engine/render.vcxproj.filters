@@ -63,9 +63,6 @@
     <ClInclude Include="public\render\texture.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="public\render\mesh_instance_render_pass.h">
-      <Filter>public</Filter>
-    </ClInclude>
     <ClInclude Include="public\render\frame_buffer.h">
       <Filter>public</Filter>
     </ClInclude>
@@ -105,9 +102,6 @@
       <Filter>private</Filter>
     </ClCompile>
     <ClCompile Include="private\render\texture.cpp">
-      <Filter>private</Filter>
-    </ClCompile>
-    <ClCompile Include="private\render\mesh_instance_render_pass.cpp">
       <Filter>private</Filter>
     </ClCompile>
     <ClCompile Include="private\render\frame_buffer.cpp">

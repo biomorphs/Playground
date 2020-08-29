@@ -21,7 +21,6 @@
     <ClInclude Include="public\render\mesh.h" />
     <ClInclude Include="public\render\mesh_builder.h" />
     <ClInclude Include="public\render\mesh_instance.h" />
-    <ClInclude Include="public\render\mesh_instance_render_pass.h" />
     <ClInclude Include="public\render\render_buffer.h" />
     <ClInclude Include="public\render\instance_queue.h" />
     <ClInclude Include="public\render\render_pass.h" />
@@ -40,7 +39,6 @@
     <ClCompile Include="private\render\material.cpp" />
     <ClCompile Include="private\render\mesh.cpp" />
     <ClCompile Include="private\render\mesh_builder.cpp" />
-    <ClCompile Include="private\render\mesh_instance_render_pass.cpp" />
     <ClCompile Include="private\render\render_buffer.cpp" />
     <ClCompile Include="private\render\shader_binary.cpp" />
     <ClCompile Include="private\render\shader_program.cpp" />

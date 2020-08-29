@@ -12,8 +12,6 @@
     <IncludePath>$(SolutionDir)external\Optick_1.3.0\include;$(SolutionDir)..\external\json-3.6.1\single_include;$(ProjectDir)public\;$(ProjectDir)public\core\;$(ProjectDir)private\core\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
-    <ClInclude Include="public\core\list.h" />
-    <ClInclude Include="public\core\object_pool.h" />
     <ClInclude Include="public\core\profiler.h" />
     <ClInclude Include="public\core\run_length_encoding.h" />
     <ClInclude Include="public\core\scoped_mutex.h" />
@@ -34,8 +32,6 @@
     <ClCompile Include="private\core\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="public\core\list.inl" />
-    <None Include="public\core\object_pool.inl" />
     <None Include="public\core\shortname.inl" />
   </ItemGroup>
 </Project>

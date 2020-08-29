@@ -33,12 +33,6 @@
     <ClInclude Include="public\core\thread_pool.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="public\core\list.h">
-      <Filter>public</Filter>
-    </ClInclude>
-    <ClInclude Include="public\core\object_pool.h">
-      <Filter>public</Filter>
-    </ClInclude>
     <ClInclude Include="public\core\run_length_encoding.h">
       <Filter>public</Filter>
     </ClInclude>
@@ -68,12 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="public\core\shortname.inl">
-      <Filter>public</Filter>
-    </None>
-    <None Include="public\core\list.inl">
-      <Filter>public</Filter>
-    </None>
-    <None Include="public\core\object_pool.inl">
       <Filter>public</Filter>
     </None>
   </ItemGroup>
