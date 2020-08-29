@@ -96,6 +96,11 @@ namespace DebugGui
 		}
 	}
 
+	bool DebugGuiSystem::IsCapturingMouse()
+	{
+		return ImGui::GetIO().WantCaptureMouse;
+	}
+
 	bool DebugGuiSystem::BeginWindow(bool& windowOpen, const char* windowName, glm::vec2 size)
 	{
 		bool ret = ImGui::Begin(windowName, &windowOpen, 0);
@@ -159,7 +164,7 @@ namespace DebugGui
 	void DebugGuiSystem::GraphLines(const char* label, glm::vec2 size, const std::vector<float>& values)
 	{
 		ImVec2 graphSize(size.x, size.y);
-		ImGui::PlotLines("", values.data(), values.size(), 0, label, FLT_MAX, FLT_MAX, graphSize);
+		ImGui::PlotLines("", values.data(), (int)values.size(), 0, label, FLT_MAX, FLT_MAX, graphSize);
 	}
 
 	void DebugGuiSystem::GraphLines(const char* label, glm::vec2 size, GraphDataBuffer& buffer)

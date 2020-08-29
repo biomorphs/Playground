@@ -9,7 +9,7 @@ namespace Render
 	class FrameBuffer
 	{
 	public:
-		FrameBuffer(glm::vec2 size);
+		FrameBuffer(glm::ivec2 size);
 		~FrameBuffer();
 
 		enum ColourAttachmentFormat
@@ -20,6 +20,7 @@ namespace Render
 
 		bool AddColourAttachment(ColourAttachmentFormat format = RGBA_U8);
 		bool AddDepthStencil();
+		bool AddDepth();	// no stencil
 		bool Create();
 		void Destroy();
 

@@ -33,9 +33,13 @@ namespace smol
 		SDE_PROF_EVENT();
 
 		// update current, draw current-1
+		auto lineCount = m_currentLines;
 		PushLinesToMesh(*m_renderMesh[m_currentWriteMesh]);
 		auto meshToDraw = (m_currentWriteMesh - 1) % c_meshBuffers;
-		r.SubmitInstance(glm::identity<glm::mat4>(), glm::vec4(1.0f), *m_renderMesh[meshToDraw], m_shader);
+		if (lineCount > 0)
+		{
+			r.SubmitInstance(glm::identity<glm::mat4>(), glm::vec4(1.0f), *m_renderMesh[meshToDraw], m_shader);
+		}
 		m_currentWriteMesh = (m_currentWriteMesh + 1) % c_meshBuffers;
 	}
 

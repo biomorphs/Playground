@@ -36,6 +36,8 @@ namespace Render
 			return GL_RGBA16F;
 		case TextureSource::Format::Depth24Stencil8:
 			return GL_DEPTH24_STENCIL8;
+		case TextureSource::Format::Depth32:
+			return GL_DEPTH_COMPONENT32F;
 		default:
 			return -1;
 		}

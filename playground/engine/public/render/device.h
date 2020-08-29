@@ -35,7 +35,7 @@ namespace Render
 		void* GetGLContext();
 		static void FlushContext();
 		void SetGLContext(void* context);	// Sets context PER THREAD
-
+		void SetViewport(glm::ivec2 pos, glm::ivec2 size);
 		void SetScissorEnabled(bool enabled);
 		void SetBlending(bool enabled);
 		void SetBackfaceCulling(bool enabled, bool frontFaceCCW);

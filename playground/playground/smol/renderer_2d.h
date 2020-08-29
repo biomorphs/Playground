@@ -20,7 +20,7 @@ namespace smol
 	class Renderer2D : public Render::RenderPass
 	{
 	public:
-		Renderer2D(TextureManager* ta, glm::vec2 windowSize)
+		Renderer2D(TextureManager* ta, glm::ivec2 windowSize)
 			: m_textures(ta)
 			, m_windowSize(windowSize)
 		{
@@ -45,7 +45,7 @@ namespace smol
 
 		const uint64_t c_maxQuads = 1024 * 128;
 		std::vector<Quad> m_quads;
-		glm::vec2 m_windowSize;
+		glm::ivec2 m_windowSize;
 		std::unique_ptr<Render::Mesh> m_quadMesh;
 		std::unique_ptr<Render::ShaderProgram> m_quadShaders;
 		smol::TextureManager* m_textures;

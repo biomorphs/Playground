@@ -20,6 +20,7 @@ namespace Render
 			RGBA8,
 			RGBAF16,
 			Depth24Stencil8,
+			Depth32,
 			Unsupported
 		};
 		struct MipDesc

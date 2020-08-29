@@ -80,6 +80,9 @@ namespace SDE
 	{
 		SDE_PROF_EVENT();
 
+		// bind backbuffer so anyone downstream doesn't have to
+		m_device->DrawToBackbuffer();
+		m_device->SetViewport({ 0,0 }, { m_config.m_windowWidth, m_config.m_windowHeight });
 		m_device->ClearColourDepthTarget(m_clearColour,FLT_MAX);
 
 		for (auto renderPass : m_passes)

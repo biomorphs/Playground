@@ -14,4 +14,5 @@ layout(std140, binding = 0) uniform Globals
 	vec4 CameraPosition;	// World Space
 	LightInfo Lights[64];
 	int LightCount;
+	float HDRExposure;
 };

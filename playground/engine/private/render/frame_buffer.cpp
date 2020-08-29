@@ -5,7 +5,7 @@
 
 namespace Render
 {
-	FrameBuffer::FrameBuffer(glm::vec2 size)
+	FrameBuffer::FrameBuffer(glm::ivec2 size)
 		: m_dimensions(size)
 	{
 	}
@@ -42,6 +42,18 @@ namespace Render
 		}
 	}
 
+	bool FrameBuffer::AddDepth()
+	{
+		TextureSource ts(m_dimensions.x, m_dimensions.y, Render::TextureSource::Format::Depth32);
+		auto newTexture = std::make_unique<Render::Texture>();
+		if (newTexture->Create(ts))
+		{
+			m_depthStencil = std::move(newTexture);
+			return true;
+		}
+		return false;
+	}
+
 	bool FrameBuffer::AddDepthStencil()
 	{
 		TextureSource ts(m_dimensions.x, m_dimensions.y, Render::TextureSource::Format::Depth24Stencil8);
@@ -69,6 +81,15 @@ namespace Render
 		{
 			glNamedFramebufferTexture(m_fboHandle, GL_DEPTH_ATTACHMENT, m_depthStencil->GetHandle(), 0);
 			SDE_RENDER_PROCESS_GL_ERRORS_RET("glNamedFramebufferTexture");
+		}
+
+		// an fbo MUST have a colour attachment, we can use binding 0 if we dont have any
+		if (m_colourAttachments.size() == 0)
+		{
+			glNamedFramebufferDrawBuffer(m_fboHandle, 0);
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glNamedFramebufferDrawBuffer");
+			glNamedFramebufferReadBuffer(m_fboHandle, 0);
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glNamedFramebufferReadBuffer");
 		}
 
 		bool readyToGo = glCheckNamedFramebufferStatus(m_fboHandle, GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;

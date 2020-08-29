@@ -66,6 +66,12 @@ namespace Render
 		m_context = nullptr;
 	}
 
+	void Device::SetViewport(glm::ivec2 pos, glm::ivec2 size)
+	{
+		glViewport(pos.x, pos.y, size.x, size.y);
+		SDE_RENDER_PROCESS_GL_ERRORS("glViewport");
+	}
+
 	void Device::ClearFramebufferColourDepth(const FrameBuffer& fb, const glm::vec4& colour, float depth)
 	{
 		int colourAttachments= fb.GetColourAttachmentCount();

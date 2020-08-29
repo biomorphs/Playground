@@ -11,8 +11,6 @@ local Sponza = Graphics.LoadModel("sponza.obj")
 local MonsterModel = Graphics.LoadModel("udim-monster.fbx")
 local LightModel = Graphics.LoadModel("sphere.fbx")
 local IslandModel = Graphics.LoadModel("islands_low.fbx")
-local ContainerModel = Graphics.LoadModel("container.fbx")
-local CottageModel = Graphics.LoadModel("cottage_blender.fbx")
 
 local Lights = {}
 local lightCount = 16
@@ -101,10 +99,10 @@ end
 
 function DrawGrid(startX,endX,stepX,startZ,endZ,stepZ,yAxis)
 	for x=startX,endX,stepX do
-		Graphics.DebugDrawLine(x,yAxis,startZ,x,yAxis,endZ,0.2,0.2,0.2,0.2,0.2,0.2)
+		Graphics.DebugDrawLine(x,yAxis,startZ,x,yAxis,endZ,0.2,0.2,0.2,1.0,0.2,0.2,0.2,1.0)
 	end
 	for z=startZ,endZ,stepZ do
-		Graphics.DebugDrawLine(startX,yAxis,z,endX,yAxis,z,0.2,0.2,0.2,0.2,0.2,0.2)
+		Graphics.DebugDrawLine(startX,yAxis,z,endX,yAxis,z,0.2,0.2,0.2,1.0,0.2,0.2,0.2,1.0)
 	end
 end
 
@@ -179,39 +177,23 @@ function Playground:Tick()
 		end
 	end
 
-	DrawGrid(-256,256,32,-256,256,32,-40.0)
+	DrawGrid(-512,512,32,-512,512,32,-40.0)
 	Graphics.DebugDrawAxis(0.0,32.0,0.0,8.0)
 
 	Graphics.DrawModel(0.0,1.0,0.0,1.0,1.0,1.0,1.0,0.15,IslandModel,DiffuseShader)
 	Graphics.DrawModel(0.0,1.3,0.0,1.0,1.0,1.0,1.0,1.0,MonsterModel,DiffuseShader)
 	Graphics.DrawModel(0.0,0.5,0.0,1.0,1.0,1.0,1.0,0.2,Sponza,DiffuseShader)
 
-	local width = 32
-	local numPerWidth = 32
-	local scale = 0.1
+	local width = 64
+	local numPerWidth = 4
+	local scale = 0.0032
 	local halfWidth = width / 2.0
 	local gap = width / numPerWidth
 	for z=1,numPerWidth do
 		for x=1,numPerWidth do
-			if((x % 2) == 0) then
-				Graphics.DrawModel(-halfWidth + (x * gap),1,-halfWidth + (z*gap),1.0,1.0,1.0,1.0,1.0 * scale,ContainerModel,DiffuseShader)
-			else
-				Graphics.DrawModel(-halfWidth + (x * gap),1,-halfWidth + (z*gap),1.0,1.0,1.0,1.0,0.2 * scale,CottageModel,DiffuseShader)
-			end			
+			Graphics.DrawModel(40 + -halfWidth + (x * gap),1,-halfWidth + (z*gap) - 14,1.0,1.0,1.0,1.0,1.0 * scale,Sponza,DiffuseShader)
 		end
 	end
-
-	local windowOpen = true
-	DebugGui.BeginWindow(windowOpen,"Playground")
-	DebugGui.Text("Testicles")
-	testString = DebugGui.TextInput("More Testes?",testString,32)
-	if(DebugGui.Button("A button")) then
-		testString = "You only went and clicked it!"
-	end
-	DebugGui.Separator();
-	testSelected = DebugGui.Selectable("Go on, select it",testSelected)
-	testChecked = DebugGui.Checkbox("Check that shit", testChecked)
-	DebugGui.EndWindow()
 end
 
 function Playground:Shutdown()

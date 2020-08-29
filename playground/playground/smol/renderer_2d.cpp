@@ -109,7 +109,7 @@ namespace smol
 		PopulateInstanceBuffers();
 
 		// global uniforms
-		auto projectionMat = glm::ortho(0.0f, m_windowSize.x, 0.0f, m_windowSize.y);
+		auto projectionMat = glm::ortho(0.0f, (float)m_windowSize.x, 0.0f, (float)m_windowSize.y);
 		Render::UniformBuffer ub;
 		ub.SetValue("ProjectionMat", projectionMat);
 
