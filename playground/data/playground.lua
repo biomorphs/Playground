@@ -28,7 +28,7 @@ local lightXZSpeed = 200
 local lightYSpeed = 200
 local lightBrightness = 2.0
 local lightSphereSize = 2.0
-local SunMulti = 0.0
+local SunMulti = 0.1
 
 -- ~distance, const, linear, quad
 local lightAttenuationTable = {
@@ -108,8 +108,15 @@ function DrawGrid(startX,endX,stepX,startZ,endZ,stepZ,yAxis)
 	end
 end
 
+local testString = "Yes"
+local testSelected = false
+local testChecked = true
+
 function Playground:Tick()
 	local timeDelta = Playground.DeltaTime * 0.25
+
+	Graphics.DirectionalLight(0.7,-0.4,-0.2, SunMulti*0.25, SunMulti*0.611, SunMulti*1.0, 0.05)
+
 	for i=1,#Lights do
 		if(Playground:Vec3Length(Lights[i].Velocity) < 16.0) then
 			Lights[i].Velocity[1] = (math.random(-100,100) / 100.0)  * lightXZSpeed
@@ -173,10 +180,8 @@ function Playground:Tick()
 	end
 
 	DrawGrid(-256,256,32,-256,256,32,-40.0)
+	Graphics.DebugDrawAxis(0.0,0.0,0.0,32.0)
 
-	Graphics.DirectionalLight(0.7,-0.4,-0.2, SunMulti*0.25, SunMulti*0.611, SunMulti*1.0, 0.05)
-
-	Graphics.DebugDrawAxis(0.0,8.0,0.0,8.0);
 	Graphics.DrawModel(0.0,1.0,0.0,1.0,1.0,1.0,1.0,0.15,IslandModel,DiffuseShader)
 	Graphics.DrawModel(0.0,1.3,0.0,1.0,1.0,1.0,1.0,1.0,MonsterModel,DiffuseShader)
 	Graphics.DrawModel(0.0,0.5,0.0,1.0,1.0,1.0,1.0,0.2,Sponza,DiffuseShader)
@@ -195,6 +200,18 @@ function Playground:Tick()
 			end			
 		end
 	end
+
+	local windowOpen = true
+	DebugGui.BeginWindow(windowOpen,"Playground")
+	DebugGui.Text("Testicles")
+	testString = DebugGui.TextInput("More Testes?",testString,32)
+	if(DebugGui.Button("A button")) then
+		testString = "You only went and clicked it!"
+	end
+	DebugGui.Separator();
+	testSelected = DebugGui.Selectable("Go on, select it",testSelected)
+	testChecked = DebugGui.Checkbox("Check that shit", testChecked)
+	DebugGui.EndWindow()
 end
 
 function Playground:Shutdown()

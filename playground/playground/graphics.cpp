@@ -126,9 +126,9 @@ bool Graphics::PostInit()
 	m_debugRender = std::make_unique<smol::DebugRender>(m_shaders.get());
 
 	m_debugCameraController = std::make_unique<SDE::DebugCameraController>();
-	m_debugCameraController->SetPosition({28.0f,60.0f,48.0f});
-	m_debugCameraController->SetPitch(-0.852f);
-	m_debugCameraController->SetYaw(0.592f);
+	m_debugCameraController->SetPosition({99.f,47.0f,2.4f});
+	m_debugCameraController->SetPitch(-0.185f);
+	m_debugCameraController->SetYaw(1.49f);
 
 	auto& gMenu = g_graphicsMenu.AddSubmenu(ICON_FK_TELEVISION " Graphics");
 	gMenu.AddItem("Reload Shaders", [this]() { m_shaders->ReloadAll(); });
@@ -136,8 +136,18 @@ bool Graphics::PostInit()
 	gMenu.AddItem("Reload Models", [this]() { m_render3d->Reset(); m_models->ReloadAll(); });
 	gMenu.AddItem("TextureManager", [this]() { g_showTextureGui = true; });
 	gMenu.AddItem("ModelManager", [this]() { g_showModelGui = true; });
-	auto& camMenu = g_graphicsMenu.AddSubmenu(ICON_FK_CAMERA " Camera");
-	camMenu.AddItem("Toggle Camera Mode", [this]() { g_useArcballCam = !g_useArcballCam; });
+	auto& camMenu = g_graphicsMenu.AddSubmenu(ICON_FK_CAMERA " Camera (Arcball)");
+	camMenu.AddItem("Toggle Camera Mode", [this,&camMenu]() {
+		g_useArcballCam = !g_useArcballCam; 
+		if (g_useArcballCam)
+		{
+			camMenu.m_label = ICON_FK_CAMERA " Camera (Arcball)";
+		}
+		else
+		{
+			camMenu.m_label = ICON_FK_CAMERA " Camera (Flycam)";
+		}
+	});
 	camMenu.AddItem("Show Camera Info", [this]() {g_showCameraInfo = true; });
 
 	return true;

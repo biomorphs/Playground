@@ -63,6 +63,6 @@ void main()
 	
 	// tonemap
 	float exposure = 1.0;
-	finalColour = Tonemap_ACESFilm(finalColour * exposure);
-	fs_out_colour = linearToSRGB(vec4(finalColour,1.0));
+	finalColour = Tonemap_ACESFilm(vs_out_colour.rgb * finalColour * exposure);
+	fs_out_colour = vec4(linearToSRGB(finalColour),1.0);
 }

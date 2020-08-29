@@ -205,8 +205,16 @@ namespace smol
 		while (firstInstance != m_instances.end())
 		{
 			const Render::Mesh* theMesh = firstInstance->m_mesh;
+			// find the range of instances using this mesh
+			auto lastMeshInstance = std::find_if(firstInstance, m_instances.end(), [theMesh](const smol::MeshInstance& m) -> bool {
+				return m.m_mesh != theMesh;
+				});
 			const auto theShader = m_shaders->GetShader(firstInstance->m_shader);
-
+			if (theShader == nullptr)
+			{
+				firstInstance = lastMeshInstance;
+				continue;
+			}
 			// bind shader + globals UBO
 			d.BindShaderProgram(*theShader);
 			d.BindUniformBufferIndex(*theShader, "Globals", 0);
@@ -223,11 +231,6 @@ namespace smol
 			d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 8, 4);
 			d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 12, 4);
 			d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceColours, instancingSlotIndex++, 4, 0);
-
-			// find the last matching mesh
-			auto lastMeshInstance = std::find_if(firstInstance, m_instances.end(), [theMesh](const smol::MeshInstance& m) -> bool {
-				return m.m_mesh != theMesh;
-				});
 
 			// 1 draw call per texture
 			auto firstTexInstance = firstInstance;

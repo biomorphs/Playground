@@ -11,7 +11,6 @@ Matt Hoyle
 namespace sol
 {
 	class state;
-	struct protected_function_result;
 }
 
 namespace SDE

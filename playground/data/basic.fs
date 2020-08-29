@@ -9,6 +9,6 @@ uniform sampler2D DiffuseTexture;
 void main()
 {
 	vec4 finalColour = srgbToLinear(texture(DiffuseTexture, out_uv)) * out_colour;
-	finalColour = vec4(Tonemap_ACESFilm(finalColour.rgb),finalColour.a);
-	colour = linearToSRGB(finalColour);
+	vec3 toneMapped = Tonemap_ACESFilm(finalColour.rgb);
+	colour = vec4(linearToSRGB(finalColour.rgb),finalColour.a);
 }

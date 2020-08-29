@@ -32,18 +32,17 @@ namespace smol
 		}
 
 		auto shader = std::make_unique<Render::ShaderProgram>();
-
 		auto vertexShader = std::make_unique<Render::ShaderBinary>();
 		std::string errorText;
 		if (!vertexShader->CompileFromFile(Render::ShaderType::VertexShader, vsPath, errorText))
 		{
-			SDE_LOG("Vertex shader compilation failed - %s", errorText.c_str());
+			SDE_LOG("Vertex shader compilation failed - %s\n%s", vsPath,errorText.c_str());
 			return ShaderHandle::Invalid();
 		}
 		auto fragmentShader = std::make_unique<Render::ShaderBinary>();
 		if (!fragmentShader->CompileFromFile(Render::ShaderType::FragmentShader, fsPath, errorText))
 		{
-			SDE_LOG("Fragment shader compilation failed - %s", errorText.c_str());
+			SDE_LOG("Fragment shader compilation failed - %s\n%s", fsPath, errorText.c_str());
 			return ShaderHandle::Invalid();
 		}
 

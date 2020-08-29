@@ -6,6 +6,7 @@
 #include "debug_gui/debug_gui_menubar.h"
 #include "sde/script_system.h"
 #include "core/profiler.h"
+#include "debug_gui_script_binding.h"
 #include <sol.hpp>
 
 Playground::Playground()
@@ -102,6 +103,8 @@ bool Playground::PreInit(Core::ISystemEnumerator& systemEnumerator)
 	m_debugGui = (DebugGui::DebugGuiSystem*)systemEnumerator.GetSystem("DebugGui");
 	m_scriptSystem = (SDE::ScriptSystem*)systemEnumerator.GetSystem("Script");
 	m_lastFrameTime = m_timer.GetSeconds();
+
+	DebugGuiScriptBinding::Go(m_debugGui, m_scriptSystem->Globals());
 
 	auto& fileMenu = g_menuBar.AddSubmenu(ICON_FK_FILE_O " File");
 	fileMenu.AddItem("Exit", []() { g_keepRunning = false; });

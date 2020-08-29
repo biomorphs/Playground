@@ -209,6 +209,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="arcball.cpp" />
+    <ClCompile Include="debug_gui_script_binding.cpp" />
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model_asset.cpp" />
@@ -225,6 +226,7 @@
   <ItemGroup>
     <ClInclude Include="..\data\global_uniforms.h" />
     <ClInclude Include="arcball.h" />
+    <ClInclude Include="debug_gui_script_binding.h" />
     <ClInclude Include="graphics.h" />
     <ClInclude Include="model_asset.h" />
     <ClInclude Include="playground.h" />

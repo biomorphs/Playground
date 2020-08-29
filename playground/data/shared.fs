@@ -10,9 +10,9 @@ vec4 srgbToLinear(vec4 v)
 	return vec4(pow(v.rgb, vec3(c_gamma)), v.a);
 }
 
-vec4 linearToSRGB(vec4 v)
+vec3 linearToSRGB(vec3 v)
 {
-	return vec4(pow(v.rgb, vec3(1.0 / c_gamma)), v.a);
+	return pow(v.rgb, vec3(1.0 / c_gamma));
 }
 
 // from https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
