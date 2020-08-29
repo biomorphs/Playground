@@ -47,7 +47,7 @@ bool g_showTextureGui = false;
 bool g_showModelGui = false;
 bool g_useArcballCam = true;
 bool g_showCameraInfo = false;
-Arcball g_arcball({ 1600, 900 }, { 7.1f,8.0f,15.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
+Arcball g_arcball({ 1600, 900 }, { 7.1f,8.0f,15.0f }, { 0.0f,5.0f,0.0f }, { 0.0f,1.0f,0.0f });
 
 bool Graphics::PostInit()
 {
@@ -59,7 +59,7 @@ bool Graphics::PostInit()
 	m_models = std::make_unique<smol::ModelManager>(m_textures.get(), m_jobSystem);
 
 	const auto& windowProps = m_renderSystem->GetWindow()->GetProperties();
-	m_windowSize = glm::vec2(windowProps.m_sizeX, windowProps.m_sizeY);
+	m_windowSize = glm::ivec2(windowProps.m_sizeX, windowProps.m_sizeY);
 
 	// Init render passes
 	m_render2d = std::make_unique<smol::Renderer2D>(m_textures.get(), m_windowSize);
@@ -113,12 +113,12 @@ bool Graphics::PostInit()
 	graphics["DebugDrawBox"] = [this](float px, float py, float pz, float size, float r, float g, float b, float a) {
 		m_debugRender->AddBox({ px,py,pz }, { size,size,size }, { r, g, b, a });
 	};
-	graphics["DebugDrawLine"] = [this](float p0x, float p0y, float p0z, float p1x, float p1y, float p1z, float p0r, float p0g, float p0b, float p1r, float p1g, float p1b) {
+	graphics["DebugDrawLine"] = [this](float p0x, float p0y, float p0z, float p1x, float p1y, float p1z, float p0r, float p0g, float p0b, float p0a, float p1r, float p1g, float p1b, float p1a) {
 		glm::vec4 positions[] = {
 			{p0x,p0y,p0z,0.0f}, {p1x,p1y,p1z,0.0f}
 		};
 		glm::vec4 colours[] = {
-			{p0r,p0g,p0b,1.0f},{p1r,p1g,p1b,1.0f}
+			{p0r,p0g,p0b,p0a},{p1r,p1g,p1b,p1a}
 		};
 		m_debugRender->AddLines(positions, colours, 1);
 	};
@@ -181,13 +181,16 @@ bool Graphics::Tick()
 	
 	bool forceOpen = true;
 	m_debugGui->BeginWindow(forceOpen, "Rendertargets");
-	m_debugGui->Image(m_render3d->GetMainFramebuffer().GetColourAttachment(0), m_windowSize * 0.8f, glm::vec2(0.0f,1.0f), glm::vec2(1.0f,0.0f));
+	m_debugGui->Image(m_render3d->GetMainFramebuffer().GetColourAttachment(0), glm::vec2(m_windowSize) * 0.8f, glm::vec2(0.0f,1.0f), glm::vec2(1.0f,0.0f));
 	m_debugGui->EndWindow();
 
 	Render::Camera c;
 	if (g_useArcballCam)
 	{
-		g_arcball.Update(m_inputSystem->MouseState(), 0.066f);
+		if (!m_debugGui->IsCapturingMouse())
+		{
+			g_arcball.Update(m_inputSystem->MouseState(), 0.066f);
+		}
 		c.LookAt(g_arcball.GetPosition(), g_arcball.GetTarget(), g_arcball.GetUp());
 		m_render3d->SetCamera(c);
 	}
@@ -209,6 +212,18 @@ bool Graphics::Tick()
 	{
 		g_showModelGui = m_models->ShowGui(*m_debugGui);
 	}
+
+	const auto& fs = m_render3d->GetStats();
+	char statText[1024] = { '\0' };
+	m_debugGui->BeginWindow(forceOpen,"Render Stats");
+	sprintf_s(statText, "Total Instances: %zu", fs.m_instancesSubmitted);	m_debugGui->Text(statText);
+	sprintf_s(statText, "Shader Binds: %zu", fs.m_shaderBinds);	m_debugGui->Text(statText);
+	sprintf_s(statText, "VA Binds: %zu", fs.m_vertexArrayBinds);	m_debugGui->Text(statText);
+	sprintf_s(statText, "Batches Drawn: %zu", fs.m_batchesDrawn);	m_debugGui->Text(statText);
+	sprintf_s(statText, "Draw calls: %zu", fs.m_drawCalls);	m_debugGui->Text(statText);
+	sprintf_s(statText, "Total Verts: %zu", fs.m_totalVertices);	m_debugGui->Text(statText);
+	m_debugGui->DragFloat("Exposure", m_render3d->GetExposure(), 0.01f, 0.0f, 100.0f);
+	m_debugGui->EndWindow();
 
 	// Process loaded data on main thread
 	m_textures->ProcessLoadedTextures();

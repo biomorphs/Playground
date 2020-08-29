@@ -17,6 +17,7 @@ namespace smol
 {
 	const uint64_t c_maxInstances = 1024 * 128;
 	const uint64_t c_maxLights = 64;
+	const int c_shadowMapSize = 1024;
 
 	struct LightInfo
 	{
@@ -25,21 +26,23 @@ namespace smol
 		glm::vec3 m_attenuation;		// const, linear, quad
 	};
 
-	struct GlobalUniforms
+	struct Renderer::GlobalUniforms
 	{
 		glm::mat4 m_projectionMat;
 		glm::mat4 m_viewMat;
 		glm::vec4 m_cameraPosition;		// world-space
 		LightInfo m_lights[c_maxLights];
 		int m_lightCount;
+		float m_hdrExposure;
 	};
 
-	Renderer::Renderer(TextureManager* ta, ModelManager* mm, ShaderManager* sm, glm::vec2 windowSize)
+	Renderer::Renderer(TextureManager* ta, ModelManager* mm, ShaderManager* sm, glm::ivec2 windowSize)
 		: m_textures(ta)
 		, m_models(mm)
 		, m_shaders(sm)
 		, m_windowSize(windowSize)
 		, m_mainFramebuffer(windowSize)
+		, m_shadowDepthBuffer(glm::ivec2(c_shadowMapSize, c_shadowMapSize))
 	{
 		m_whiteTexture = m_textures->LoadTexture("white.bmp");
 		m_defaultNormalmap = m_textures->LoadTexture("default_normalmap.png");
@@ -59,6 +62,11 @@ namespace smol
 			{
 				SDE_LOG("Failed to create framebuffer!");
 			}
+			m_shadowDepthBuffer.AddDepth();
+			if (!m_shadowDepthBuffer.Create())
+			{
+				SDE_LOG("Failed to create shadow depth buffer");
+			}
 		}
 	}
 
@@ -77,13 +85,11 @@ namespace smol
 	{
 		SDE_PROF_EVENT();
 
-		// Shader - bits 64 - 48
+		// Shader - bits 48 - 64
 		const uint64_t shaderHash = static_cast<uint64_t>(shader.m_index) << 48;
 
-		// Then mesh - bits 48-24
-		const uint64_t meshHash = (reinterpret_cast<uintptr_t>(&mesh) & 0x0000000000ffffff) << 24;
-
-		// No textures
+		// Then mesh - bits 0-32
+		const uint64_t meshHash = (reinterpret_cast<uintptr_t>(&mesh) & 0x00000000ffffffff);
 
 		const uint64_t sortKey = meshHash | shaderHash;
 		m_instances.push_back({ sortKey, transform, colour, TextureHandle(), TextureHandle(), TextureHandle(), shader, &mesh });
@@ -100,19 +106,14 @@ namespace smol
 			uint16_t meshPartIndex = 0;
 			for (const auto& part : theModel->Parts())
 			{
-				// Shader - bits 64 - 48
+				// Shader - bits 48-64
 				const uint64_t shaderHash = static_cast<uint64_t>(shader.m_index) << 48;
 
-				// Then mesh/model - bits 48-32 for model, 32-24 bits per mesh
-				const uint64_t modelHash = static_cast<uint64_t>(model.m_index) << 32;
-				const uint64_t meshHash = static_cast<uint64_t>(meshPartIndex) << 24;
+				// Then mesh/model - bits 16-32 for model, 0-16 bits per mesh
+				const uint64_t modelHash = static_cast<uint64_t>(model.m_index) << 16;
+				const uint64_t meshHash = static_cast<uint64_t>(meshPartIndex++);
 
-				// bits 24 - 8 for diffuse
-				const uint64_t textureHash = static_cast<uint64_t>(part.m_diffuse.m_index) << 8;
-
-				// 1 byte spare
-
-				const uint64_t sortKey = textureHash | meshHash | modelHash | shaderHash;
+				const uint64_t sortKey = meshHash | modelHash | shaderHash;
 				m_instances.push_back({ sortKey, transform * part.m_transform, colour, part.m_diffuse, part.m_normalMap, part.m_specularMap, shader, part.m_mesh.get() });
 			}
 			SDE_ASSERT(meshPartIndex <= 255, "Too many parts in mesh!");
@@ -139,7 +140,6 @@ namespace smol
 		static std::vector<glm::vec4> instanceColours;
 		instanceColours.reserve(c_maxInstances);
 		instanceColours.clear();
-
 		for (const auto& c : m_instances)
 		{
 			instanceTransforms.push_back(c.m_transform);
@@ -151,116 +151,110 @@ namespace smol
 		m_instanceColours.SetData(0, instanceColours.size() * sizeof(glm::vec4), instanceColours.data());
 	}
 
+	void Renderer::UpdateGlobals()
+	{
+		SDE_PROF_EVENT();
+		GlobalUniforms globals;
+		globals.m_projectionMat = glm::perspectiveFov(glm::radians(70.0f), (float)m_windowSize.x, (float)m_windowSize.y, 0.1f, 1000.0f);
+		globals.m_viewMat = glm::lookAt(m_camera.Position(), m_camera.Target(), m_camera.Up());
+		for (int l = 0; l < m_lights.size() && l < c_maxLights; ++l)
+		{
+			globals.m_lights[l].m_colourAndAmbient = m_lights[l].m_colour;
+			globals.m_lights[l].m_position = m_lights[l].m_position;
+			globals.m_lights[l].m_attenuation = m_lights[l].m_attenuation;
+		}
+		globals.m_lightCount = static_cast<int>(std::min(m_lights.size(), c_maxLights));
+		globals.m_cameraPosition = glm::vec4(m_camera.Position(), 0.0);
+		globals.m_hdrExposure = m_hdrExposure;
+		m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
+	}
+
+	void Renderer::SortInstances()
+	{
+		SDE_PROF_EVENT();
+		std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
+			return q1.m_sortKey < q2.m_sortKey;
+			});
+	}
+
 	void Renderer::RenderAll(Render::Device& d)
 	{
 		SDE_PROF_EVENT();
+		m_frameStats = { m_instances.size(),0,0,0,0 };
 		if (m_instances.size() == 0)
 		{
 			return;
 		}
-
-		{
-			SDE_PROF_EVENT("SortInstances");
-			std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
-				return q1.m_sortKey < q2.m_sortKey;
-				});
-		}
-
-		PopulateInstanceBuffers();
-		auto windowSize = glm::vec2(m_windowSize.x, m_windowSize.y);
-
-		// render to main target
-		d.DrawToFramebuffer(m_mainFramebuffer);
-		d.ClearFramebufferColourDepth(m_mainFramebuffer, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), FLT_MAX);
-
-		// render state
-		d.SetDepthState(true, true);		// enable z-test, enable write
-		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
-		d.SetBlending(true);				// enable blending (we might want to do it manually instead)
-		d.SetScissorEnabled(false);			// (don't) scissor me timbers
-		{
-			SDE_PROF_EVENT("Update Globals UBO");
-			GlobalUniforms globals;
-			globals.m_projectionMat = glm::perspectiveFov(glm::radians(70.0f), windowSize.x, windowSize.y, 0.1f, 1000.0f);
-			globals.m_viewMat = glm::lookAt(m_camera.Position(), m_camera.Target(), m_camera.Up());
-			for (int l = 0; l < m_lights.size() && l < c_maxLights; ++l)
-			{
-				globals.m_lights[l].m_colourAndAmbient = m_lights[l].m_colour;
-				globals.m_lights[l].m_position = m_lights[l].m_position;
-				globals.m_lights[l].m_attenuation = m_lights[l].m_attenuation;
-			}
-			globals.m_lightCount = static_cast<int>(std::min(m_lights.size(), c_maxLights));
-			globals.m_cameraPosition = glm::vec4(m_camera.Position(), 0.0);
-			m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
-		}
+		UpdateGlobals();
 		const auto c_defaultTexture = m_textures->GetTexture(m_whiteTexture);
 		const auto c_defaultNormalmap = m_textures->GetTexture(m_defaultNormalmap);
 		if (c_defaultTexture == nullptr || c_defaultNormalmap == nullptr)
 		{
 			return;
 		}
+		SortInstances();
+		PopulateInstanceBuffers();
 
-		Render::UniformBuffer ub;	// hack for setting samplers
+		// render to main target
+		d.DrawToFramebuffer(m_mainFramebuffer);
+		d.ClearFramebufferColourDepth(m_mainFramebuffer, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), FLT_MAX);
+		d.SetDepthState(true, true);		// enable z-test, enable write
+		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
+		d.SetBlending(true);				// enable blending (we might want to do it manually instead)
+		d.SetScissorEnabled(false);			// (don't) scissor me timbers
+		Render::UniformBuffer ub;			// hack for setting samplers
 		auto firstInstance = m_instances.begin();
+		const Render::ShaderProgram* lastShaderUsed = nullptr;
 		while (firstInstance != m_instances.end())
 		{
 			const Render::Mesh* theMesh = firstInstance->m_mesh;
-			// find the range of instances using this mesh
-			auto lastMeshInstance = std::find_if(firstInstance, m_instances.end(), [theMesh](const smol::MeshInstance& m) -> bool {
-				return m.m_mesh != theMesh;
+			// Batch by shader and mesh
+			auto lastMeshInstance = std::find_if(firstInstance, m_instances.end(), [firstInstance](const smol::MeshInstance& m) -> bool {
+				return  m.m_mesh != firstInstance->m_mesh || m.m_shader.m_index != firstInstance->m_shader.m_index;
 				});
+			auto instanceCount = (uint32_t)(lastMeshInstance - firstInstance);
 			const auto theShader = m_shaders->GetShader(firstInstance->m_shader);
-			if (theShader == nullptr)
+			if (theShader != nullptr)
 			{
-				firstInstance = lastMeshInstance;
-				continue;
-			}
-			// bind shader + globals UBO
-			d.BindShaderProgram(*theShader);
-			d.BindUniformBufferIndex(*theShader, "Globals", 0);
-			d.SetUniforms(*theShader, m_globalsUniformBuffer, 0);
+				m_frameStats.m_batchesDrawn++;
 
-			// bind vertex array
-			d.BindVertexArray(theMesh->GetVertexArray());
+				// bind shader + globals UBO
+				if (theShader != lastShaderUsed)
+				{
+					m_frameStats.m_shaderBinds++;
+					d.BindShaderProgram(*theShader);
+					d.BindUniformBufferIndex(*theShader, "Globals", 0);
+					d.SetUniforms(*theShader, m_globalsUniformBuffer, 0);
+					lastShaderUsed = theShader;
+				}
 
-			// bind instancing streams immediately after mesh vertex streams
-			int instancingSlotIndex = theMesh->GetVertexArray().GetStreamCount();
-			// matrices must be set over multiple stream as part of vao
-			d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, 0, 4);
-			d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 4, 4);
-			d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 8, 4);
-			d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 12, 4);
-			d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceColours, instancingSlotIndex++, 4, 0);
+				// bind vertex array + instancing streams immediately after mesh vertex streams
+				m_frameStats.m_vertexArrayBinds++;
+				int instancingSlotIndex = theMesh->GetVertexArray().GetStreamCount();
+				d.BindVertexArray(theMesh->GetVertexArray());
+				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, 0, 4);
+				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 4, 4);
+				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 8, 4);
+				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 12, 4);
+				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceColours, instancingSlotIndex++, 4, 0);
 
-			// 1 draw call per texture
-			auto firstTexInstance = firstInstance;
-			while (firstTexInstance != lastMeshInstance)
-			{
-				// firstTexInstance -> lastTexInstance instances to draw
-				uint64_t texID = firstTexInstance->m_texture.m_index;
-				auto lastTexInstance = std::find_if(firstTexInstance, lastMeshInstance, [texID](const smol::MeshInstance& m) -> bool {
-					return m.m_texture.m_index != texID;
-					});
-				
-				// textures
-				auto diffusePtr = m_textures->GetTexture(firstTexInstance->m_texture);
+				// mesh material samplers go here
+				auto diffusePtr = m_textures->GetTexture(firstInstance->m_texture);
 				ub.SetSampler("DiffuseTexture", diffusePtr ? diffusePtr->GetHandle() : c_defaultTexture->GetHandle());
-				
-				auto normalPtr = m_textures->GetTexture(firstTexInstance->m_normalTexture);
+				auto normalPtr = m_textures->GetTexture(firstInstance->m_normalTexture);
 				ub.SetSampler("NormalsTexture", normalPtr ? normalPtr->GetHandle() : c_defaultNormalmap->GetHandle());
-
-				auto specPtr = m_textures->GetTexture(firstTexInstance->m_specularTexture);
+				auto specPtr = m_textures->GetTexture(firstInstance->m_specularTexture);
 				ub.SetSampler("SpecularTexture", specPtr ? specPtr->GetHandle() : c_defaultTexture->GetHandle());
-
 				d.SetUniforms(*theShader, ub);
 
+				// draw the chunks
 				for (const auto& chunk : theMesh->GetChunks())
 				{
-					auto instanceCount = (uint32_t)(lastTexInstance - firstTexInstance);
-					uint32_t firstIndex = (uint32_t)(firstTexInstance - m_instances.begin());
+					uint32_t firstIndex = (uint32_t)(firstInstance - m_instances.begin());
 					d.DrawPrimitivesInstanced(chunk.m_primitiveType, chunk.m_firstVertex, chunk.m_vertexCount, instanceCount, firstIndex);
+					m_frameStats.m_drawCalls++;
+					m_frameStats.m_totalVertices += chunk.m_vertexCount * instanceCount;
 				}
-				firstTexInstance = lastTexInstance;
 			}
 			firstInstance = lastMeshInstance;
 		}

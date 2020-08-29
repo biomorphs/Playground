@@ -18,7 +18,7 @@ namespace smol
 	class Renderer : public Render::RenderPass
 	{
 	public:
-		Renderer(TextureManager* ta, ModelManager* mm, ShaderManager* sm, glm::vec2 windowSize);			
+		Renderer(TextureManager* ta, ModelManager* mm, ShaderManager* sm, glm::ivec2 windowSize);			
 		virtual ~Renderer() = default;
 
 		void Reset();
@@ -28,11 +28,23 @@ namespace smol
 		void SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader);
 		void SetLight(glm::vec4 positionOrDir,glm::vec3 colour, float ambientStr, glm::vec3 attenuation);
 		Render::FrameBuffer& GetMainFramebuffer() { return m_mainFramebuffer; }
+		struct FrameStats {
+			size_t m_instancesSubmitted;
+			size_t m_shaderBinds;
+			size_t m_vertexArrayBinds;
+			size_t m_batchesDrawn;
+			size_t m_drawCalls;
+			size_t m_totalVertices;
+		};
+		const FrameStats& GetStats() const { return m_frameStats; }
+		float& GetExposure() { return m_hdrExposure; }
 	private:
+		void SortInstances();
+		void UpdateGlobals();
 		void PopulateInstanceBuffers();
-
+		struct GlobalUniforms;
 		Render::Camera m_camera;
-		glm::vec2 m_windowSize;
+		glm::ivec2 m_windowSize;
 		std::vector<MeshInstance> m_instances;
 		std::vector<Light> m_lights;
 		smol::TextureHandle m_whiteTexture;
@@ -45,5 +57,8 @@ namespace smol
 		Render::RenderBuffer m_instanceColours;
 		Render::RenderBuffer m_globalsUniformBuffer;
 		Render::FrameBuffer m_mainFramebuffer;
+		Render::FrameBuffer m_shadowDepthBuffer;
+		FrameStats m_frameStats;
+		float m_hdrExposure = 1.0f;
 	};
 }
