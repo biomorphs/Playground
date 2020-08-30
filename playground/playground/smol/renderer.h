@@ -9,6 +9,11 @@
 #include <vector>
 #include <memory>
 
+namespace Render
+{
+	class Material;
+}
+
 namespace smol
 {
 	class TextureManager;
@@ -39,6 +44,7 @@ namespace smol
 		const FrameStats& GetStats() const { return m_frameStats; }
 		float& GetExposure() { return m_hdrExposure; }
 	private:
+		void ApplyMaterial(Render::Device& d, Render::ShaderProgram& shader, const Render::Material& material);
 		void PrepareInstances();
 		void UpdateGlobals();
 		void PopulateInstanceBuffers();
@@ -47,9 +53,6 @@ namespace smol
 		glm::ivec2 m_windowSize;
 		std::vector<MeshInstance> m_instances;
 		std::vector<Light> m_lights;
-		smol::TextureHandle m_whiteTexture;
-		smol::TextureHandle m_defaultNormalmap;
-		smol::Light m_light;
 		ShaderManager* m_shaders;
 		smol::TextureManager* m_textures;
 		smol::ModelManager* m_models;

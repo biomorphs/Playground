@@ -99,10 +99,10 @@ end
 
 function DrawGrid(startX,endX,stepX,startZ,endZ,stepZ,yAxis)
 	for x=startX,endX,stepX do
-		--Graphics.DebugDrawLine(x,yAxis,startZ,x,yAxis,endZ,0.2,0.2,0.2,1.0,0.2,0.2,0.2,1.0)
+		Graphics.DebugDrawLine(x,yAxis,startZ,x,yAxis,endZ,0.2,0.2,0.2,1.0,0.2,0.2,0.2,1.0)
 	end
 	for z=startZ,endZ,stepZ do
-		--Graphics.DebugDrawLine(startX,yAxis,z,endX,yAxis,z,0.2,0.2,0.2,1.0,0.2,0.2,0.2,1.0)
+		Graphics.DebugDrawLine(startX,yAxis,z,endX,yAxis,z,0.2,0.2,0.2,1.0,0.2,0.2,0.2,1.0)
 	end
 end
 
@@ -166,23 +166,23 @@ function Playground:Tick()
 		end
 
 		Graphics.PointLight(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3], Lights[i].Ambient, Lights[i].Attenuation[1], Lights[i].Attenuation[2], Lights[i].Attenuation[3])
-		--Graphics.DrawModel(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0,lightSphereSize,LightModel,LightShader)
+		Graphics.DrawModel(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0,lightSphereSize,LightModel,LightShader)
 
 		for h=1,#Lights[i].History-1 do
 			local alpha = 1.0 - (((#Lights[i].History - h) / #Lights[i].History))
-			--Graphics.DebugDrawLine(Lights[i].History[h][1],Lights[i].History[h][2],Lights[i].History[h][3],
-			--					   Lights[i].History[h+1][1],Lights[i].History[h+1][2],Lights[i].History[h+1][3],
-			--					   Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],alpha,
-			--					   Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],alpha)
+			Graphics.DebugDrawLine(Lights[i].History[h][1],Lights[i].History[h][2],Lights[i].History[h][3],
+								   Lights[i].History[h+1][1],Lights[i].History[h+1][2],Lights[i].History[h+1][3],
+								   Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],alpha,
+								   Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],alpha)
 		end
 	end
 
 	DrawGrid(-512,512,32,-512,512,32,-40.0)
-	--Graphics.DebugDrawAxis(0.0,32.0,0.0,8.0)
+	Graphics.DebugDrawAxis(0.0,32.0,0.0,8.0)
 
-	--Graphics.DrawModel(0.0,1.0,0.0,1.0,1.0,1.0,1.0,0.15,IslandModel,DiffuseShader)
-	--Graphics.DrawModel(0.0,1.3,0.0,1.0,1.0,1.0,1.0,1.0,MonsterModel,DiffuseShader)
-	--Graphics.DrawModel(0.0,0.5,0.0,1.0,1.0,1.0,1.0,0.2,Sponza,DiffuseShader)
+	Graphics.DrawModel(0.0,1.0,0.0,1.0,1.0,1.0,1.0,0.15,IslandModel,DiffuseShader)
+	Graphics.DrawModel(0.0,1.3,0.0,1.0,1.0,1.0,1.0,1.0,MonsterModel,DiffuseShader)
+	Graphics.DrawModel(0.0,0.5,0.0,1.0,1.0,1.0,1.0,0.2,Sponza,DiffuseShader)
 
 	local width = 64
 	local numPerWidth = 4

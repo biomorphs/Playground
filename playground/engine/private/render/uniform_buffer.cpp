@@ -38,21 +38,6 @@ namespace Render
 		ApplyDefaults(d, p, m_vec4Values, defaults.m_vec4Values);
 		ApplyValues(d, p, m_mat4Values);
 		ApplyDefaults(d, p, m_mat4Values, defaults.m_mat4Values);
-
-		uint32_t textureUnit = 0;
-		for (const auto& it : m_textureSamplers)
-		{
-			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(), it.first);
-			if (uniformHandle != -1)
-				d.SetSampler(uniformHandle, it.second.m_value, textureUnit++);
-		}
-
-		for (const auto& it : m_textureArraySamplers)
-		{
-			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(), it.first);
-			if (uniformHandle != -1)
-				d.SetArraySampler(uniformHandle, it.second.m_value, textureUnit++);
-		}
 	}
 
 	void UniformBuffer::Apply(Render::Device& d, Render::ShaderProgram& p) const
@@ -60,21 +45,6 @@ namespace Render
 		ApplyValues(d, p, m_floatValues);
 		ApplyValues(d, p, m_vec4Values);
 		ApplyValues(d, p, m_mat4Values);
-
-		uint32_t textureUnit = 0;
-		for (const auto& it : m_textureSamplers)
-		{
-			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(), it.first);
-			if (uniformHandle != -1)
-				d.SetSampler(uniformHandle, it.second.m_value, textureUnit++);
-		}
-
-		for (const auto& it : m_textureArraySamplers)
-		{
-			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(), it.first);
-			if (uniformHandle != -1)
-				d.SetArraySampler(uniformHandle, it.second.m_value, textureUnit++);
-		}
 	}
 
 	void UniformBuffer::SetValue(std::string name, float value)
@@ -93,17 +63,5 @@ namespace Render
 	{
 		const uint32_t hash = Core::StringHashing::GetHash(name.c_str());
 		m_vec4Values[hash] = { name, value };
-	}
-
-	void UniformBuffer::SetSampler(std::string name, uint32_t handle)
-	{
-		const uint32_t hash = Core::StringHashing::GetHash(name.c_str());
-		m_textureSamplers[hash] = { name, handle };
-	}
-
-	void UniformBuffer::SetArraySampler(std::string name, uint32_t handle)
-	{
-		const uint32_t hash = Core::StringHashing::GetHash(name.c_str());
-		m_textureArraySamplers[hash] = { name, handle };
 	}
 }

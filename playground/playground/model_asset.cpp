@@ -156,9 +156,7 @@ namespace Assets
 			aiProcess_Triangulate |
 			aiProcess_JoinIdenticalVertices |
 			aiProcess_SortByPType |
-			aiProcess_RemoveRedundantMaterials |	// so we can batch more verts together with...
-			aiProcess_OptimizeMeshes |
-			aiProcess_OptimizeGraph
+			aiProcess_PreTransformVertices
 			);
 		if (!scene)
 		{

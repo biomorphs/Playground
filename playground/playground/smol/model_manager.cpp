@@ -70,15 +70,14 @@ namespace smol
 				const auto& mesh = model.Meshes()[index];
 				const auto& mat = mesh.Material();
 
-				// Load all textures for each part and set material samplers
+				// load textures and store in mesh material
 				std::string diffusePath = mat.DiffuseMaps().size() > 0 ? mat.DiffuseMaps()[0] : "";
 				std::string normalPath = mat.NormalMaps().size() > 0 ? mat.NormalMaps()[0] : "";
 				std::string specPath = mat.SpecularMaps().size() > 0 ? mat.SpecularMaps()[0] : "";
-
 				auto& material = renderModel.Parts()[index].m_mesh->GetMaterial();
-				renderModel.Parts()[index].m_diffuse = m_textureManager->LoadTexture(diffusePath.c_str());
-				renderModel.Parts()[index].m_normalMap = m_textureManager->LoadTexture(normalPath.c_str());
-				renderModel.Parts()[index].m_specularMap = m_textureManager->LoadTexture(specPath.c_str());
+				material.SetSampler("DiffuseTexture", m_textureManager->LoadTexture(diffusePath.c_str()).m_index);
+				material.SetSampler("NormalsTexture", m_textureManager->LoadTexture(normalPath.c_str()).m_index);
+				material.SetSampler("SpecularTexture", m_textureManager->LoadTexture(specPath.c_str()).m_index);
 
 				// Create render resources that cannot be shared across contexts
 				meshBuilders[index]->CreateVertexArray(*renderModel.Parts()[index].m_mesh);

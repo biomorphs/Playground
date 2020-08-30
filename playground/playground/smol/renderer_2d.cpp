@@ -132,6 +132,7 @@ namespace smol
 		d.BindInstanceBuffer(m_quadMesh->GetVertexArray(), m_quadInstanceColours, 5, 4, 0);
 
 		// find the first and last quad with the same texture
+		uint32_t samplerHandle = m_quadShaders->GetUniformHandle("DiffuseTexture");
 		auto firstQuad = m_quads.begin();
 		while (firstQuad != m_quads.end())
 		{
@@ -142,7 +143,10 @@ namespace smol
 
 			// use the texture or our in built white texture
 			smol::TextureHandle texture = firstQuad->m_texture.m_index != (uint64_t)-1 ? firstQuad->m_texture : smol::TextureHandle{ 0 };
-			ub.SetSampler("DiffuseTexture", m_textures->GetTexture(texture)->GetHandle());
+			if (samplerHandle != -1)
+			{
+				d.SetSampler(samplerHandle, m_textures->GetTexture(texture)->GetHandle(), 0);
+			}
 			ub.Apply(d, *m_quadShaders);
 
 			// somehow only draw firstQuad-lastQuad instances

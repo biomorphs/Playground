@@ -19,10 +19,15 @@ uniform sampler2D SpecularTexture;
  
 void main()
 {
+	// early out if we can
+	vec4 diffuseTex = srgbToLinear(texture(DiffuseTexture, vs_out_uv));	
+	if(diffuseTex.a == 0.0 || MeshDiffuseOpacity.a == 0.0)
+		discard;
+
 	vec3 finalNormal = texture(NormalsTexture, vs_out_uv).rgb;
 	vec3 finalColour = vec3(0.0);
-	vec4 diffuseTex = srgbToLinear(texture(DiffuseTexture, vs_out_uv));
 	vec3 specularTex = texture(SpecularTexture, vs_out_uv).rgb;
+
 
 	// transform normal map to world space
 	finalNormal = finalNormal * 2.0 - 1.0;   

@@ -12,6 +12,7 @@
 #include "shader_manager.h"
 #include "model.h"
 #include <algorithm>
+#include <map>
 
 namespace smol
 {
@@ -36,6 +37,8 @@ namespace smol
 		float m_hdrExposure;
 	};
 
+	std::map<std::string, TextureHandle> g_defaultTextures;
+
 	Renderer::Renderer(TextureManager* ta, ModelManager* mm, ShaderManager* sm, glm::ivec2 windowSize)
 		: m_textures(ta)
 		, m_models(mm)
@@ -44,9 +47,9 @@ namespace smol
 		, m_mainFramebuffer(windowSize)
 		, m_shadowDepthBuffer(glm::ivec2(c_shadowMapSize, c_shadowMapSize))
 	{
-		m_whiteTexture = m_textures->LoadTexture("white.bmp");
-		m_defaultNormalmap = m_textures->LoadTexture("default_normalmap.png");
-
+		g_defaultTextures["DiffuseTexture"] = m_textures->LoadTexture("white.bmp");
+		g_defaultTextures["NormalsTexture"] = m_textures->LoadTexture("default_normalmap.png");
+		g_defaultTextures["SpecularTexture="] = m_textures->LoadTexture("white.bmp");
 		{
 			SDE_PROF_EVENT("Create Instance Buffers");
 			m_instanceTransforms.Create(c_maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
@@ -83,7 +86,7 @@ namespace smol
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const Render::Mesh& mesh, const struct ShaderHandle& shader)
 	{
 		SDE_PROF_EVENT();
-		m_instances.push_back({ transform, 0.0f, colour, TextureHandle(), TextureHandle(), TextureHandle(), shader, &mesh });
+		m_instances.push_back({ transform, colour, shader, &mesh });
 	}
 
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader)
@@ -97,7 +100,7 @@ namespace smol
 			uint16_t meshPartIndex = 0;
 			for (const auto& part : theModel->Parts())
 			{
-				m_instances.push_back({ transform * part.m_transform, 0.0f, colour, part.m_diffuse, part.m_normalMap, part.m_specularMap, shader, part.m_mesh.get() });
+				m_instances.push_back({ transform * part.m_transform, colour, shader, part.m_mesh.get() });
 			}
 		}
 	}
@@ -155,24 +158,8 @@ namespace smol
 	{
 		SDE_PROF_EVENT();
 		{
-			SDE_PROF_EVENT("DistanceToCamera");
-			for (auto& c : m_instances)
-			{
-				float distance = glm::length(m_camera.Position() - glm::vec3(c.m_transform[3]));
-				c.m_distanceToCamera = distance;
-			}
-		}
-		{
 			SDE_PROF_EVENT("Sort");
 			std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
-				if (q1.m_distanceToCamera < q2.m_distanceToCamera)	// front to back
-				{
-					return true;		
-				}
-				else if (q1.m_distanceToCamera > q2.m_distanceToCamera)
-				{
-					return false;
-				}
 				if (q1.m_shader.m_index < q2.m_shader.m_index)	// shader
 				{
 					return true;
@@ -196,6 +183,41 @@ namespace smol
 		}
 	}
 
+	void Renderer::ApplyMaterial(Render::Device& d, Render::ShaderProgram& shader, const Render::Material& material)
+	{
+		const auto& uniforms = material.GetUniforms();
+		uniforms.Apply(d, shader);
+
+		const auto& samplers = material.GetSamplers();
+		uint32_t textureUnit = 0;
+		for (const auto& s : samplers)
+		{
+			uint32_t uniformHandle = shader.GetUniformHandle(s.second.m_name.c_str());
+			if (uniformHandle != -1)
+			{
+				TextureHandle texHandle = { static_cast<uint16_t>(s.second.m_handle) };
+				const auto theTexture = m_textures->GetTexture({ texHandle });
+				if (theTexture)
+				{
+					d.SetSampler(uniformHandle, theTexture->GetHandle(), textureUnit++);
+				}
+				else
+				{
+					// set default if one exists
+					auto foundDefault = g_defaultTextures.find(s.second.m_name.c_str());
+					if (foundDefault != g_defaultTextures.end())
+					{
+						const auto defaultTexture = m_textures->GetTexture({ foundDefault->second });
+						if (defaultTexture != nullptr)
+						{
+							d.SetSampler(uniformHandle, defaultTexture->GetHandle(), textureUnit++);
+						}
+					}
+				}
+			}
+		}
+	}
+
 	void Renderer::RenderAll(Render::Device& d)
 	{
 		SDE_PROF_EVENT();
@@ -205,12 +227,6 @@ namespace smol
 			return;
 		}
 		UpdateGlobals();
-		const auto c_defaultTexture = m_textures->GetTexture(m_whiteTexture);
-		const auto c_defaultNormalmap = m_textures->GetTexture(m_defaultNormalmap);
-		if (c_defaultTexture == nullptr || c_defaultNormalmap == nullptr)
-		{
-			return;
-		}
 		PrepareInstances();
 		PopulateInstanceBuffers();
 
@@ -222,17 +238,17 @@ namespace smol
 		d.SetBlending(true);				// enable blending (we might want to do it manually instead)
 		d.SetScissorEnabled(false);			// (don't) scissor me timbers
 		auto firstInstance = m_instances.begin();
-		const Render::ShaderProgram* lastShaderUsed = nullptr;
+		const Render::ShaderProgram* lastShaderUsed = nullptr;	// avoid setting the same shader
 		while (firstInstance != m_instances.end())
 		{
-			const Render::Mesh* theMesh = firstInstance->m_mesh;
 			// Batch by shader and mesh
 			auto lastMeshInstance = std::find_if(firstInstance, m_instances.end(), [firstInstance](const smol::MeshInstance& m) -> bool {
 				return  m.m_mesh != firstInstance->m_mesh || m.m_shader.m_index != firstInstance->m_shader.m_index;
 				});
 			auto instanceCount = (uint32_t)(lastMeshInstance - firstInstance);
+			const Render::Mesh* theMesh = firstInstance->m_mesh;
 			const auto theShader = m_shaders->GetShader(firstInstance->m_shader);
-			if (theShader != nullptr)
+			if (theShader != nullptr && theMesh != nullptr)
 			{
 				m_frameStats.m_batchesDrawn++;
 
@@ -256,18 +272,8 @@ namespace smol
 				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 12, 4);
 				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceColours, instancingSlotIndex++, 4, 0);
 
-				const auto& uniforms = theMesh->GetMaterial().GetUniforms();
-				uniforms.Apply(d, *theShader);
-
-				// todo - refactor
-				Render::UniformBuffer ub;
-				auto diffusePtr = m_textures->GetTexture(firstInstance->m_texture);
-				ub.SetSampler("DiffuseTexture", diffusePtr ? diffusePtr->GetHandle() : c_defaultTexture->GetHandle());
-				auto normalPtr = m_textures->GetTexture(firstInstance->m_normalTexture);
-				ub.SetSampler("NormalsTexture", normalPtr ? normalPtr->GetHandle() : c_defaultNormalmap->GetHandle());
-				auto specPtr = m_textures->GetTexture(firstInstance->m_specularTexture);
-				ub.SetSampler("SpecularTexture", specPtr ? specPtr->GetHandle() : c_defaultTexture->GetHandle());
-				ub.Apply(d, *theShader);
+				// apply mesh material uniforms and samplers
+				ApplyMaterial(d, *theShader, theMesh->GetMaterial());
 
 				// draw the chunks
 				for (const auto& chunk : theMesh->GetChunks())
