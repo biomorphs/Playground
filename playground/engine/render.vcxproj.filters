@@ -39,12 +39,6 @@
     <ClInclude Include="public\render\mesh_builder.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="public\render\instance_queue.h">
-      <Filter>public</Filter>
-    </ClInclude>
-    <ClInclude Include="public\render\mesh_instance.h">
-      <Filter>public</Filter>
-    </ClInclude>
     <ClInclude Include="public\render\render_pass.h">
       <Filter>public</Filter>
     </ClInclude>
@@ -57,13 +51,13 @@
     <ClInclude Include="public\render\texture_source.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="public\render\uniform_buffer.h">
-      <Filter>public</Filter>
-    </ClInclude>
     <ClInclude Include="public\render\texture.h">
       <Filter>public</Filter>
     </ClInclude>
     <ClInclude Include="public\render\frame_buffer.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\render\uniform_buffer.h">
       <Filter>public</Filter>
     </ClInclude>
   </ItemGroup>
@@ -98,13 +92,13 @@
     <ClCompile Include="private\render\dds_loader.cpp">
       <Filter>private</Filter>
     </ClCompile>
-    <ClCompile Include="private\render\uniform_buffer.cpp">
-      <Filter>private</Filter>
-    </ClCompile>
     <ClCompile Include="private\render\texture.cpp">
       <Filter>private</Filter>
     </ClCompile>
     <ClCompile Include="private\render\frame_buffer.cpp">
+      <Filter>private</Filter>
+    </ClCompile>
+    <ClCompile Include="private\render\uniform_buffer.cpp">
       <Filter>private</Filter>
     </ClCompile>
   </ItemGroup>

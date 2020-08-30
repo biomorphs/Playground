@@ -28,6 +28,7 @@ namespace Render
 
 		inline uint32_t GetHandle() const { return m_handle; }
 		inline bool IsArray() const { return m_isArray; }
+		uint32_t GetComponentCount() const { return m_componentCount; }
 
 	private:
 		bool CreateSimpleUncompressedTexture(const TextureSource& src);
@@ -37,5 +38,6 @@ namespace Render
 
 		bool m_isArray;
 		uint32_t m_handle;
+		uint32_t m_componentCount;
 	};
 }

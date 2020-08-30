@@ -17,6 +17,8 @@ namespace Render
 			DXT1,
 			DXT3,
 			DXT5,
+			R8,
+			RGB8,
 			RGBA8,
 			RGBAF16,
 			Depth24Stencil8,

@@ -28,7 +28,6 @@ void main()
 	vec3 finalColour = vec3(0.0);
 	vec3 specularTex = texture(SpecularTexture, vs_out_uv).rgb;
 
-
 	// transform normal map to world space
 	finalNormal = finalNormal * 2.0 - 1.0;   
 	finalNormal = normalize(vs_out_tbnMatrix * finalNormal);

@@ -46,13 +46,15 @@ namespace smol
 			auto newMesh = std::make_unique<Render::Mesh>();
 			builder.CreateMesh(*newMesh);
 
-			std::string diffuseTexturePath = mesh.Material().DiffuseMaps().size() > 0 ? mesh.Material().DiffuseMaps()[0] : "white.bmp";
-			std::string normalTexturePath = mesh.Material().NormalMaps().size() > 0 ? mesh.Material().NormalMaps()[0] : "";
-			std::string specTexturePath = mesh.Material().SpecularMaps().size() > 0 ? mesh.Material().SpecularMaps()[0] : "";
-			auto diffuseTexture = tm.LoadTexture(diffuseTexturePath.c_str());
-			auto normalTexture = tm.LoadTexture(normalTexturePath.c_str());
-			auto specularTexture = tm.LoadTexture(specTexturePath.c_str());
-			resultModel->m_parts.push_back({ std::move(newMesh), diffuseTexture, normalTexture, specularTexture, mesh.Transform(), mesh.Bounds() });
+			const auto& mat = mesh.Material();
+			std::string diffusePath = mat.DiffuseMaps().size() > 0 ? mat.DiffuseMaps()[0] : "";
+			std::string normalPath = mat.NormalMaps().size() > 0 ? mat.NormalMaps()[0] : "";
+			std::string specPath = mat.SpecularMaps().size() > 0 ? mat.SpecularMaps()[0] : "";
+			auto& material = newMesh->GetMaterial();
+			material.SetSampler("DiffuseTexture", tm.LoadTexture(diffusePath.c_str()).m_index);
+			material.SetSampler("NormalsTexture", tm.LoadTexture(normalPath.c_str()).m_index);
+			material.SetSampler("SpecularTexture", tm.LoadTexture(specPath.c_str()).m_index);
+			resultModel->m_parts.push_back({ std::move(newMesh), mesh.Transform(), mesh.Bounds() });
 		}
 		return resultModel;
 	}

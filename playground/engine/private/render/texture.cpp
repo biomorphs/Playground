@@ -20,6 +20,33 @@ namespace Render
 		Destroy();
 	}
 
+	uint32_t SourceFormatToComponentCount(TextureSource::Format f)
+	{
+		switch (f)
+		{
+		case TextureSource::Format::DXT1:
+			return 3;
+		case TextureSource::Format::DXT3:
+			return 4;
+		case TextureSource::Format::DXT5:
+			return 4;
+		case TextureSource::Format::RGBA8:
+			return 4;
+		case TextureSource::Format::RGB8:
+			return 3;
+		case TextureSource::Format::R8:
+			return 1;
+		case TextureSource::Format::RGBAF16:
+			return 4;
+		case TextureSource::Format::Depth24Stencil8:
+			return 1;
+		case TextureSource::Format::Depth32:
+			return 1;
+		default:
+			return -1;
+		}
+	}
+
 	uint32_t SourceFormatToGLStorageFormat(TextureSource::Format f)
 	{
 		switch (f)
@@ -32,6 +59,10 @@ namespace Render
 			return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 		case TextureSource::Format::RGBA8:
 			return GL_RGBA8;
+		case TextureSource::Format::RGB8:
+			return GL_RGB8;
+		case TextureSource::Format::R8:
+			return GL_R8;
 		case TextureSource::Format::RGBAF16:
 			return GL_RGBA16F;
 		case TextureSource::Format::Depth24Stencil8:
@@ -47,6 +78,8 @@ namespace Render
 	{
 		switch (f)
 		{
+		case TextureSource::Format::R8:
+		case TextureSource::Format::RGB8:
 		case TextureSource::Format::RGBA8:
 			return GL_UNSIGNED_BYTE;
 		default:
@@ -58,6 +91,10 @@ namespace Render
 	{
 		switch (f)
 		{
+		case TextureSource::Format::R8:
+			return GL_RED;
+		case TextureSource::Format::RGB8:
+			return GL_RGB;
 		case TextureSource::Format::RGBA8:
 			return GL_RGBA;
 		default:
@@ -87,6 +124,7 @@ namespace Render
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_handle);
 		SDE_RENDER_PROCESS_GL_ERRORS_RET("glCreateTextures");
 
+		m_componentCount = SourceFormatToComponentCount(src.SourceFormat());
 		const uint32_t mipCount = src.MipCount();
 		const bool shouldGenerateMips = mipCount <=1 && src.ShouldGenerateMips();
 		glTextureParameteri(m_handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

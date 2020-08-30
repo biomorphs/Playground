@@ -20,9 +20,7 @@
     <ClInclude Include="public\render\material.h" />
     <ClInclude Include="public\render\mesh.h" />
     <ClInclude Include="public\render\mesh_builder.h" />
-    <ClInclude Include="public\render\mesh_instance.h" />
     <ClInclude Include="public\render\render_buffer.h" />
-    <ClInclude Include="public\render\instance_queue.h" />
     <ClInclude Include="public\render\render_pass.h" />
     <ClInclude Include="public\render\shader_binary.h" />
     <ClInclude Include="public\render\shader_program.h" />

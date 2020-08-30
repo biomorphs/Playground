@@ -126,7 +126,7 @@ namespace smol
 
 			int w, h, components;
 			stbi_set_flip_vertically_on_load(true);
-			unsigned char* loadedData = stbi_load(pathString.c_str(), &w, &h, &components, 4);		// we always want rgba
+			unsigned char* loadedData = stbi_load(pathString.c_str(), &w, &h, &components, 0);
 			if (loadedData == nullptr)
 			{
 				m_inFlightTextures.Add(-1);
@@ -134,13 +134,26 @@ namespace smol
 			}
 
 			std::vector<uint8_t> rawDataBuffer;
-			rawDataBuffer.resize(w * h * 4);
-			memcpy(rawDataBuffer.data(), loadedData, w * h * 4);
+			rawDataBuffer.resize(w * h * components);
+			memcpy(rawDataBuffer.data(), loadedData, w * h * components);
 			stbi_image_free(loadedData);
 
 			std::vector<Render::TextureSource::MipDesc> mip;
-			mip.push_back({ (uint32_t)w,(uint32_t)h,0,w * h * (size_t)4 });
-			Render::TextureSource ts((uint32_t)w, (uint32_t)h, Render::TextureSource::Format::RGBA8, { mip }, rawDataBuffer);
+			mip.push_back({ (uint32_t)w,(uint32_t)h,0,w * h * (size_t)components });
+			Render::TextureSource::Format format = Render::TextureSource::Format::Unsupported;
+			switch (components)
+			{
+			case 1:
+				format = Render::TextureSource::Format::R8;
+				break;
+			case 3:
+				format = Render::TextureSource::Format::RGB8;
+				break;
+			case 4:
+				format = Render::TextureSource::Format::RGBA8;
+				break;
+			}
+			Render::TextureSource ts((uint32_t)w, (uint32_t)h, format, { mip }, rawDataBuffer);
 			ts.SetGenerateMips(true);
 			auto newTex = std::make_unique<Render::Texture>();
 			if (newTex->Create(ts))

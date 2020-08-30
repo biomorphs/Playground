@@ -83,10 +83,30 @@ namespace smol
 		m_camera = c;
 	}
 
+	bool IsMeshTransparent(const Render::Mesh& mesh, TextureManager& tm)
+	{
+		const auto& samplers = mesh.GetMaterial().GetSamplers();
+		for (const auto& it : samplers)
+		{
+			TextureHandle texHandle = { static_cast<uint16_t>(it.second.m_handle) };
+			const auto theTexture = tm.GetTexture({ texHandle });
+			if (theTexture && theTexture->GetComponentCount() == 4)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const Render::Mesh& mesh, const struct ShaderHandle& shader)
 	{
 		SDE_PROF_EVENT();
-		m_instances.push_back({ transform, colour, shader, &mesh });
+		bool isTransparent = colour.a != 1.0f;
+		if (!isTransparent)
+		{
+			isTransparent = IsMeshTransparent(mesh, *m_textures);
+		}
+		m_instances.push_back({ transform, colour, shader, &mesh, isTransparent });
 	}
 
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader)
@@ -100,7 +120,12 @@ namespace smol
 			uint16_t meshPartIndex = 0;
 			for (const auto& part : theModel->Parts())
 			{
-				m_instances.push_back({ transform * part.m_transform, colour, shader, part.m_mesh.get() });
+				bool isTransparent = colour.a != 1.0f;
+				if (!isTransparent)
+				{
+					isTransparent = IsMeshTransparent(*part.m_mesh, *m_textures);
+				}
+				m_instances.push_back({ transform * part.m_transform, colour, shader, part.m_mesh.get(), isTransparent });
 			}
 		}
 	}
@@ -160,6 +185,14 @@ namespace smol
 		{
 			SDE_PROF_EVENT("Sort");
 			std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
+				if (q1.m_transparent && !q2.m_transparent)	// opaques first
+				{
+					return false;
+				}
+				else if (!q1.m_transparent && q2.m_transparent)
+				{
+					return true;
+				}
 				if (q1.m_shader.m_index < q2.m_shader.m_index)	// shader
 				{
 					return true;
