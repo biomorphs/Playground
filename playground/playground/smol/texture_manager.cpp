@@ -99,8 +99,13 @@ namespace smol
 		}
 	}
 
-	TextureHandle TextureManager::LoadTexture(const char* path)
+	TextureHandle TextureManager::LoadTexture(std::string path)
 	{
+		if (path.empty())
+		{
+			return TextureHandle::Invalid();
+		}
+
 		for (uint64_t i = 0; i < m_textures.size(); ++i)
 		{
 			if (m_textures[i].m_path == path)

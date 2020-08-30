@@ -39,7 +39,7 @@ namespace smol
 		const FrameStats& GetStats() const { return m_frameStats; }
 		float& GetExposure() { return m_hdrExposure; }
 	private:
-		void SortInstances();
+		void PrepareInstances();
 		void UpdateGlobals();
 		void PopulateInstanceBuffers();
 		struct GlobalUniforms;

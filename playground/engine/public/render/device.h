@@ -13,7 +13,6 @@ namespace Render
 	class Texture;
 	class VertexArray;
 	class ShaderProgram;
-	class UniformBuffer;
 	class RenderBuffer;
 	class FrameBuffer;
 
@@ -46,6 +45,7 @@ namespace Render
 		void DrawToBackbuffer();
 		void SetUniformValue(uint32_t uniformHandle, const glm::mat4& matrix);
 		void SetUniformValue(uint32_t uniformHandle, const glm::vec4& val);
+		void SetUniformValue(uint32_t uniformHandle, float val);
 		void SetSampler(uint32_t uniformHandle, uint32_t textureHandle, uint32_t textureUnit);
 		void SetArraySampler(uint32_t uniformHandle, uint32_t textureHandle, uint32_t textureUnit);
 		void BindShaderProgram(const ShaderProgram& program);
@@ -53,7 +53,6 @@ namespace Render
 		void BindInstanceBuffer(const VertexArray& srcArray, const RenderBuffer& buffer, int vertexLayoutSlot, int components, size_t offset = 0, size_t vectorCount=1);
 		void DrawPrimitives(PrimitiveType primitive, uint32_t vertexStart, uint32_t vertexCount);
 		void DrawPrimitivesInstanced(PrimitiveType primitive, uint32_t vertexStart, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstInstance=0);
-		void SetUniforms(ShaderProgram& p, const UniformBuffer& uniforms);
 		void BindUniformBufferIndex(ShaderProgram& p, const char* bufferName, uint32_t bindingIndex);
 		void SetUniforms(ShaderProgram& p, const RenderBuffer& ubo, uint32_t uboBindingIndex);
 	private:

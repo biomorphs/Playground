@@ -6,7 +6,7 @@
 #include "render/shader_binary.h"
 #include "render/device.h"
 #include "render/mesh.h"
-#include "render/uniform_buffer.h"
+#include "render/material.h"
 #include "mesh_instance.h"
 #include "model_manager.h"
 #include "shader_manager.h"
@@ -53,7 +53,6 @@ namespace smol
 			m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
 			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Dynamic, true);
 		}
-
 		{
 			SDE_PROF_EVENT("Create framebuffers");
 			m_mainFramebuffer.AddColourAttachment(Render::FrameBuffer::RGBA_F16);
@@ -84,15 +83,7 @@ namespace smol
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const Render::Mesh& mesh, const struct ShaderHandle& shader)
 	{
 		SDE_PROF_EVENT();
-
-		// Shader - bits 48 - 64
-		const uint64_t shaderHash = static_cast<uint64_t>(shader.m_index) << 48;
-
-		// Then mesh - bits 0-32
-		const uint64_t meshHash = (reinterpret_cast<uintptr_t>(&mesh) & 0x00000000ffffffff);
-
-		const uint64_t sortKey = meshHash | shaderHash;
-		m_instances.push_back({ sortKey, transform, colour, TextureHandle(), TextureHandle(), TextureHandle(), shader, &mesh });
+		m_instances.push_back({ transform, 0.0f, colour, TextureHandle(), TextureHandle(), TextureHandle(), shader, &mesh });
 	}
 
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader)
@@ -106,17 +97,8 @@ namespace smol
 			uint16_t meshPartIndex = 0;
 			for (const auto& part : theModel->Parts())
 			{
-				// Shader - bits 48-64
-				const uint64_t shaderHash = static_cast<uint64_t>(shader.m_index) << 48;
-
-				// Then mesh/model - bits 16-32 for model, 0-16 bits per mesh
-				const uint64_t modelHash = static_cast<uint64_t>(model.m_index) << 16;
-				const uint64_t meshHash = static_cast<uint64_t>(meshPartIndex++);
-
-				const uint64_t sortKey = meshHash | modelHash | shaderHash;
-				m_instances.push_back({ sortKey, transform * part.m_transform, colour, part.m_diffuse, part.m_normalMap, part.m_specularMap, shader, part.m_mesh.get() });
+				m_instances.push_back({ transform * part.m_transform, 0.0f, colour, part.m_diffuse, part.m_normalMap, part.m_specularMap, shader, part.m_mesh.get() });
 			}
-			SDE_ASSERT(meshPartIndex <= 255, "Too many parts in mesh!");
 		}
 	}
 
@@ -169,12 +151,49 @@ namespace smol
 		m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
 	}
 
-	void Renderer::SortInstances()
+	void Renderer::PrepareInstances()
 	{
 		SDE_PROF_EVENT();
-		std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
-			return q1.m_sortKey < q2.m_sortKey;
+		{
+			SDE_PROF_EVENT("DistanceToCamera");
+			for (auto& c : m_instances)
+			{
+				float distance = glm::length(m_camera.Position() - glm::vec3(c.m_transform[3]));
+				c.m_distanceToCamera = distance;
+			}
+		}
+		{
+			SDE_PROF_EVENT("Sort");
+			std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
+				if (q1.m_distanceToCamera < q2.m_distanceToCamera)	// front to back
+				{
+					return true;		
+				}
+				else if (q1.m_distanceToCamera > q2.m_distanceToCamera)
+				{
+					return false;
+				}
+				if (q1.m_shader.m_index < q2.m_shader.m_index)	// shader
+				{
+					return true;
+				}
+				else if (q1.m_shader.m_index > q2.m_shader.m_index)
+				{
+					return false;
+				}
+				auto q1Mesh = reinterpret_cast<uintptr_t>(q1.m_mesh);	// mesh
+				auto q2Mesh = reinterpret_cast<uintptr_t>(q2.m_mesh);
+				if (q1Mesh < q2Mesh)
+				{
+					return true;
+				}
+				else if (q1Mesh > q2Mesh)
+				{
+					return false;
+				}
+				return false;
 			});
+		}
 	}
 
 	void Renderer::RenderAll(Render::Device& d)
@@ -192,17 +211,16 @@ namespace smol
 		{
 			return;
 		}
-		SortInstances();
+		PrepareInstances();
 		PopulateInstanceBuffers();
 
 		// render to main target
 		d.DrawToFramebuffer(m_mainFramebuffer);
-		d.ClearFramebufferColourDepth(m_mainFramebuffer, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), FLT_MAX);
+		d.ClearFramebufferColourDepth(m_mainFramebuffer, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), FLT_MAX);
 		d.SetDepthState(true, true);		// enable z-test, enable write
 		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
 		d.SetBlending(true);				// enable blending (we might want to do it manually instead)
 		d.SetScissorEnabled(false);			// (don't) scissor me timbers
-		Render::UniformBuffer ub;			// hack for setting samplers
 		auto firstInstance = m_instances.begin();
 		const Render::ShaderProgram* lastShaderUsed = nullptr;
 		while (firstInstance != m_instances.end())
@@ -238,14 +256,18 @@ namespace smol
 				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 12, 4);
 				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceColours, instancingSlotIndex++, 4, 0);
 
-				// mesh material samplers go here
+				const auto& uniforms = theMesh->GetMaterial().GetUniforms();
+				uniforms.Apply(d, *theShader);
+
+				// todo - refactor
+				Render::UniformBuffer ub;
 				auto diffusePtr = m_textures->GetTexture(firstInstance->m_texture);
 				ub.SetSampler("DiffuseTexture", diffusePtr ? diffusePtr->GetHandle() : c_defaultTexture->GetHandle());
 				auto normalPtr = m_textures->GetTexture(firstInstance->m_normalTexture);
 				ub.SetSampler("NormalsTexture", normalPtr ? normalPtr->GetHandle() : c_defaultNormalmap->GetHandle());
 				auto specPtr = m_textures->GetTexture(firstInstance->m_specularTexture);
 				ub.SetSampler("SpecularTexture", specPtr ? specPtr->GetHandle() : c_defaultTexture->GetHandle());
-				d.SetUniforms(*theShader, ub);
+				ub.Apply(d, *theShader);
 
 				// draw the chunks
 				for (const auto& chunk : theMesh->GetChunks())

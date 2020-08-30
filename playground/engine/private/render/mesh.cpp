@@ -23,6 +23,5 @@ namespace Render
 		}
 		m_vertexStreams.clear();
 		m_vertices.Destroy();
-		m_material = nullptr;
 	}
 }

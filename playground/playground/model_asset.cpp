@@ -104,6 +104,22 @@ namespace Assets
 				sceneMat->GetTexture(aiTextureType_SPECULAR, t, &texturePath);
 				newMaterial.SpecularMaps().push_back(texturePath.C_Str());
 			}
+			aiColor3D ambientColour(0.f, 0.f, 0.f);
+			aiColor3D diffuseColour(0.f, 0.f, 0.f);
+			aiColor3D specularColour(0.f, 0.f, 0.f);
+			float shininess = 0.0f, shininessStrength = 1.0f, opacity=1.0f;
+			sceneMat->Get(AI_MATKEY_COLOR_DIFFUSE,diffuseColour);
+			sceneMat->Get(AI_MATKEY_COLOR_SPECULAR, specularColour);
+			sceneMat->Get(AI_MATKEY_COLOR_AMBIENT, ambientColour);
+			sceneMat->Get(AI_MATKEY_SHININESS, shininess);	
+			sceneMat->Get(AI_MATKEY_SHININESS_STRENGTH, shininessStrength);
+			sceneMat->Get(AI_MATKEY_OPACITY, opacity);
+			newMaterial.AmbientColour() = { ambientColour.r,ambientColour.g,ambientColour.b };
+			newMaterial.DiffuseColour() = { diffuseColour.r, diffuseColour.g, diffuseColour.b };
+			newMaterial.SpecularColour() = { specularColour.r, specularColour.g, specularColour.b };
+			newMaterial.Shininess() = shininess;
+			newMaterial.ShininessStrength() = shininessStrength;
+			newMaterial.Opacity() = opacity;
 
 			newMesh.SetMaterial(std::move(newMaterial));
 		}
@@ -136,10 +152,13 @@ namespace Assets
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(path,
 			aiProcess_CalcTangentSpace |
+			aiProcess_GenNormals |	// only if no normals in data
 			aiProcess_Triangulate |
 			aiProcess_JoinIdenticalVertices |
 			aiProcess_SortByPType |
-			aiProcess_PreTransformVertices
+			aiProcess_RemoveRedundantMaterials |	// so we can batch more verts together with...
+			aiProcess_OptimizeMeshes |
+			aiProcess_OptimizeGraph
 			);
 		if (!scene)
 		{

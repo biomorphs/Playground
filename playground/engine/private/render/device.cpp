@@ -10,7 +10,6 @@ Matt Hoyle
 #include "shader_program.h"
 #include "render_buffer.h"
 #include "frame_buffer.h"
-#include "uniform_buffer.h"
 #include "math/glm_headers.h"
 #include "core/profiler.h"
 #include <SDL.h>
@@ -257,6 +256,13 @@ namespace Render
 		SDE_RENDER_PROCESS_GL_ERRORS("glUniform4fv");
 	}
 
+	void Device::SetUniformValue(uint32_t uniformHandle, float val)
+	{
+		SDE_ASSERT(uniformHandle != -1);
+		glUniform1f(uniformHandle, val);
+		SDE_RENDER_PROCESS_GL_ERRORS("glUniform1f");
+	}
+
 	void Device::BindShaderProgram(const ShaderProgram& program)
 	{
 		glUseProgram(program.GetHandle());
@@ -314,38 +320,6 @@ namespace Render
 
 		glDrawArrays(primitiveType, vertexStart, vertexCount);
 		SDE_RENDER_PROCESS_GL_ERRORS("glDrawArrays");
-	}
-
-	void Device::SetUniforms(ShaderProgram& p, const UniformBuffer& uniforms)
-	{
-		for (const auto& it : uniforms.Vec4Values())
-		{
-			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(),it.first);
-			if(uniformHandle != -1)
-				SetUniformValue(uniformHandle, it.second.m_value);
-		}
-
-		for (const auto& it : uniforms.Mat4Values())
-		{
-			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(), it.first);
-			if (uniformHandle != -1)
-				SetUniformValue(uniformHandle, it.second.m_value);
-		}
-
-		uint32_t textureUnit = 0;
-		for (const auto& it : uniforms.Samplers())
-		{
-			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(), it.first);
-			if (uniformHandle != -1)
-				SetSampler(uniformHandle, it.second.m_value, textureUnit++);
-		}
-
-		for (const auto& it : uniforms.ArraySamplers())
-		{
-			auto uniformHandle = p.GetUniformHandle(it.second.m_name.c_str(), it.first);
-			if (uniformHandle != -1)
-				SetArraySampler(uniformHandle, it.second.m_value, textureUnit++);
-		}
 	}
 
 	void Device::SetUniforms(ShaderProgram& p, const RenderBuffer& ubo, uint32_t uboBindingIndex)

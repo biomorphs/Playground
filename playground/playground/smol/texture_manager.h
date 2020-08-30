@@ -34,7 +34,7 @@ namespace smol
 		TextureManager(TextureManager&&) = delete;
 		~TextureManager() = default;
 
-		TextureHandle LoadTexture(const char* path);
+		TextureHandle LoadTexture(std::string path);
 		Render::Texture* GetTexture(const TextureHandle& h);
 		void ProcessLoadedTextures();
 

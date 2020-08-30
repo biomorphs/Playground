@@ -10,7 +10,7 @@ Matt Hoyle
 namespace Render
 {
 	// this must match the enum VertexDataType
-	constexpr size_t VertexDataTypeSizes[] = {
+	constexpr uint32_t VertexDataTypeSizes[] = {
 		sizeof(float)
 	};
 

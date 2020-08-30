@@ -8,6 +8,11 @@ in vec3 vs_out_position;
 in mat3 vs_out_tbnMatrix;
 out vec4 fs_out_colour;
 
+uniform vec4 MeshAmbient;
+uniform vec4 MeshDiffuseOpacity;
+uniform vec4 MeshSpecular;	//r,g,b,strength
+uniform float MeshShininess;
+
 uniform sampler2D DiffuseTexture;
 uniform sampler2D NormalsTexture;
 uniform sampler2D SpecularTexture;
@@ -44,24 +49,22 @@ void main()
 
 		// diffuse light
 		float diffuseFactor = max(dot(finalNormal, lightDir),0.0);
-		vec3 diffuse = diffuseTex.rgb * Lights[i].ColourAndAmbient.rgb * diffuseFactor;
+		vec3 diffuse = MeshDiffuseOpacity.rgb * diffuseTex.rgb * Lights[i].ColourAndAmbient.rgb * diffuseFactor;
 
 		// ambient light
-		vec3 ambient = diffuseTex.rgb * Lights[i].ColourAndAmbient.rgb * Lights[i].ColourAndAmbient.a;
+		vec3 ambient = MeshAmbient.rgb * diffuseTex.rgb * Lights[i].ColourAndAmbient.rgb * Lights[i].ColourAndAmbient.a;
 
 		// specular light 
-		float specularStrength = 0.5;
-		float shininess = 24.0;
 		vec3 viewDir = normalize(CameraPosition.xyz - vs_out_position);
-		vec3 reflectDir = reflect(-lightDir, finalNormal);  
-		float specFactor = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-		vec3 specularColour = Lights[i].ColourAndAmbient.rgb;
-		vec3 specular = specularStrength * specFactor * specularColour * specularTex; 
+		vec3 reflectDir = normalize(reflect(-lightDir, finalNormal));  
+		float specFactor = pow(max(dot(viewDir, reflectDir), 0.0), MeshShininess);
+		vec3 specularColour = MeshSpecular.rgb * Lights[i].ColourAndAmbient.rgb;
+		vec3 specular = MeshSpecular.a * specFactor * specularColour * specularTex; 
 
 		finalColour += attenuation * (ambient + diffuse + specular);
 	}
 	
 	// tonemap
 	finalColour = Tonemap_ACESFilm(vs_out_colour.rgb * finalColour * HDRExposure);
-	fs_out_colour = vec4(linearToSRGB(finalColour),1.0);
+	fs_out_colour = vec4(linearToSRGB(finalColour),MeshDiffuseOpacity.a * diffuseTex.a);
 }

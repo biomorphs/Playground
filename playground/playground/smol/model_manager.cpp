@@ -68,14 +68,17 @@ namespace smol
 			if (renderModel.Parts()[index].m_mesh != nullptr)
 			{
 				const auto& mesh = model.Meshes()[index];
+				const auto& mat = mesh.Material();
 
-				// Load all textures for each part
-				std::string diffuseTexturePath = mesh.Material().DiffuseMaps().size() > 0 ? mesh.Material().DiffuseMaps()[0] : "white.bmp";
-				std::string normalTexturePath = mesh.Material().NormalMaps().size() > 0 ? mesh.Material().NormalMaps()[0] : "";
-				std::string specTexturePath = mesh.Material().SpecularMaps().size() > 0 ? mesh.Material().SpecularMaps()[0] : "";
-				renderModel.Parts()[index].m_diffuse = m_textureManager->LoadTexture(diffuseTexturePath.c_str());
-				renderModel.Parts()[index].m_normalMap = m_textureManager->LoadTexture(normalTexturePath.c_str());
-				renderModel.Parts()[index].m_specularMap = m_textureManager->LoadTexture(specTexturePath.c_str());
+				// Load all textures for each part and set material samplers
+				std::string diffusePath = mat.DiffuseMaps().size() > 0 ? mat.DiffuseMaps()[0] : "";
+				std::string normalPath = mat.NormalMaps().size() > 0 ? mat.NormalMaps()[0] : "";
+				std::string specPath = mat.SpecularMaps().size() > 0 ? mat.SpecularMaps()[0] : "";
+
+				auto& material = renderModel.Parts()[index].m_mesh->GetMaterial();
+				renderModel.Parts()[index].m_diffuse = m_textureManager->LoadTexture(diffusePath.c_str());
+				renderModel.Parts()[index].m_normalMap = m_textureManager->LoadTexture(normalPath.c_str());
+				renderModel.Parts()[index].m_specularMap = m_textureManager->LoadTexture(specPath.c_str());
 
 				// Create render resources that cannot be shared across contexts
 				meshBuilders[index]->CreateVertexArray(*renderModel.Parts()[index].m_mesh);
@@ -99,6 +102,15 @@ namespace smol
 
 			auto newMesh = std::make_unique<Render::Mesh>();
 			meshBuilders[index]->CreateMesh(*newMesh);
+
+			// materials pushed to uniform buffers
+			const auto& mat = mesh.Material();
+			auto& uniforms = newMesh->GetMaterial().GetUniforms();
+			auto packedSpecular = glm::vec4(mat.SpecularColour(), mat.ShininessStrength());
+			uniforms.SetValue("MeshAmbient", glm::vec4(mat.AmbientColour(),1.0f));
+			uniforms.SetValue("MeshDiffuseOpacity", glm::vec4(mat.DiffuseColour(), mat.Opacity()));
+			uniforms.SetValue("MeshSpecular", packedSpecular);
+			uniforms.SetValue("MeshShininess", mat.Shininess());
 
 			Model::Part newPart;
 			newPart.m_mesh = std::move(newMesh);

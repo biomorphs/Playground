@@ -143,7 +143,7 @@ namespace smol
 			// use the texture or our in built white texture
 			smol::TextureHandle texture = firstQuad->m_texture.m_index != (uint64_t)-1 ? firstQuad->m_texture : smol::TextureHandle{ 0 };
 			ub.SetSampler("DiffuseTexture", m_textures->GetTexture(texture)->GetHandle());
-			d.SetUniforms(*m_quadShaders, ub);
+			ub.Apply(d, *m_quadShaders);
 
 			// somehow only draw firstQuad-lastQuad instances
 			const auto& meshChunk = m_quadMesh->GetChunks()[0];

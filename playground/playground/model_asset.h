@@ -46,10 +46,28 @@ namespace Assets
 		std::vector<std::string>& SpecularMaps() { return m_specularMaps; }
 		const std::vector<std::string>& SpecularMaps() const { return m_specularMaps; }
 
+		float Opacity() const { return m_opacity; }
+		float& Opacity() { return m_opacity; }
+		glm::vec3 DiffuseColour() const { return m_diffuseColour; }
+		glm::vec3& DiffuseColour() { return m_diffuseColour; }
+		glm::vec3 AmbientColour() const { return m_ambientColour; }
+		glm::vec3& AmbientColour() { return m_ambientColour; }
+		glm::vec3 SpecularColour() const { return m_specularColour; }
+		glm::vec3& SpecularColour() { return m_specularColour; }
+		float Shininess() const { return m_shininess; }
+		float& Shininess() { return m_shininess; }
+		float& ShininessStrength() { return m_shininessStrength; }
+		float ShininessStrength() const { return m_shininessStrength; }
 	private:
 		std::vector<std::string> m_diffuseMaps;
 		std::vector<std::string> m_normalMaps;
 		std::vector<std::string> m_specularMaps;
+		glm::vec3 m_diffuseColour;
+		glm::vec3 m_ambientColour;
+		glm::vec3 m_specularColour;
+		float m_shininess;
+		float m_shininessStrength;
+		float m_opacity;
 	};
 
 	class ModelMesh
