@@ -2,6 +2,7 @@
 #include "kernel/assert.h"
 #include "kernel/log.h"
 #include "core/profiler.h"
+#include "core/string_hashing.h"
 #include "render/shader_program.h"
 #include "render/shader_binary.h"
 #include "render/device.h"
@@ -27,7 +28,7 @@ namespace smol
 		glm::vec3 m_attenuation;		// const, linear, quad
 	};
 
-	struct Renderer::GlobalUniforms
+	struct GlobalUniforms
 	{
 		glm::mat4 m_projectionMat;
 		glm::mat4 m_viewMat;
@@ -51,13 +52,13 @@ namespace smol
 		g_defaultTextures["NormalsTexture"] = m_textures->LoadTexture("default_normalmap.png");
 		g_defaultTextures["SpecularTexture="] = m_textures->LoadTexture("white.bmp");
 		{
-			SDE_PROF_EVENT("Create Instance Buffers");
-			m_instanceTransforms.Create(c_maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
-			m_instanceColours.Create(c_maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
+			SDE_PROF_EVENT("Create Buffers");
+			CreateInstanceList(m_opaqueInstances, c_maxInstances);
+			CreateInstanceList(m_transparentInstances, c_maxInstances);
 			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Dynamic, true);
 		}
 		{
-			SDE_PROF_EVENT("Create framebuffers");
+			SDE_PROF_EVENT("Create render targets");
 			m_mainFramebuffer.AddColourAttachment(Render::FrameBuffer::RGBA_F16);
 			m_mainFramebuffer.AddDepthStencil();
 			if (!m_mainFramebuffer.Create())
@@ -72,9 +73,17 @@ namespace smol
 		}
 	}
 
+	void Renderer::CreateInstanceList(InstanceList& newlist, uint32_t maxInstances)
+	{
+		newlist.m_instances.reserve(maxInstances);
+		newlist.m_transforms.Create(maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
+		newlist.m_colours.Create(maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
+	}
+
 	void Renderer::Reset() 
 	{ 
-		m_instances.clear(); 
+		m_opaqueInstances.m_instances.clear();
+		m_transparentInstances.m_instances.clear();
 		m_lights.clear();
 	}
 
@@ -85,10 +94,12 @@ namespace smol
 
 	bool IsMeshTransparent(const Render::Mesh& mesh, TextureManager& tm)
 	{
+		const uint32_t c_diffuseSampler = Core::StringHashing::GetHash("DiffuseTexture");
 		const auto& samplers = mesh.GetMaterial().GetSamplers();
-		for (const auto& it : samplers)
+		const auto& diffuseSampler = samplers.find(c_diffuseSampler);
+		if (diffuseSampler != samplers.end())
 		{
-			TextureHandle texHandle = { static_cast<uint16_t>(it.second.m_handle) };
+			TextureHandle texHandle = { static_cast<uint16_t>(diffuseSampler->second.m_handle) };
 			const auto theTexture = tm.GetTexture({ texHandle });
 			if (theTexture && theTexture->GetComponentCount() == 4)
 			{
@@ -106,7 +117,8 @@ namespace smol
 		{
 			isTransparent = IsMeshTransparent(mesh, *m_textures);
 		}
-		m_instances.push_back({ transform, colour, shader, &mesh, isTransparent });
+		InstanceList& instances = isTransparent ? m_transparentInstances : m_opaqueInstances;
+		instances.m_instances.push_back({ transform, colour, shader, &mesh });
 	}
 
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader)
@@ -125,7 +137,8 @@ namespace smol
 				{
 					isTransparent = IsMeshTransparent(*part.m_mesh, *m_textures);
 				}
-				m_instances.push_back({ transform * part.m_transform, colour, shader, part.m_mesh.get(), isTransparent });
+				InstanceList& instances = isTransparent ? m_transparentInstances : m_opaqueInstances;
+				instances.m_instances.push_back({ transform, colour, shader, part.m_mesh.get() });
 			}
 		}
 	}
@@ -139,26 +152,30 @@ namespace smol
 		m_lights.push_back(newLight);
 	}
 
-	void Renderer::PopulateInstanceBuffers()
+	void Renderer::PopulateInstanceBuffers(InstanceList& list)
 	{
 		SDE_PROF_EVENT();
 
 		//static to avoid constant allocations
 		static std::vector<glm::mat4> instanceTransforms;
-		instanceTransforms.reserve(c_maxInstances);
+		instanceTransforms.reserve(list.m_instances.size());
 		instanceTransforms.clear();
 		static std::vector<glm::vec4> instanceColours;
-		instanceColours.reserve(c_maxInstances);
+		instanceColours.reserve(list.m_instances.size());
 		instanceColours.clear();
-		for (const auto& c : m_instances)
+
+		for (const auto& c : list.m_instances)
 		{
 			instanceTransforms.push_back(c.m_transform);
 			instanceColours.push_back(c.m_colour);
 		}
 
 		// copy the instance buffers to gpu
-		m_instanceTransforms.SetData(0, instanceTransforms.size() * sizeof(glm::mat4), instanceTransforms.data());
-		m_instanceColours.SetData(0, instanceColours.size() * sizeof(glm::vec4), instanceColours.data());
+		if (list.m_instances.size() > 0)
+		{
+			list.m_transforms.SetData(0, instanceTransforms.size() * sizeof(glm::mat4), instanceTransforms.data());
+			list.m_colours.SetData(0, instanceColours.size() * sizeof(glm::vec4), instanceColours.data());
+		}
 	}
 
 	void Renderer::UpdateGlobals()
@@ -179,20 +196,12 @@ namespace smol
 		m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
 	}
 
-	void Renderer::PrepareInstances()
+	void Renderer::PrepareInstances(InstanceList& list)
 	{
 		SDE_PROF_EVENT();
 		{
 			SDE_PROF_EVENT("Sort");
-			std::sort(m_instances.begin(), m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
-				if (q1.m_transparent && !q2.m_transparent)	// opaques first
-				{
-					return false;
-				}
-				else if (!q1.m_transparent && q2.m_transparent)
-				{
-					return true;
-				}
+			std::sort(list.m_instances.begin(), list.m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
 				if (q1.m_shader.m_index < q2.m_shader.m_index)	// shader
 				{
 					return true;
@@ -251,31 +260,14 @@ namespace smol
 		}
 	}
 
-	void Renderer::RenderAll(Render::Device& d)
+	void Renderer::SubmitInstances(Render::Device& d, const InstanceList& list)
 	{
-		SDE_PROF_EVENT();
-		m_frameStats = { m_instances.size(),0,0,0,0 };
-		if (m_instances.size() == 0)
-		{
-			return;
-		}
-		UpdateGlobals();
-		PrepareInstances();
-		PopulateInstanceBuffers();
-
-		// render to main target
-		d.DrawToFramebuffer(m_mainFramebuffer);
-		d.ClearFramebufferColourDepth(m_mainFramebuffer, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), FLT_MAX);
-		d.SetDepthState(true, true);		// enable z-test, enable write
-		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
-		d.SetBlending(true);				// enable blending (we might want to do it manually instead)
-		d.SetScissorEnabled(false);			// (don't) scissor me timbers
-		auto firstInstance = m_instances.begin();
+		auto firstInstance = list.m_instances.begin();
 		const Render::ShaderProgram* lastShaderUsed = nullptr;	// avoid setting the same shader
-		while (firstInstance != m_instances.end())
+		while (firstInstance != list.m_instances.end())
 		{
 			// Batch by shader and mesh
-			auto lastMeshInstance = std::find_if(firstInstance, m_instances.end(), [firstInstance](const smol::MeshInstance& m) -> bool {
+			auto lastMeshInstance = std::find_if(firstInstance, list.m_instances.end(), [firstInstance](const smol::MeshInstance& m) -> bool {
 				return  m.m_mesh != firstInstance->m_mesh || m.m_shader.m_index != firstInstance->m_shader.m_index;
 				});
 			auto instanceCount = (uint32_t)(lastMeshInstance - firstInstance);
@@ -299,11 +291,11 @@ namespace smol
 				m_frameStats.m_vertexArrayBinds++;
 				int instancingSlotIndex = theMesh->GetVertexArray().GetStreamCount();
 				d.BindVertexArray(theMesh->GetVertexArray());
-				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, 0, 4);
-				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 4, 4);
-				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 8, 4);
-				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceTransforms, instancingSlotIndex++, 4, sizeof(float) * 12, 4);
-				d.BindInstanceBuffer(theMesh->GetVertexArray(), m_instanceColours, instancingSlotIndex++, 4, 0);
+				d.BindInstanceBuffer(theMesh->GetVertexArray(), list.m_transforms, instancingSlotIndex++, 4, 0, 4);
+				d.BindInstanceBuffer(theMesh->GetVertexArray(), list.m_transforms, instancingSlotIndex++, 4, sizeof(float) * 4, 4);
+				d.BindInstanceBuffer(theMesh->GetVertexArray(), list.m_transforms, instancingSlotIndex++, 4, sizeof(float) * 8, 4);
+				d.BindInstanceBuffer(theMesh->GetVertexArray(), list.m_transforms, instancingSlotIndex++, 4, sizeof(float) * 12, 4);
+				d.BindInstanceBuffer(theMesh->GetVertexArray(), list.m_colours, instancingSlotIndex++, 4, 0);
 
 				// apply mesh material uniforms and samplers
 				ApplyMaterial(d, *theShader, theMesh->GetMaterial());
@@ -311,7 +303,7 @@ namespace smol
 				// draw the chunks
 				for (const auto& chunk : theMesh->GetChunks())
 				{
-					uint32_t firstIndex = (uint32_t)(firstInstance - m_instances.begin());
+					uint32_t firstIndex = (uint32_t)(firstInstance - list.m_instances.begin());
 					d.DrawPrimitivesInstanced(chunk.m_primitiveType, chunk.m_firstVertex, chunk.m_vertexCount, instanceCount, firstIndex);
 					m_frameStats.m_drawCalls++;
 					m_frameStats.m_totalVertices += chunk.m_vertexCount * instanceCount;
@@ -319,6 +311,40 @@ namespace smol
 			}
 			firstInstance = lastMeshInstance;
 		}
-		d.DrawToBackbuffer();
+	}
+
+	void Renderer::RenderAll(Render::Device& d)
+	{
+		SDE_PROF_EVENT();
+		auto totalInstances = m_opaqueInstances.m_instances.size() + m_transparentInstances.m_instances.size();
+		m_frameStats = { totalInstances,0,0,0,0 };
+
+		// clear targets asap
+		d.SetDepthState(true, true);	// make sure depth write is enabled before clearing!
+		d.ClearFramebufferColourDepth(m_mainFramebuffer, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), FLT_MAX);
+
+		// set global data
+		UpdateGlobals();
+
+		// prepare instance lists for passes
+		PrepareInstances(m_opaqueInstances);
+		PrepareInstances(m_transparentInstances);
+
+		// copy instance data to gpu
+		PopulateInstanceBuffers(m_opaqueInstances);
+		PopulateInstanceBuffers(m_transparentInstances);
+
+		d.DrawToFramebuffer(m_mainFramebuffer);
+
+		// render opaques
+		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
+		d.SetBlending(false);				// no blending for opaques
+		d.SetScissorEnabled(false);			// (don't) scissor me timbers
+		SubmitInstances(d, m_opaqueInstances);
+
+		// render transparents
+		d.SetDepthState(true, false);		// enable z-test, disable write
+		d.SetBlending(true);				// enable blending
+		SubmitInstances(d, m_transparentInstances);
 	}
 }

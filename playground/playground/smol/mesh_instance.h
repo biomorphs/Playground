@@ -17,6 +17,5 @@ namespace smol
 		glm::vec4 m_colour;
 		smol::ShaderHandle m_shader;
 		const Render::Mesh* m_mesh;
-		bool m_transparent;
 	};
 }

@@ -45,23 +45,32 @@ namespace smol
 		float& GetExposure() { return m_hdrExposure; }
 	private:
 		void ApplyMaterial(Render::Device& d, Render::ShaderProgram& shader, const Render::Material& material);
-		void PrepareInstances();
 		void UpdateGlobals();
-		void PopulateInstanceBuffers();
-		struct GlobalUniforms;
-		Render::Camera m_camera;
-		glm::ivec2 m_windowSize;
-		std::vector<MeshInstance> m_instances;
+
+		struct InstanceList
+		{
+			std::vector<MeshInstance> m_instances;
+			Render::RenderBuffer m_transforms;
+			Render::RenderBuffer m_colours;
+		};
+		void CreateInstanceList(InstanceList& newlist, uint32_t maxInstances);
+		void PrepareInstances(InstanceList& list);
+		void PopulateInstanceBuffers(InstanceList& list);
+		void SubmitInstances(Render::Device& d, const InstanceList& list);
+
+		FrameStats m_frameStats;
+		float m_hdrExposure = 1.0f;
 		std::vector<Light> m_lights;
+		InstanceList m_opaqueInstances;
+		InstanceList m_transparentInstances;
+
 		ShaderManager* m_shaders;
 		smol::TextureManager* m_textures;
 		smol::ModelManager* m_models;
-		Render::RenderBuffer m_instanceTransforms;
-		Render::RenderBuffer m_instanceColours;
 		Render::RenderBuffer m_globalsUniformBuffer;
 		Render::FrameBuffer m_mainFramebuffer;
 		Render::FrameBuffer m_shadowDepthBuffer;
-		FrameStats m_frameStats;
-		float m_hdrExposure = 1.0f;
+		Render::Camera m_camera;
+		glm::ivec2 m_windowSize;
 	};
 }

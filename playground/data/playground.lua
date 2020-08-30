@@ -11,9 +11,10 @@ local Sponza = Graphics.LoadModel("sponza.obj")
 local MonsterModel = Graphics.LoadModel("udim-monster.fbx")
 local LightModel = Graphics.LoadModel("sphere.fbx")
 local IslandModel = Graphics.LoadModel("islands_low.fbx")
+local Cottage = Graphics.LoadModel("container.fbx")
 
 local Lights = {}
-local lightCount = 16
+local lightCount = 20
 local lightBoxMin = {-284,1,-125}
 local lightBoxMax = {256,228,113}
 local lightRadiusRange = {64,100}
@@ -166,7 +167,7 @@ function Playground:Tick()
 		end
 
 		Graphics.PointLight(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3], Lights[i].Ambient, Lights[i].Attenuation[1], Lights[i].Attenuation[2], Lights[i].Attenuation[3])
-		Graphics.DrawModel(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0,lightSphereSize,LightModel,LightShader)
+		Graphics.DrawModel(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],0.8,lightSphereSize,LightModel,LightShader)
 
 		for h=1,#Lights[i].History-1 do
 			local alpha = 1.0 - (((#Lights[i].History - h) / #Lights[i].History))
@@ -185,13 +186,13 @@ function Playground:Tick()
 	Graphics.DrawModel(0.0,0.5,0.0,1.0,1.0,1.0,1.0,0.2,Sponza,DiffuseShader)
 
 	local width = 64
-	local numPerWidth = 4
-	local scale = 1.0
+	local numPerWidth = 16
+	local scale = 0.5
 	local halfWidth = width / 2.0
 	local gap = width / numPerWidth
 	for z=1,numPerWidth do
 		for x=1,numPerWidth do
-			Graphics.DrawModel(40 + -halfWidth + (x * gap),1,-halfWidth + (z*gap) - 14,1.0,1.0,1.0,1.0,1.0 * scale,MonsterModel,DiffuseShader)
+			Graphics.DrawModel(40 + -halfWidth + (x * gap),1,-halfWidth + (z*gap) - 14,1.0,1.0,1.0,1.0,1.0 * scale,Cottage,DiffuseShader)
 		end
 	end
 end

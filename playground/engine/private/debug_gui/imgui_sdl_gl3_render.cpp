@@ -43,9 +43,10 @@ namespace DebugGui
 	{
 	}
 	
-	void ImguiSdlGL3RenderPass::RenderAll(class Render::Device&) 
+	void ImguiSdlGL3RenderPass::RenderAll(class Render::Device& d) 
 	{
 		SDE_PROF_EVENT();
+		d.DrawToBackbuffer();
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}

@@ -25,7 +25,11 @@ namespace smol
 		gui.Separator();
 		for (int t=0;t<m_textures.size();++t)
 		{
-			sprintf_s(text, "%d: %s (0x%p)", t, m_textures[t].m_path.c_str(), m_textures[t].m_texture.get());
+			sprintf_s(text, "%d: %s (0x%p) - %d components", 
+				t, 
+				m_textures[t].m_path.c_str(),
+				m_textures[t].m_texture.get(),
+				m_textures[t].m_texture ? m_textures[t].m_texture->GetComponentCount() : 0);
 			if (gui.Button(text))
 			{
 				s_showTexture = { static_cast<uint16_t>(t) };
