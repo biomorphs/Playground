@@ -65,6 +65,12 @@
     <ClCompile Include="debug_gui_script_binding.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="smol\render_target_blitter.cpp">
+      <Filter>smol</Filter>
+    </ClCompile>
+    <ClCompile Include="smol\material_helpers.cpp">
+      <Filter>smol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h">
@@ -115,6 +121,12 @@
     <ClInclude Include="debug_gui_script_binding.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="smol\render_target_blitter.h">
+      <Filter>smol</Filter>
+    </ClInclude>
+    <ClInclude Include="smol\material_helpers.h">
+      <Filter>smol</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\data\basic.fs">
@@ -151,6 +163,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\data\simplediffuse.fs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\basic_blit.vs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\basic_blit.fs">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

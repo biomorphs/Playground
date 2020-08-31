@@ -60,13 +60,10 @@ bool Graphics::PostInit()
 
 	const auto& windowProps = m_renderSystem->GetWindow()->GetProperties();
 	m_windowSize = glm::ivec2(windowProps.m_sizeX, windowProps.m_sizeY);
-
-	// Init render passes
-	m_render2d = std::make_unique<smol::Renderer2D>(m_textures.get(), m_windowSize);
-	m_renderSystem->AddPass(*m_render2d);
 	
-	m_render3d = std::make_unique<smol::Renderer>(m_textures.get(), m_models.get(), m_shaders.get(), m_windowSize);
-	m_renderSystem->AddPass(*m_render3d);
+	// add our renderer to the global passes
+	m_renderer = std::make_unique<smol::Renderer>(m_textures.get(), m_models.get(), m_shaders.get(), m_windowSize);
+	m_renderSystem->AddPass(*m_renderer);
 
 	// expose TextureHandle to lua
 	m_scriptSystem->Globals().new_usertype<smol::TextureHandle>("TextureHandle",sol::constructors<smol::TextureHandle()>());
@@ -80,13 +77,7 @@ bool Graphics::PostInit()
 	// expose Graphics namespace functions
 	auto graphics = m_scriptSystem->Globals()["Graphics"].get_or_create<sol::table>();
 	graphics["SetClearColour"] = [this](float r, float g, float b) {
-		m_renderSystem->SetClearColour(glm::vec4(r, g, b, 1.0f));
-	};
-	graphics["DrawQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a) {
-		m_render2d->SubmitQuad({ px,py }, { sx,sy }, { r,g,b,a }, { 0 });
-	};
-	graphics["DrawTexturedQuad"] = [this](float px, float py, float sx, float sy, float r, float g, float b, float a, smol::TextureHandle h) {
-		m_render2d->SubmitQuad({ px,py }, { sx,sy }, { r,g,b,a }, h);
+		m_renderer->SetClearColour(glm::vec4(r, g, b, 1.0f));
 	};
 	graphics["LoadTexture"] = [this](const char* path) -> smol::TextureHandle {
 		return m_textures->LoadTexture(path);
@@ -99,13 +90,13 @@ bool Graphics::PostInit()
 	};
 	graphics["DrawModel"] = [this](float px, float py, float pz, float r, float g, float b, float a, float scale, smol::ModelHandle h, smol::ShaderHandle sh) {
 		auto transform = glm::scale(glm::translate(glm::identity<glm::mat4>(), glm::vec3(px, py, pz)), glm::vec3(scale));
-		m_render3d->SubmitInstance(transform, glm::vec4(r,g,b,a), h, sh);
+		m_renderer->SubmitInstance(transform, glm::vec4(r,g,b,a), h, sh);
 	};
 	graphics["PointLight"] = [this](float px, float py, float pz, float r, float g, float b, float ambient, float attenConst, float attenLinear, float attenQuad) {
-		m_render3d->SetLight(glm::vec4(px, py, pz,1.0f), glm::vec3(r, g, b), ambient, { attenConst , attenLinear , attenQuad });
+		m_renderer->SetLight(glm::vec4(px, py, pz,1.0f), glm::vec3(r, g, b), ambient, { attenConst , attenLinear , attenQuad });
 	};
 	graphics["DirectionalLight"] = [this](float dx, float dy, float dz, float r, float g, float b, float ambient) {
-		m_render3d->SetLight(glm::vec4(dx, dy, dz, 0.0f), glm::vec3(r, g, b), ambient, { 0.0f,0.0f,0.0f });
+		m_renderer->SetLight(glm::vec4(dx, dy, dz, 0.0f), glm::vec3(r, g, b), ambient, { 0.0f,0.0f,0.0f });
 	};
 	graphics["DebugDrawAxis"] = [this](float px, float py, float pz, float size) {
 		m_debugRender->AddAxisAtPoint({ px,py,pz,1.0f }, size);
@@ -133,7 +124,7 @@ bool Graphics::PostInit()
 	auto& gMenu = g_graphicsMenu.AddSubmenu(ICON_FK_TELEVISION " Graphics");
 	gMenu.AddItem("Reload Shaders", [this]() { m_shaders->ReloadAll(); });
 	gMenu.AddItem("Reload Textures", [this]() { m_textures->ReloadAll(); });
-	gMenu.AddItem("Reload Models", [this]() { m_render3d->Reset(); m_models->ReloadAll(); });
+	gMenu.AddItem("Reload Models", [this]() { m_renderer->Reset(); m_models->ReloadAll(); });
 	gMenu.AddItem("TextureManager", [this]() { g_showTextureGui = true; });
 	gMenu.AddItem("ModelManager", [this]() { g_showModelGui = true; });
 	auto& camMenu = g_graphicsMenu.AddSubmenu(ICON_FK_CAMERA " Camera (Arcball)");
@@ -178,11 +169,6 @@ bool Graphics::Tick()
 		m_debugGui->DragVector("Position", posVec);
 		m_debugGui->EndWindow();
 	}
-	
-	bool forceOpen = true;
-	m_debugGui->BeginWindow(forceOpen, "Rendertargets");
-	m_debugGui->Image(m_render3d->GetMainFramebuffer().GetColourAttachment(0), glm::vec2(m_windowSize) * 0.8f, glm::vec2(0.0f,1.0f), glm::vec2(1.0f,0.0f));
-	m_debugGui->EndWindow();
 
 	Render::Camera c;
 	if (g_useArcballCam)
@@ -192,17 +178,17 @@ bool Graphics::Tick()
 			g_arcball.Update(m_inputSystem->MouseState(), 0.066f);
 		}
 		c.LookAt(g_arcball.GetPosition(), g_arcball.GetTarget(), g_arcball.GetUp());
-		m_render3d->SetCamera(c);
+		m_renderer->SetCamera(c);
 	}
 	else
 	{
 		m_debugCameraController->Update(m_inputSystem->ControllerState(0), 0.016f);
 		m_debugCameraController->ApplyToCamera(c);
-		m_render3d->SetCamera(c);
+		m_renderer->SetCamera(c);
 	}	
 
 	// debug render
-	m_debugRender->PushToRenderer(*m_render3d);
+	m_debugRender->PushToRenderer(*m_renderer);
 	m_debugGui->MainMenuBar(g_graphicsMenu);
 	if (g_showTextureGui)
 	{
@@ -213,8 +199,9 @@ bool Graphics::Tick()
 		g_showModelGui = m_models->ShowGui(*m_debugGui);
 	}
 
-	const auto& fs = m_render3d->GetStats();
+	const auto& fs = m_renderer->GetStats();
 	char statText[1024] = { '\0' };
+	bool forceOpen = true;
 	m_debugGui->BeginWindow(forceOpen,"Render Stats");
 	sprintf_s(statText, "Total Instances: %zu", fs.m_instancesSubmitted);	m_debugGui->Text(statText);
 	sprintf_s(statText, "Shader Binds: %zu", fs.m_shaderBinds);	m_debugGui->Text(statText);
@@ -222,7 +209,7 @@ bool Graphics::Tick()
 	sprintf_s(statText, "Batches Drawn: %zu", fs.m_batchesDrawn);	m_debugGui->Text(statText);
 	sprintf_s(statText, "Draw calls: %zu", fs.m_drawCalls);	m_debugGui->Text(statText);
 	sprintf_s(statText, "Total Verts: %zu", fs.m_totalVertices);	m_debugGui->Text(statText);
-	m_debugGui->DragFloat("Exposure", m_render3d->GetExposure(), 0.01f, 0.0f, 100.0f);
+	m_debugGui->DragFloat("Exposure", m_renderer->GetExposure(), 0.01f, 0.0f, 100.0f);
 	m_debugGui->EndWindow();
 
 	// Process loaded data on main thread
@@ -238,8 +225,7 @@ void Graphics::Shutdown()
 
 	m_scriptSystem->Globals()["Graphics"] = nullptr;
 	m_debugRender = nullptr;
-	m_render2d = nullptr;
-	m_render3d = nullptr;
+	m_renderer = nullptr;
 	m_models = nullptr;
 	m_textures = nullptr;
 	m_shaders = nullptr;

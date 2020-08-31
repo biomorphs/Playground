@@ -5,6 +5,7 @@
 #include "render/camera.h"
 #include "math/glm_headers.h"
 #include "mesh_instance.h"
+#include "render_target_blitter.h"
 #include "light.h"
 #include <vector>
 #include <memory>
@@ -19,6 +20,7 @@ namespace smol
 	class TextureManager;
 	class ModelManager;
 	class ShaderManager;
+	struct ShaderHandle;
 
 	class Renderer : public Render::RenderPass
 	{
@@ -32,6 +34,7 @@ namespace smol
 		void SubmitInstance(glm::mat4 transform, glm::vec4 colour, const Render::Mesh& mesh, const struct ShaderHandle& shader);
 		void SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader);
 		void SetLight(glm::vec4 positionOrDir,glm::vec3 colour, float ambientStr, glm::vec3 attenuation);
+		void SetClearColour(glm::vec4 c) { m_clearColour = c; }
 		Render::FrameBuffer& GetMainFramebuffer() { return m_mainFramebuffer; }
 		struct FrameStats {
 			size_t m_instancesSubmitted;
@@ -44,7 +47,6 @@ namespace smol
 		const FrameStats& GetStats() const { return m_frameStats; }
 		float& GetExposure() { return m_hdrExposure; }
 	private:
-		void ApplyMaterial(Render::Device& d, Render::ShaderProgram& shader, const Render::Material& material);
 		void UpdateGlobals();
 
 		struct InstanceList
@@ -63,10 +65,12 @@ namespace smol
 		std::vector<Light> m_lights;
 		InstanceList m_opaqueInstances;
 		InstanceList m_transparentInstances;
+		glm::vec4 m_clearColour = { 0.0f,0.0f,0.0f,1.0f };
 
 		ShaderManager* m_shaders;
 		smol::TextureManager* m_textures;
 		smol::ModelManager* m_models;
+		RenderTargetBlitter m_targetBlitter;
 		Render::RenderBuffer m_globalsUniformBuffer;
 		Render::FrameBuffer m_mainFramebuffer;
 		Render::FrameBuffer m_shadowDepthBuffer;

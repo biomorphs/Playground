@@ -215,10 +215,12 @@
     <ClCompile Include="model_asset.cpp" />
     <ClCompile Include="playground.cpp" />
     <ClCompile Include="smol\debug_render.cpp" />
+    <ClCompile Include="smol\material_helpers.cpp" />
     <ClCompile Include="smol\model.cpp" />
     <ClCompile Include="smol\model_manager.cpp" />
     <ClCompile Include="smol\renderer.cpp" />
     <ClCompile Include="smol\renderer_2d.cpp" />
+    <ClCompile Include="smol\render_target_blitter.cpp" />
     <ClCompile Include="smol\shader_manager.cpp" />
     <ClCompile Include="smol\texture_manager.cpp" />
     <ClCompile Include="stb_image.cpp" />
@@ -232,16 +234,20 @@
     <ClInclude Include="playground.h" />
     <ClInclude Include="smol\debug_render.h" />
     <ClInclude Include="smol\light.h" />
+    <ClInclude Include="smol\material_helpers.h" />
     <ClInclude Include="smol\mesh_instance.h" />
     <ClInclude Include="smol\model.h" />
     <ClInclude Include="smol\model_manager.h" />
     <ClInclude Include="smol\renderer.h" />
     <ClInclude Include="smol\renderer_2d.h" />
+    <ClInclude Include="smol\render_target_blitter.h" />
     <ClInclude Include="smol\shader_manager.h" />
     <ClInclude Include="smol\texture_manager.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\data\basic_blit.fs" />
+    <None Include="..\data\basic_blit.vs" />
     <None Include="..\data\config.lua" />
     <None Include="..\data\basic.fs" />
     <None Include="..\data\basic.vs" />

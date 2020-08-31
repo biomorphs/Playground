@@ -46,8 +46,7 @@ public:
 private:
 	std::unique_ptr<smol::DebugRender> m_debugRender;
 	std::unique_ptr<SDE::DebugCameraController> m_debugCameraController;
-	std::unique_ptr<smol::Renderer2D> m_render2d;
-	std::unique_ptr<smol::Renderer> m_render3d;
+	std::unique_ptr<smol::Renderer> m_renderer;
 	std::unique_ptr<smol::TextureManager> m_textures;
 	std::unique_ptr<smol::ModelManager> m_models;
 	std::unique_ptr<smol::ShaderManager> m_shaders;

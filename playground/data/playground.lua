@@ -14,10 +14,10 @@ local IslandModel = Graphics.LoadModel("islands_low.fbx")
 local Cottage = Graphics.LoadModel("container.fbx")
 
 local Lights = {}
-local lightCount = 20
+local lightCount = 32
 local lightBoxMin = {-284,1,-125}
 local lightBoxMax = {256,228,113}
-local lightRadiusRange = {64,100}
+local lightRadiusRange = {32,64}
 local lightGravity = -4096.0
 local lightBounceMul = 0.9
 local lightFriction = 0.95
@@ -27,7 +27,7 @@ local lightXZSpeed = 200
 local lightYSpeed = 200
 local lightBrightness = 8.0
 local lightSphereSize = 1.0
-local SunMulti = 0.3
+local SunMulti = 0.2
 
 -- ~distance, const, linear, quad
 local lightAttenuationTable = {

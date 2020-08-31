@@ -42,8 +42,6 @@ namespace SDE
 		bool Tick();			// All passes are drawn here
 		void PostShutdown();	// Device + window shutdown here
 
-		inline void SetClearColour(const glm::vec4& c) { m_clearColour = c; }
-
 	private:
 		void LoadConfig(ConfigSystem* cfg);
 
@@ -56,7 +54,6 @@ namespace SDE
 		};
 
 		Config m_config;
-		glm::vec4 m_clearColour;
 
 		struct Pass { Render::RenderPass* m_pass; uint32_t m_key; };
 		std::vector<Pass> m_passes;

@@ -12,6 +12,7 @@
 #include "model_manager.h"
 #include "shader_manager.h"
 #include "model.h"
+#include "material_helpers.h"
 #include <algorithm>
 #include <map>
 
@@ -39,6 +40,7 @@ namespace smol
 	};
 
 	std::map<std::string, TextureHandle> g_defaultTextures;
+	ShaderHandle g_basicBlitShader;
 
 	Renderer::Renderer(TextureManager* ta, ModelManager* mm, ShaderManager* sm, glm::ivec2 windowSize)
 		: m_textures(ta)
@@ -51,6 +53,7 @@ namespace smol
 		g_defaultTextures["DiffuseTexture"] = m_textures->LoadTexture("white.bmp");
 		g_defaultTextures["NormalsTexture"] = m_textures->LoadTexture("default_normalmap.png");
 		g_defaultTextures["SpecularTexture="] = m_textures->LoadTexture("white.bmp");
+		g_basicBlitShader = m_shaders->LoadShader("Basic Blit", "basic_blit.vs", "basic_blit.fs");
 		{
 			SDE_PROF_EVENT("Create Buffers");
 			CreateInstanceList(m_opaqueInstances, c_maxInstances);
@@ -225,41 +228,6 @@ namespace smol
 		}
 	}
 
-	void Renderer::ApplyMaterial(Render::Device& d, Render::ShaderProgram& shader, const Render::Material& material)
-	{
-		const auto& uniforms = material.GetUniforms();
-		uniforms.Apply(d, shader);
-
-		const auto& samplers = material.GetSamplers();
-		uint32_t textureUnit = 0;
-		for (const auto& s : samplers)
-		{
-			uint32_t uniformHandle = shader.GetUniformHandle(s.second.m_name.c_str());
-			if (uniformHandle != -1)
-			{
-				TextureHandle texHandle = { static_cast<uint16_t>(s.second.m_handle) };
-				const auto theTexture = m_textures->GetTexture({ texHandle });
-				if (theTexture)
-				{
-					d.SetSampler(uniformHandle, theTexture->GetHandle(), textureUnit++);
-				}
-				else
-				{
-					// set default if one exists
-					auto foundDefault = g_defaultTextures.find(s.second.m_name.c_str());
-					if (foundDefault != g_defaultTextures.end())
-					{
-						const auto defaultTexture = m_textures->GetTexture({ foundDefault->second });
-						if (defaultTexture != nullptr)
-						{
-							d.SetSampler(uniformHandle, defaultTexture->GetHandle(), textureUnit++);
-						}
-					}
-				}
-			}
-		}
-	}
-
 	void Renderer::SubmitInstances(Render::Device& d, const InstanceList& list)
 	{
 		auto firstInstance = list.m_instances.begin();
@@ -298,7 +266,7 @@ namespace smol
 				d.BindInstanceBuffer(theMesh->GetVertexArray(), list.m_colours, instancingSlotIndex++, 4, 0);
 
 				// apply mesh material uniforms and samplers
-				ApplyMaterial(d, *theShader, theMesh->GetMaterial());
+				smol::ApplyMaterial(d, *theShader, theMesh->GetMaterial(), *m_textures, g_defaultTextures);
 
 				// draw the chunks
 				for (const auto& chunk : theMesh->GetChunks())
@@ -321,7 +289,7 @@ namespace smol
 
 		// clear targets asap
 		d.SetDepthState(true, true);	// make sure depth write is enabled before clearing!
-		d.ClearFramebufferColourDepth(m_mainFramebuffer, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), FLT_MAX);
+		d.ClearFramebufferColourDepth(m_mainFramebuffer, m_clearColour, FLT_MAX);
 
 		// set global data
 		UpdateGlobals();
@@ -335,6 +303,7 @@ namespace smol
 		PopulateInstanceBuffers(m_transparentInstances);
 
 		d.DrawToFramebuffer(m_mainFramebuffer);
+		d.SetViewport(glm::ivec2(0,0), m_mainFramebuffer.Dimensions());
 
 		// render opaques
 		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
@@ -344,7 +313,16 @@ namespace smol
 
 		// render transparents
 		d.SetDepthState(true, false);		// enable z-test, disable write
-		d.SetBlending(true);				// enable blending
+		d.SetBlending(true);
 		SubmitInstances(d, m_transparentInstances);
+
+		// blit main buffer to backbuffer
+		d.SetDepthState(false, false);
+		d.SetBlending(true);
+		auto blitShader = m_shaders->GetShader(g_basicBlitShader);
+		if (blitShader)
+		{
+			m_targetBlitter.TargetToBackbuffer(d, m_mainFramebuffer, *blitShader, m_windowSize);
+		}
 	}
 }
