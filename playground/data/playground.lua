@@ -167,10 +167,10 @@ function Playground:Tick()
 		end
 
 		Graphics.PointLight(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3], Lights[i].Ambient, Lights[i].Attenuation[1], Lights[i].Attenuation[2], Lights[i].Attenuation[3])
-		Graphics.DrawModel(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],0.8,lightSphereSize,LightModel,LightShader)
+		Graphics.DrawModel(Lights[i].Position[1],Lights[i].Position[2],Lights[i].Position[3],Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],1.0,lightSphereSize,LightModel,LightShader)
 
 		for h=1,#Lights[i].History-1 do
-			local alpha = 1.0 - (((#Lights[i].History - h) / #Lights[i].History))
+			local alpha = (1.0 - (((#Lights[i].History - h) / #Lights[i].History)))  * 0.5
 			Graphics.DebugDrawLine(Lights[i].History[h][1],Lights[i].History[h][2],Lights[i].History[h][3],
 								   Lights[i].History[h+1][1],Lights[i].History[h+1][2],Lights[i].History[h+1][3],
 								   Lights[i].Colour[1],Lights[i].Colour[2],Lights[i].Colour[3],alpha,

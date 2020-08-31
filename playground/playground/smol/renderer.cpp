@@ -121,7 +121,8 @@ namespace smol
 			isTransparent = IsMeshTransparent(mesh, *m_textures);
 		}
 		InstanceList& instances = isTransparent ? m_transparentInstances : m_opaqueInstances;
-		instances.m_instances.push_back({ transform, colour, shader, &mesh });
+		float distanceToCamera = glm::length(transform[3] - glm::vec4(m_camera.Position(),1.0f));
+		instances.m_instances.push_back({ transform, colour, shader, &mesh, distanceToCamera });
 	}
 
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader)
@@ -141,7 +142,9 @@ namespace smol
 					isTransparent = IsMeshTransparent(*part.m_mesh, *m_textures);
 				}
 				InstanceList& instances = isTransparent ? m_transparentInstances : m_opaqueInstances;
-				instances.m_instances.push_back({ transform, colour, shader, part.m_mesh.get() });
+				const glm::mat4 instanceTransform = transform * part.m_transform;
+				float distanceToCamera = glm::length(instanceTransform[3] - glm::vec4(m_camera.Position(), 1.0f));
+				instances.m_instances.push_back({ instanceTransform, colour, shader, part.m_mesh.get(), distanceToCamera });
 			}
 		}
 	}
@@ -199,7 +202,44 @@ namespace smol
 		m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
 	}
 
-	void Renderer::PrepareInstances(InstanceList& list)
+	void Renderer::PrepareTransparentInstances(InstanceList& list)
+	{
+		SDE_PROF_EVENT();
+		{
+			SDE_PROF_EVENT("Sort");
+			std::sort(list.m_instances.begin(), list.m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
+				if (q1.m_distanceToCamera < q2.m_distanceToCamera)	// back to front
+				{
+					return false;
+				}
+				else if (q1.m_distanceToCamera > q2.m_distanceToCamera)
+				{
+					return true;
+				}
+				if (q1.m_shader.m_index < q2.m_shader.m_index)	// shader
+				{
+					return true;
+				}
+				else if (q1.m_shader.m_index > q2.m_shader.m_index)
+				{
+					return false;
+				}
+				auto q1Mesh = reinterpret_cast<uintptr_t>(q1.m_mesh);	// mesh
+				auto q2Mesh = reinterpret_cast<uintptr_t>(q2.m_mesh);
+				if (q1Mesh < q2Mesh)
+				{
+					return true;
+				}
+				else if (q1Mesh > q2Mesh)
+				{
+					return false;
+				}
+				return false;
+				});
+		}
+	}
+
+	void Renderer::PrepareOpaqueInstances(InstanceList& list)
 	{
 		SDE_PROF_EVENT();
 		{
@@ -220,6 +260,14 @@ namespace smol
 					return true;
 				}
 				else if (q1Mesh > q2Mesh)
+				{
+					return false;
+				}
+				if (q1.m_distanceToCamera < q2.m_distanceToCamera)	// front to back
+				{
+					return true;
+				}
+				else if (q1.m_distanceToCamera > q2.m_distanceToCamera)
 				{
 					return false;
 				}
@@ -295,8 +343,8 @@ namespace smol
 		UpdateGlobals();
 
 		// prepare instance lists for passes
-		PrepareInstances(m_opaqueInstances);
-		PrepareInstances(m_transparentInstances);
+		PrepareOpaqueInstances(m_opaqueInstances);
+		PrepareTransparentInstances(m_transparentInstances);
 
 		// copy instance data to gpu
 		PopulateInstanceBuffers(m_opaqueInstances);

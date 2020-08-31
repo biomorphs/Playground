@@ -56,7 +56,8 @@ namespace smol
 			Render::RenderBuffer m_colours;
 		};
 		void CreateInstanceList(InstanceList& newlist, uint32_t maxInstances);
-		void PrepareInstances(InstanceList& list);
+		void PrepareOpaqueInstances(InstanceList& list);
+		void PrepareTransparentInstances(InstanceList& list);
 		void PopulateInstanceBuffers(InstanceList& list);
 		void SubmitInstances(Render::Device& d, const InstanceList& list);
 
