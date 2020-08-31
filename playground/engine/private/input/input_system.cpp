@@ -12,9 +12,52 @@ Matt Hoyle
 #include <SDL_mouse.h>
 #include <SDL_events.h>
 #include <algorithm>
+#include <map>
 
 namespace Input
 {
+	const std::map<SDL_Keycode, Key> c_keyMapping = {
+		{ SDLK_0, KEY_0 },
+		{ SDLK_1, KEY_1 },
+		{ SDLK_2, KEY_2 },
+		{ SDLK_3, KEY_3 },
+		{ SDLK_4, KEY_4 },
+		{ SDLK_5, KEY_5 },
+		{ SDLK_6, KEY_6 },
+		{ SDLK_7, KEY_7 },
+		{ SDLK_8, KEY_8 },
+		{ SDLK_9, KEY_9 },
+		{ SDLK_a, KEY_a },
+		{ SDLK_b, KEY_b },
+		{ SDLK_c, KEY_c },
+		{ SDLK_d, KEY_d },
+		{ SDLK_e, KEY_e },
+		{ SDLK_f, KEY_f },
+		{ SDLK_g, KEY_g },
+		{ SDLK_h, KEY_h },
+		{ SDLK_i, KEY_i },
+		{ SDLK_j, KEY_j },
+		{ SDLK_k, KEY_k },
+		{ SDLK_l, KEY_l },
+		{ SDLK_m, KEY_m },
+		{ SDLK_n, KEY_n },
+		{ SDLK_o, KEY_o },
+		{ SDLK_p, KEY_p },
+		{ SDLK_q, KEY_q },
+		{ SDLK_r, KEY_r },
+		{ SDLK_s, KEY_s },
+		{ SDLK_t, KEY_t },
+		{ SDLK_u, KEY_u },
+		{ SDLK_v, KEY_v },
+		{ SDLK_w, KEY_w },
+		{ SDLK_x, KEY_x },
+		{ SDLK_y, KEY_y },
+		{ SDLK_z, KEY_z },
+		{ SDLK_LSHIFT, KEY_LSHIFT },
+		{ SDLK_RSHIFT, KEY_RSHIFT },
+		{ SDLK_SPACE, KEY_SPACE },
+	};
+
 	InputSystem::InputSystem()
 		: m_controllerAxisDeadZone( 0.5f )
 	{
@@ -30,6 +73,14 @@ namespace Input
 		if (theEvent->type == SDL_MOUSEWHEEL)
 		{
 			m_currentMouseScroll = theEvent->wheel.y;
+		}
+		if (theEvent->type == SDL_KEYDOWN || theEvent->type == SDL_KEYUP)
+		{
+			auto mappedKey = c_keyMapping.find(theEvent->key.keysym.sym);
+			if (mappedKey != c_keyMapping.end())
+			{
+				m_keysState.m_keyPressed[mappedKey->second] = theEvent->key.state == SDL_PRESSED ? true : false;
+			}
 		}
 	}
 
@@ -50,11 +101,6 @@ namespace Input
 		UpdateControllerState();
 		UpdateMouseState();
 		return true;
-	}
-
-	const MouseRawState& InputSystem::MouseState() const
-	{
-		return m_mouseState;
 	}
 
 	const ControllerRawState InputSystem::ControllerState(uint32_t padIndex) const

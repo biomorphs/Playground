@@ -10,6 +10,9 @@
     <ClInclude Include="public\input\mouse_state.h">
       <Filter>public</Filter>
     </ClInclude>
+    <ClInclude Include="public\input\keyboard_state.h">
+      <Filter>public</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="public">

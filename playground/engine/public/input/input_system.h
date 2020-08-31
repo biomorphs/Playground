@@ -6,6 +6,7 @@ Matt Hoyle
 
 #include "controller_state.h"
 #include "mouse_state.h"
+#include "keyboard_state.h"
 #include "core/system.h"
 #include <vector>
 
@@ -22,7 +23,8 @@ namespace Input
 
 		inline uint32_t ControllerCount() const { return (uint32_t)m_controllers.size(); }
 		const ControllerRawState ControllerState(uint32_t padIndex) const;
-		const MouseRawState& MouseState() const;
+		const MouseRawState& GetMouseState() const { return m_mouseState; }
+		const KeyboardState& GetKeyboardState() const { return m_keysState;	}
 
 	private:
 		void UpdateControllerState();
@@ -41,5 +43,7 @@ namespace Input
 
 		int32_t m_currentMouseScroll = 0;
 		MouseRawState m_mouseState;
+
+		KeyboardState m_keysState;
 	};
 }

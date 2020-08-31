@@ -37,7 +37,8 @@ namespace DebugGui
 		virtual bool PostInit() override;
 		virtual bool Tick() override;
 		virtual void Shutdown() override;
-		bool IsCapturingMouse();	// if true the mouse is interacting with gui;
+		bool IsCapturingMouse();	// if true the gui is interacting with mouse
+		bool IsCapturingKeyboard();	// if true the gui is interacting with keyboard
 		bool BeginWindow(bool& windowOpen, const char* windowName, glm::vec2 size=glm::vec2(-1.f));
 		void EndWindow();
 		void Text(const char* txt);

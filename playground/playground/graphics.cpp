@@ -175,7 +175,7 @@ bool Graphics::Tick()
 	{
 		if (!m_debugGui->IsCapturingMouse())
 		{
-			g_arcball.Update(m_inputSystem->MouseState(), 0.066f);
+			g_arcball.Update(m_inputSystem->GetMouseState(), 0.066f);
 		}
 		c.LookAt(g_arcball.GetPosition(), g_arcball.GetTarget(), g_arcball.GetUp());
 		m_renderer->SetCamera(c);
@@ -183,6 +183,14 @@ bool Graphics::Tick()
 	else
 	{
 		m_debugCameraController->Update(m_inputSystem->ControllerState(0), 0.016f);
+		if (!m_debugGui->IsCapturingMouse())
+		{
+			m_debugCameraController->Update(m_inputSystem->GetMouseState(), 0.016f);
+		}
+		if (!m_debugGui->IsCapturingKeyboard())
+		{
+			m_debugCameraController->Update(m_inputSystem->GetKeyboardState(), 0.016f);
+		}
 		m_debugCameraController->ApplyToCamera(c);
 		m_renderer->SetCamera(c);
 	}	

@@ -101,6 +101,11 @@ namespace DebugGui
 		return ImGui::GetIO().WantCaptureMouse;
 	}
 
+	bool DebugGuiSystem::IsCapturingKeyboard()
+	{
+		return ImGui::GetIO().WantCaptureKeyboard;
+	}
+
 	bool DebugGuiSystem::BeginWindow(bool& windowOpen, const char* windowName, glm::vec2 size)
 	{
 		bool ret = ImGui::Begin(windowName, &windowOpen, 0);

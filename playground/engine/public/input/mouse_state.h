@@ -17,9 +17,9 @@ namespace Input
 
 	struct MouseRawState
 	{
-		int32_t m_cursorX;	// position relative to window/viewport in pixels
-		int32_t m_cursorY;
-		uint32_t m_buttonState;	// mask of buttons
-		int32_t m_wheelScroll;
+		int32_t m_cursorX = 0;	// position relative to window/viewport in pixels
+		int32_t m_cursorY = 0;
+		uint32_t m_buttonState = 0;	// mask of buttons
+		int32_t m_wheelScroll = 0;
 	};
 }

@@ -4,6 +4,8 @@ Matt Hoyle
 */
 #include "debug_camera_controller.h"
 #include "input/controller_state.h"
+#include "input/mouse_state.h"
+#include "input/keyboard_state.h"
 #include "render/camera.h"
 #include "math/glm_headers.h"
 #include "core/profiler.h"
@@ -29,6 +31,79 @@ namespace SDE
 	{
 		glm::vec3 up(0.0f, 1.0f, 0.0f);
 		target.LookAt(m_position, m_position + m_lookDirection, up);
+	}
+
+	void DebugCameraController::Update(const Input::MouseRawState& mouse, double timeDelta)
+	{
+		SDE_PROF_EVENT();
+
+		const auto mousePosition = glm::ivec2(mouse.m_cursorX, mouse.m_cursorY);
+		const float timeDeltaF = (float)timeDelta;
+		static float s_yawRotSpeed = 0.01f;
+		static float s_pitchRotSpeed = 0.01f;
+		static bool enabled = false;
+		static glm::ivec2 lastClickPos = { 0,0 };
+		
+		if (mouse.m_buttonState & Input::MouseButtons::LeftButton)
+		{
+			if (!enabled)
+			{
+				lastClickPos = mousePosition;
+				enabled = true;
+			}
+			else
+			{
+				glm::ivec2 movement = mousePosition - lastClickPos;
+				glm::vec2 movementAtSpeed = glm::vec2(movement);
+				const float yawRotation = -movementAtSpeed.x * s_yawRotSpeed * timeDeltaF;
+				m_yaw += yawRotation;
+
+				const float pitchRotation = -movementAtSpeed.y * s_pitchRotSpeed * timeDeltaF;
+				m_pitch += pitchRotation;
+			}
+		}
+		else
+		{
+			enabled = false;
+		}
+	}
+
+	void DebugCameraController::Update(const Input::KeyboardState& kbState, double timeDelta)
+	{
+		const float timeDeltaF = (float)timeDelta;
+		static float s_forwardSpeed = 10.0f;
+		static float s_strafeSpeed = 10.0f;
+		float forwardAmount = 0.0f;
+		float strafeAmount = 0.0f;
+		float speedMul = 1.0f;
+		if (kbState.m_keyPressed[Input::KEY_LSHIFT] || kbState.m_keyPressed[Input::KEY_RSHIFT])
+		{ 
+			speedMul = 10.0f;
+		}
+		if (kbState.m_keyPressed[Input::KEY_w])
+		{
+			forwardAmount = 1.0f;
+		}
+		if (kbState.m_keyPressed[Input::KEY_s])
+		{
+			forwardAmount = -1.0f;
+		}
+		if (kbState.m_keyPressed[Input::KEY_d])
+		{
+			strafeAmount = 1.0f;
+		}
+		if (kbState.m_keyPressed[Input::KEY_a])
+		{
+			strafeAmount = -1.0f;
+		}
+
+		// move forward
+		const float forward = speedMul * forwardAmount * s_forwardSpeed * timeDeltaF;
+		m_position += m_lookDirection * forward;
+
+		// strafe
+		const float strafe = speedMul * strafeAmount * s_strafeSpeed * timeDeltaF;
+		m_position += m_right * strafe;
 	}
 
 	void DebugCameraController::Update(const Input::ControllerRawState& controllerState, double timeDelta)
