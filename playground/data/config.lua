@@ -7,6 +7,6 @@ Config = {
 		WindowTitle = "Playground!",
 	},
 	JobSystem = {
-		--ThreadCount = 2,
+		ThreadCount = 2,
 	}
 }

@@ -78,6 +78,7 @@ namespace smol
 
 	void Renderer::CreateInstanceList(InstanceList& newlist, uint32_t maxInstances)
 	{
+		SDE_PROF_EVENT();
 		newlist.m_instances.reserve(maxInstances);
 		newlist.m_transforms.Create(maxInstances * sizeof(glm::mat4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
 		newlist.m_colours.Create(maxInstances * sizeof(glm::vec4), Render::RenderBufferType::VertexData, Render::RenderBufferModification::Dynamic, true);
@@ -115,6 +116,7 @@ namespace smol
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const Render::Mesh& mesh, const struct ShaderHandle& shader)
 	{
 		SDE_PROF_EVENT();
+
 		bool isTransparent = colour.a != 1.0f;
 		if (!isTransparent)
 		{
@@ -278,6 +280,7 @@ namespace smol
 
 	void Renderer::SubmitInstances(Render::Device& d, const InstanceList& list)
 	{
+		SDE_PROF_EVENT();
 		auto firstInstance = list.m_instances.begin();
 		const Render::ShaderProgram* lastShaderUsed = nullptr;	// avoid setting the same shader
 		while (firstInstance != list.m_instances.end())
@@ -334,11 +337,12 @@ namespace smol
 		SDE_PROF_EVENT();
 		auto totalInstances = m_opaqueInstances.m_instances.size() + m_transparentInstances.m_instances.size();
 		m_frameStats = { totalInstances,0,0,0,0 };
-
-		// clear targets asap
-		d.SetDepthState(true, true);	// make sure depth write is enabled before clearing!
-		d.ClearFramebufferColourDepth(m_mainFramebuffer, m_clearColour, FLT_MAX);
-
+		{
+			SDE_PROF_EVENT("Clear main framebuffer");
+			// clear targets asap
+			d.SetDepthState(true, true);	// make sure depth write is enabled before clearing!
+			d.ClearFramebufferColourDepth(m_mainFramebuffer, m_clearColour, FLT_MAX);
+		}
 		// set global data
 		UpdateGlobals();
 

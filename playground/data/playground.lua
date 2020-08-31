@@ -186,7 +186,7 @@ function Playground:Tick()
 	Graphics.DrawModel(0.0,0.5,0.0,1.0,1.0,1.0,1.0,0.2,Sponza,DiffuseShader)
 
 	local width = 64
-	local numPerWidth = 16
+	local numPerWidth = 8
 	local scale = 0.5
 	local halfWidth = width / 2.0
 	local gap = width / numPerWidth
