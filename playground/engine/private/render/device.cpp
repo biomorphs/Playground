@@ -71,6 +71,15 @@ namespace Render
 		SDE_RENDER_PROCESS_GL_ERRORS("glViewport");
 	}
 
+	void Device::ClearFramebufferDepth(const FrameBuffer& fb, float depth)
+	{
+		if (fb.GetDepthStencil() != nullptr)
+		{
+			glClearNamedFramebufferfi(fb.GetHandle(), GL_DEPTH_STENCIL, 0, depth, 0);
+			SDE_RENDER_PROCESS_GL_ERRORS("glClearNamedFramebufferfi");
+		}
+	}
+
 	void Device::ClearFramebufferColourDepth(const FrameBuffer& fb, const glm::vec4& colour, float depth)
 	{
 		int colourAttachments= fb.GetColourAttachmentCount();

@@ -117,6 +117,18 @@ namespace Render
 		}
 	}
 
+	uint32_t GetGeneratedMipCount(const TextureSource& src)
+	{
+		uint32_t mipCount = 0;
+		uint32_t smallestDim = std::min(src.Width(), src.Height());
+		while (smallestDim > 1)
+		{
+			smallestDim = smallestDim >> 1;
+			mipCount++;
+		}
+		return mipCount;
+	}
+
 	bool Texture::CreateSimpleUncompressedTexture(const TextureSource& src)
 	{
 		SDE_PROF_EVENT();
@@ -125,11 +137,12 @@ namespace Render
 		SDE_RENDER_PROCESS_GL_ERRORS_RET("glCreateTextures");
 
 		m_componentCount = SourceFormatToComponentCount(src.SourceFormat());
-		const uint32_t mipCount = src.MipCount();
-		const bool shouldGenerateMips = mipCount <=1 && src.ShouldGenerateMips();
+		const bool shouldGenerateMips = src.MipCount() <=1 && src.ShouldGenerateMips();
+		const uint32_t mipCount = shouldGenerateMips ? GetGeneratedMipCount(src) : src.MipCount();
+
 		glTextureParameteri(m_handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
-		if (mipCount > 1 || shouldGenerateMips)
+		if (mipCount > 1)
 		{
 			glTextureParameteri(m_handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		}
@@ -154,7 +167,7 @@ namespace Render
 			uint32_t glInternalType = SourceFormatToGLInternalType(src.SourceFormat());
 			SDE_RENDER_ASSERT(glInternalFormat != -1);
 			SDE_RENDER_ASSERT(glInternalType != -1);
-			for (uint32_t m = 0; m < mipCount; ++m)
+			for (uint32_t m = 0; m < src.MipCount(); ++m)
 			{
 				uint32_t w = 0, h = 0;
 				size_t size = 0;
