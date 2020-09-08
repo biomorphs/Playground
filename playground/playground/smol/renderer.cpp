@@ -259,8 +259,8 @@ namespace smol
 		if (shadowLight)
 		{
 			static float c_nearPlane = 1.0f;
-			static float c_farPlane = 500.0f;
-			static float c_orthoDims = 200.0f;
+			static float c_farPlane = 1000.0f;
+			static float c_orthoDims = 400.0f;
 			glm::mat4 lightProjection = glm::ortho(-c_orthoDims, c_orthoDims, -c_orthoDims, c_orthoDims, c_nearPlane, c_farPlane);
 			glm::mat4 lightView = glm::lookAt(glm::vec3(shadowLight->m_position), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			glm::mat4 lightSpaceMatrix = lightProjection * lightView;

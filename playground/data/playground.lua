@@ -8,14 +8,14 @@ Playground = {}
 local LightShader = Graphics.LoadShader("light",  "basic.vs", "basic.fs")
 local DiffuseShader = Graphics.LoadShader("diffuse", "simplediffuse.vs", "simplediffuse.fs")
 local ShadowShader = Graphics.LoadShader("shadow", "simpleshadow.vs", "simpleshadow.fs");
---local Sponza = Graphics.LoadModel("sponza.obj")
+local Sponza = Graphics.LoadModel("sponza.obj")
 local MonsterModel = Graphics.LoadModel("udim-monster.fbx")
 local LightModel = Graphics.LoadModel("sphere.fbx")
 local IslandModel = Graphics.LoadModel("islands_low.fbx")
 local Cottage = Graphics.LoadModel("container.fbx")
 
 local Lights = {}
-local lightCount = 0
+local lightCount = 16
 local lightBoxMin = {-284,1,-125}
 local lightBoxMax = {256,228,113}
 local lightRadiusRange = {32,64}
@@ -28,8 +28,8 @@ local lightXZSpeed = 200
 local lightYSpeed = 200
 local lightBrightness = 8.0
 local lightSphereSize = 1.0
-local SunMulti = 4
-local SunPosition = {-100,80,100}
+local SunMulti = 1
+local SunPosition = {-100,350,40}
 local SunColour = {0.25, 0.611, 1.0}
 
 -- ~distance, const, linear, quad
@@ -115,7 +115,7 @@ function Playground:Tick()
 	local timeDelta = Playground.DeltaTime * 0.25
 
 	Graphics.DrawModel(SunPosition[1],SunPosition[2],SunPosition[3],SunMulti * SunColour[1],SunMulti * SunColour[2], SunMulti * SunColour[3],1.0,20.0,LightModel,LightShader)
-	Graphics.DirectionalLight(SunPosition[1],SunPosition[2],SunPosition[3], SunColour[1], SunColour[2], SunColour[3], 0.1)
+	Graphics.DirectionalLight(SunPosition[1],SunPosition[2],SunPosition[3], SunMulti * SunColour[1], SunMulti * SunColour[2], SunMulti * SunColour[3], 0.1)
 
 	for i=1,#Lights do
 		if(Playground:Vec3Length(Lights[i].Velocity) < 16.0) then
@@ -182,18 +182,18 @@ function Playground:Tick()
 	DrawGrid(-512,512,32,-512,512,32,-40.0)
 	Graphics.DebugDrawAxis(0.0,32.0,0.0,8.0)
 
-	Graphics.DrawModel(0.0,-4.0,0.0,1.0,1.0,1.0,1.0,2.0,IslandModel,DiffuseShader)
-	Graphics.DrawModel(0.0,1.3,0.0,1.0,1.0,1.0,1.0,16.0,MonsterModel,DiffuseShader)
-	--Graphics.DrawModel(0.0,0.5,0.0,1.0,1.0,1.0,1.0,0.2,Sponza,DiffuseShader)
+	Graphics.DrawModel(0.0,1.5,0.0,1.0,1.0,1.0,1.0,0.4,IslandModel,DiffuseShader)
+	Graphics.DrawModel(4.0,1.3,0.0,1.0,1.0,1.0,1.0,4.0,MonsterModel,DiffuseShader)
+	Graphics.DrawModel(0.0,0.5,0.0,1.0,1.0,1.0,1.0,0.2,Sponza,DiffuseShader)
 
-	local width = 256
+	local width = 64
 	local numPerWidth = 8
-	local scale = 3
+	local scale = 1
 	local halfWidth = width / 2.0
 	local gap = width / numPerWidth
 	for z=1,numPerWidth do
 		for x=1,numPerWidth do
-			Graphics.DrawModel(-halfWidth + (x * gap),-10.0,-halfWidth + (z*gap) - 14,1.0,1.0,1.0,1.0,1.0 * scale,Cottage,DiffuseShader)
+			Graphics.DrawModel(-halfWidth + (x * gap),0.0,-halfWidth + (z*gap) - 14,1.0,1.0,1.0,1.0,1.0 * scale,Cottage,DiffuseShader)
 		end
 	end
 end

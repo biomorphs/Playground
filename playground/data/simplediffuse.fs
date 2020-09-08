@@ -33,7 +33,7 @@ float CalculateShadows(vec3 normal, vec4 lightSpacePos)
 	}
 
 	float currentDepth = projCoords.z;
-	float bias = 0.0005;
+	float bias = 0.0008;
 	float shadow = 0.0;
 	vec2 texelSize = 1.0 / textureSize(ShadowMapTexture, 0);
 	for(int x = -1; x <= 1; ++x)
@@ -70,6 +70,7 @@ void main()
 	{
 		float attenuation;
 		vec3 lightDir;
+		float shadow = shadowValue;
 
 		if(Lights[i].Position.w == 0.0)		// directional light
 		{
@@ -83,6 +84,7 @@ void main()
 								(Lights[i].Attenuation[1] * lightDistance) + 
 								(Lights[i].Attenuation[2] * (lightDistance * lightDistance)));
 			lightDir = normalize(Lights[i].Position.xyz - vs_out_position);
+			shadowValue = 0.0;	// point lights not affected by shadow
 		}
 
 		// diffuse light
