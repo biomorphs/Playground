@@ -3,6 +3,7 @@ SDLEngine
 Matt Hoyle
 */
 #pragma once
+#include "math/glm_headers.h"
 #include "kernel/base_types.h"
 #include <vector>
 
@@ -29,6 +30,8 @@ namespace Render
 		inline uint32_t GetHandle() const { return m_handle; }
 		inline bool IsArray() const { return m_isArray; }
 		uint32_t GetComponentCount() const { return m_componentCount; }
+
+		void SetClampToBorder(glm::vec4 borderColour);
 
 	private:
 		bool CreateSimpleUncompressedTexture(const TextureSource& src);

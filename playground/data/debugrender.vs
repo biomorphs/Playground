@@ -10,7 +10,7 @@ out vec4 out_colour;
 void main()
 {
 	vec4 pos = vec4(vs_in_pos_modelSpace.xyz,1);
-	vec4 v = ProjectionMatrix * ViewMatrix * vs_in_instance_modelmat * pos; 
+	vec4 v = ProjectionViewMatrix * vs_in_instance_modelmat * pos; 
     out_colour = vs_in_colour;
     gl_Position = v;
 }

@@ -38,6 +38,7 @@ namespace Render
 		void SetScissorEnabled(bool enabled);
 		void SetBlending(bool enabled);
 		void SetBackfaceCulling(bool enabled, bool frontFaceCCW);
+		void SetFrontfaceCulling(bool enabled, bool frontFaceCCW);
 		void SetDepthState(bool enabled, bool writeEnabled);
 		void ClearColourDepthTarget(const glm::vec4& colour, float depth);
 		void ClearFramebufferColourDepth(const FrameBuffer& fb, const glm::vec4& colour, float depth);

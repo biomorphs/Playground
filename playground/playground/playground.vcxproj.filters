@@ -171,5 +171,11 @@
     <None Include="..\data\basic_blit.fs">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\data\simpleshadow.fs">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\data\simpleshadow.vs">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -6,13 +6,12 @@
 
 namespace smol
 {
-	void ApplyMaterial(Render::Device& d, Render::ShaderProgram& shader, const Render::Material& material, TextureManager& tm, const DefaultTextures& defaults)
+	uint32_t ApplyMaterial(Render::Device& d, Render::ShaderProgram& shader, const Render::Material& material, TextureManager& tm, const DefaultTextures& defaults, uint32_t textureUnit)
 	{
 		const auto& uniforms = material.GetUniforms();
 		uniforms.Apply(d, shader);
 
 		const auto& samplers = material.GetSamplers();
-		uint32_t textureUnit = 0;
 		for (const auto& s : samplers)
 		{
 			uint32_t uniformHandle = shader.GetUniformHandle(s.second.m_name.c_str());
@@ -39,5 +38,6 @@ namespace smol
 				}
 			}
 		}
+		return textureUnit;
 	}
 }

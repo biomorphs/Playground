@@ -9,10 +9,12 @@
 #include "light.h"
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 namespace Render
 {
 	class Material;
+	class UniformBuffer;
 }
 
 namespace smol
@@ -35,6 +37,7 @@ namespace smol
 		void SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader);
 		void SetLight(glm::vec4 positionOrDir,glm::vec3 colour, float ambientStr, glm::vec3 attenuation);
 		void SetClearColour(glm::vec4 c) { m_clearColour = c; }
+		void SetShadowsShader(ShaderHandle lightingShader, ShaderHandle shadowShader);
 		Render::FrameBuffer& GetMainFramebuffer() { return m_mainFramebuffer; }
 		struct FrameStats {
 			size_t m_instancesSubmitted;
@@ -47,27 +50,32 @@ namespace smol
 		const FrameStats& GetStats() const { return m_frameStats; }
 		float& GetExposure() { return m_hdrExposure; }
 	private:
-		void UpdateGlobals();
-
 		struct InstanceList
 		{
 			std::vector<MeshInstance> m_instances;
 			Render::RenderBuffer m_transforms;
 			Render::RenderBuffer m_colours;
 		};
+		using ShadowShaders = std::unordered_map<uint32_t, ShaderHandle>;
+
+		void SubmitInstance(InstanceList& list, glm::vec3 cameraPos, glm::mat4 transform, glm::vec4 colour, const Render::Mesh& mesh, const struct ShaderHandle& shader);
 		void CreateInstanceList(InstanceList& newlist, uint32_t maxInstances);
 		void PrepareOpaqueInstances(InstanceList& list);
 		void PrepareTransparentInstances(InstanceList& list);
+		void PrepareShadowInstances(InstanceList& list);
 		void PopulateInstanceBuffers(InstanceList& list);
-		void SubmitInstances(Render::Device& d, const InstanceList& list);
+		void DrawInstances(Render::Device& d, const InstanceList& list, ShaderHandle shaderOverride = ShaderHandle::Invalid());
+		void UpdateGlobals(glm::mat4 projectionMat, glm::mat4 viewMat);
+		const Light* FindShadowCastingLight();
 
 		FrameStats m_frameStats;
 		float m_hdrExposure = 1.0f;
 		std::vector<Light> m_lights;
 		InstanceList m_opaqueInstances;
 		InstanceList m_transparentInstances;
+		InstanceList m_shadowCasterInstances;
 		glm::vec4 m_clearColour = { 0.0f,0.0f,0.0f,1.0f };
-
+		ShadowShaders m_shadowShaders;	// map of lighting shader handle index -> shadow shader
 		ShaderManager* m_shaders;
 		smol::TextureManager* m_textures;
 		smol::ModelManager* m_models;

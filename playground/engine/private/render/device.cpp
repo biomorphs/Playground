@@ -184,12 +184,33 @@ namespace Render
 		}
 	}
 
+	void Device::SetFrontfaceCulling(bool enabled, bool frontFaceCCW)
+	{
+		if (enabled)
+		{
+			glEnable(GL_CULL_FACE);
+			SDE_RENDER_PROCESS_GL_ERRORS("glEnable");
+			glCullFace(GL_FRONT);
+			SDE_RENDER_PROCESS_GL_ERRORS("glCullFace");
+		}
+		else
+		{
+			glDisable(GL_CULL_FACE);
+			SDE_RENDER_PROCESS_GL_ERRORS("glDisable");
+		}
+
+		glFrontFace(frontFaceCCW ? GL_CCW : GL_CW);
+		SDE_RENDER_PROCESS_GL_ERRORS("glFrontFace");
+	}
+
 	void Device::SetBackfaceCulling(bool enabled, bool frontFaceCCW)
 	{
 		if (enabled)
 		{
 			glEnable(GL_CULL_FACE);
 			SDE_RENDER_PROCESS_GL_ERRORS("glEnable");
+			glCullFace(GL_BACK);
+			SDE_RENDER_PROCESS_GL_ERRORS("glCullFace");
 		}
 		else
 		{

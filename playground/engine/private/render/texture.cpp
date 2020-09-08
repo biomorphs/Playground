@@ -129,6 +129,16 @@ namespace Render
 		return mipCount;
 	}
 
+	void Texture::SetClampToBorder(glm::vec4 borderColour)
+	{
+		glTextureParameteri(m_handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		SDE_RENDER_PROCESS_GL_ERRORS("glTextureParameteri");
+		glTextureParameteri(m_handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		SDE_RENDER_PROCESS_GL_ERRORS("glTextureParameteri");
+		glTextureParameterfv(m_handle, GL_TEXTURE_BORDER_COLOR, glm::value_ptr(borderColour));
+		SDE_RENDER_PROCESS_GL_ERRORS("glTextureParameterfv");
+	}
+
 	bool Texture::CreateSimpleUncompressedTexture(const TextureSource& src)
 	{
 		SDE_PROF_EVENT();

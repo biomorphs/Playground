@@ -20,7 +20,7 @@ namespace smol
 {
 	const uint64_t c_maxInstances = 1024 * 128;
 	const uint64_t c_maxLights = 64;
-	const int c_shadowMapSize = 1024;
+	const int c_shadowMapSize = 4096;
 
 	struct LightInfo
 	{
@@ -31,8 +31,8 @@ namespace smol
 
 	struct GlobalUniforms
 	{
-		glm::mat4 m_projectionMat;
-		glm::mat4 m_viewMat;
+		glm::mat4 m_viewProjMat;
+		glm::mat4 m_shadowLightMat;
 		glm::vec4 m_cameraPosition;		// world-space
 		LightInfo m_lights[c_maxLights];
 		int m_lightCount;
@@ -58,6 +58,7 @@ namespace smol
 			SDE_PROF_EVENT("Create Buffers");
 			CreateInstanceList(m_opaqueInstances, c_maxInstances);
 			CreateInstanceList(m_transparentInstances, c_maxInstances);
+			CreateInstanceList(m_shadowCasterInstances, c_maxInstances);
 			m_globalsUniformBuffer.Create(sizeof(GlobalUniforms), Render::RenderBufferType::UniformData, Render::RenderBufferModification::Dynamic, true);
 		}
 		{
@@ -76,6 +77,11 @@ namespace smol
 		}
 	}
 
+	void Renderer::SetShadowsShader(ShaderHandle lightingShader, ShaderHandle shadowShader)
+	{
+		m_shadowShaders[lightingShader.m_index] = shadowShader;
+	}
+
 	void Renderer::CreateInstanceList(InstanceList& newlist, uint32_t maxInstances)
 	{
 		SDE_PROF_EVENT();
@@ -88,6 +94,7 @@ namespace smol
 	{ 
 		m_opaqueInstances.m_instances.clear();
 		m_transparentInstances.m_instances.clear();
+		m_shadowCasterInstances.m_instances.clear();
 		m_lights.clear();
 	}
 
@@ -113,9 +120,27 @@ namespace smol
 		return false;
 	}
 
+	void Renderer::SubmitInstance(InstanceList& list, glm::vec3 cameraPos, glm::mat4 transform, glm::vec4 colour, const Render::Mesh& mesh, const struct ShaderHandle& shader)
+	{
+		SDE_PROF_EVENT();
+
+		float distanceToCamera = glm::length(glm::vec3(transform[3]) - cameraPos);
+		list.m_instances.push_back({ transform, colour, shader, &mesh, distanceToCamera });
+	}
+
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const Render::Mesh& mesh, const struct ShaderHandle& shader)
 	{
 		SDE_PROF_EVENT();
+
+		bool castShadow = true;
+		if (castShadow)
+		{
+			const auto& foundShadowShader = m_shadowShaders.find(shader.m_index);
+			if (foundShadowShader != m_shadowShaders.end())
+			{
+				SubmitInstance(m_shadowCasterInstances, m_camera.Position(), transform, colour, mesh, foundShadowShader->second);
+			}
+		}
 
 		bool isTransparent = colour.a != 1.0f;
 		if (!isTransparent)
@@ -123,8 +148,7 @@ namespace smol
 			isTransparent = IsMeshTransparent(mesh, *m_textures);
 		}
 		InstanceList& instances = isTransparent ? m_transparentInstances : m_opaqueInstances;
-		float distanceToCamera = glm::length(transform[3] - glm::vec4(m_camera.Position(),1.0f));
-		instances.m_instances.push_back({ transform, colour, shader, &mesh, distanceToCamera });
+		SubmitInstance(instances, m_camera.Position(), transform, colour, mesh, shader);
 	}
 
 	void Renderer::SubmitInstance(glm::mat4 transform, glm::vec4 colour, const struct ModelHandle& model, const struct ShaderHandle& shader)
@@ -133,11 +157,28 @@ namespace smol
 
 		const auto theModel = m_models->GetModel(model);
 		const auto theShader = m_shaders->GetShader(shader);
+		ShaderHandle shadowShader = ShaderHandle::Invalid();
+
+		bool castShadow = true;
+		if (castShadow)
+		{
+			const auto& foundShadowShader = m_shadowShaders.find(shader.m_index);
+			if (foundShadowShader != m_shadowShaders.end())
+			{
+				shadowShader = foundShadowShader->second;
+			}
+		}
+
 		if (theModel != nullptr && theShader != nullptr)
 		{
 			uint16_t meshPartIndex = 0;
 			for (const auto& part : theModel->Parts())
 			{
+				if (shadowShader.m_index != -1)
+				{
+					SubmitInstance(m_shadowCasterInstances, m_camera.Position(), transform, colour, *part.m_mesh, shadowShader);
+				}
+
 				bool isTransparent = colour.a != 1.0f;
 				if (!isTransparent)
 				{
@@ -145,8 +186,7 @@ namespace smol
 				}
 				InstanceList& instances = isTransparent ? m_transparentInstances : m_opaqueInstances;
 				const glm::mat4 instanceTransform = transform * part.m_transform;
-				float distanceToCamera = glm::length(instanceTransform[3] - glm::vec4(m_camera.Position(), 1.0f));
-				instances.m_instances.push_back({ instanceTransform, colour, shader, part.m_mesh.get(), distanceToCamera });
+				SubmitInstance(instances, m_camera.Position(), instanceTransform, colour, *part.m_mesh, shader);
 			}
 		}
 	}
@@ -186,22 +226,79 @@ namespace smol
 		}
 	}
 
-	void Renderer::UpdateGlobals()
+	const Light* Renderer::FindShadowCastingLight()
+	{
+		const Light* foundLight = nullptr;
+		for (const auto& l : m_lights)
+		{
+			if (l.m_position.w == 0)
+			{
+				return &l;
+			}
+		}
+		return nullptr;
+	}
+
+	void Renderer::UpdateGlobals(glm::mat4 projectionMat, glm::mat4 viewMat)
 	{
 		SDE_PROF_EVENT();
+
 		GlobalUniforms globals;
-		globals.m_projectionMat = glm::perspectiveFov(glm::radians(70.0f), (float)m_windowSize.x, (float)m_windowSize.y, 0.1f, 1000.0f);
-		globals.m_viewMat = glm::lookAt(m_camera.Position(), m_camera.Target(), m_camera.Up());
+		globals.m_viewProjMat = projectionMat * viewMat;
+		const Light* shadowLight = nullptr;
 		for (int l = 0; l < m_lights.size() && l < c_maxLights; ++l)
 		{
 			globals.m_lights[l].m_colourAndAmbient = m_lights[l].m_colour;
 			globals.m_lights[l].m_position = m_lights[l].m_position;
 			globals.m_lights[l].m_attenuation = m_lights[l].m_attenuation;
+			if (shadowLight == nullptr && m_lights[l].m_position.w == 0.0f)
+			{
+				shadowLight = &m_lights[l];
+			}
+		}
+		if (shadowLight)
+		{
+			static float c_nearPlane = 1.0f;
+			static float c_farPlane = 500.0f;
+			static float c_orthoDims = 200.0f;
+			glm::mat4 lightProjection = glm::ortho(-c_orthoDims, c_orthoDims, -c_orthoDims, c_orthoDims, c_nearPlane, c_farPlane);
+			glm::mat4 lightView = glm::lookAt(glm::vec3(shadowLight->m_position), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+			globals.m_shadowLightMat = lightSpaceMatrix;
 		}
 		globals.m_lightCount = static_cast<int>(std::min(m_lights.size(), c_maxLights));
 		globals.m_cameraPosition = glm::vec4(m_camera.Position(), 0.0);
 		globals.m_hdrExposure = m_hdrExposure;
 		m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
+	}
+
+	void Renderer::PrepareShadowInstances(InstanceList& list)
+	{
+		SDE_PROF_EVENT();
+		{
+			SDE_PROF_EVENT("Sort");
+			std::sort(list.m_instances.begin(), list.m_instances.end(), [](const smol::MeshInstance& q1, const smol::MeshInstance& q2) -> bool {
+				if (q1.m_shader.m_index < q2.m_shader.m_index)	// shader
+				{
+					return true;
+				}
+				else if (q1.m_shader.m_index > q2.m_shader.m_index)
+				{
+					return false;
+				}
+				auto q1Mesh = reinterpret_cast<uintptr_t>(q1.m_mesh);	// mesh
+				auto q2Mesh = reinterpret_cast<uintptr_t>(q2.m_mesh);
+				if (q1Mesh < q2Mesh)
+				{
+					return true;
+				}
+				else if (q1Mesh > q2Mesh)
+				{
+					return false;
+				}
+				return false;
+			});
+		}
 	}
 
 	void Renderer::PrepareTransparentInstances(InstanceList& list)
@@ -237,7 +334,7 @@ namespace smol
 					return false;
 				}
 				return false;
-				});
+			});
 		}
 	}
 
@@ -278,11 +375,12 @@ namespace smol
 		}
 	}
 
-	void Renderer::SubmitInstances(Render::Device& d, const InstanceList& list)
+	void Renderer::DrawInstances(Render::Device& d, const InstanceList& list, ShaderHandle shaderOverride)
 	{
 		SDE_PROF_EVENT();
 		auto firstInstance = list.m_instances.begin();
 		const Render::ShaderProgram* lastShaderUsed = nullptr;	// avoid setting the same shader
+		Render::ShaderProgram* shaderOverridePtr = m_shaders->GetShader(shaderOverride);
 		while (firstInstance != list.m_instances.end())
 		{
 			// Batch by shader and mesh
@@ -291,7 +389,7 @@ namespace smol
 				});
 			auto instanceCount = (uint32_t)(lastMeshInstance - firstInstance);
 			const Render::Mesh* theMesh = firstInstance->m_mesh;
-			const auto theShader = m_shaders->GetShader(firstInstance->m_shader);
+			Render::ShaderProgram* theShader = shaderOverridePtr != nullptr ? shaderOverridePtr :m_shaders->GetShader(firstInstance->m_shader);
 			if (theShader != nullptr && theMesh != nullptr)
 			{
 				m_frameStats.m_batchesDrawn++;
@@ -317,7 +415,12 @@ namespace smol
 				d.BindInstanceBuffer(theMesh->GetVertexArray(), list.m_colours, instancingSlotIndex++, 4, 0);
 
 				// apply mesh material uniforms and samplers
-				smol::ApplyMaterial(d, *theShader, theMesh->GetMaterial(), *m_textures, g_defaultTextures);
+				auto shadowSampler = theShader->GetUniformHandle("ShadowMapTexture");
+				if (shadowSampler != -1)
+				{
+					d.SetSampler(shadowSampler, m_shadowDepthBuffer.GetDepthStencil()->GetHandle(), 0);
+				}
+				smol::ApplyMaterial(d, *theShader, theMesh->GetMaterial(), *m_textures, g_defaultTextures, 1);
 
 				// draw the chunks
 				for (const auto& chunk : theMesh->GetChunks())
@@ -343,17 +446,32 @@ namespace smol
 			d.SetDepthState(true, true);	// make sure depth write is enabled before clearing!
 			d.ClearFramebufferColourDepth(m_mainFramebuffer, m_clearColour, FLT_MAX);
 		}
-		// set global data
-		UpdateGlobals();
 
 		// prepare instance lists for passes
+		PrepareShadowInstances(m_shadowCasterInstances);
 		PrepareOpaqueInstances(m_opaqueInstances);
 		PrepareTransparentInstances(m_transparentInstances);
 
 		// copy instance data to gpu
+		PopulateInstanceBuffers(m_shadowCasterInstances);
 		PopulateInstanceBuffers(m_opaqueInstances);
 		PopulateInstanceBuffers(m_transparentInstances);
 
+		// setup global constants
+		auto projectionMat = glm::perspectiveFov(glm::radians(70.0f), (float)m_windowSize.x, (float)m_windowSize.y, 0.1f, 1000.0f);
+		auto viewMat = glm::lookAt(m_camera.Position(), m_camera.Target(), m_camera.Up());
+		UpdateGlobals(projectionMat, viewMat);
+
+		// shadow maps
+		d.DrawToFramebuffer(m_shadowDepthBuffer);
+		d.SetViewport(glm::ivec2(0, 0), m_shadowDepthBuffer.Dimensions());
+		d.ClearFramebufferDepth(m_shadowDepthBuffer, FLT_MAX);
+		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
+		d.SetBlending(false);				// no blending, opaques only (maybe with discard)
+		d.SetScissorEnabled(false);			// (don't) scissor me timbers
+		DrawInstances(d, m_shadowCasterInstances);
+
+		// lighting to main frame buffer
 		d.DrawToFramebuffer(m_mainFramebuffer);
 		d.SetViewport(glm::ivec2(0,0), m_mainFramebuffer.Dimensions());
 
@@ -361,12 +479,12 @@ namespace smol
 		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
 		d.SetBlending(false);				// no blending for opaques
 		d.SetScissorEnabled(false);			// (don't) scissor me timbers
-		SubmitInstances(d, m_opaqueInstances);
+		DrawInstances(d, m_opaqueInstances);
 
 		// render transparents
 		d.SetDepthState(true, false);		// enable z-test, disable write
 		d.SetBlending(true);
-		SubmitInstances(d, m_transparentInstances);
+		DrawInstances(d, m_transparentInstances);
 
 		// blit main buffer to backbuffer
 		d.SetDepthState(false, false);

@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 #include <map>
 #include <string>
 
@@ -14,5 +15,5 @@ namespace smol
 	class TextureManager;
 	struct TextureHandle;
 	using DefaultTextures = std::map<std::string, TextureHandle>;
-	void ApplyMaterial(Render::Device& d, Render::ShaderProgram& shader, const Render::Material& m, TextureManager& tm, const DefaultTextures& defaults);
+	uint32_t ApplyMaterial(Render::Device& d, Render::ShaderProgram& shader, const Render::Material& m, TextureManager& tm, const DefaultTextures& defaults, uint32_t textureUnit=0);
 }

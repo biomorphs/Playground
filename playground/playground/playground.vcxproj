@@ -260,6 +260,8 @@
     <None Include="..\data\shared.vs" />
     <None Include="..\data\simplediffuse.fs" />
     <None Include="..\data\simplediffuse.vs" />
+    <None Include="..\data\simpleshadow.fs" />
+    <None Include="..\data\simpleshadow.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -88,6 +88,9 @@ bool Graphics::PostInit()
 	graphics["LoadShader"] = [this](const char* name, const char* vsPath, const char* fsPath) -> smol::ShaderHandle {
 		return m_shaders->LoadShader(name, vsPath, fsPath);
 	};
+	graphics["SetShadowShader"] = [this](smol::ShaderHandle lightingShander, smol::ShaderHandle shadowShader) {
+		m_renderer->SetShadowsShader(lightingShander, shadowShader);
+	};
 	graphics["DrawModel"] = [this](float px, float py, float pz, float r, float g, float b, float a, float scale, smol::ModelHandle h, smol::ShaderHandle sh) {
 		auto transform = glm::scale(glm::translate(glm::identity<glm::mat4>(), glm::vec3(px, py, pz)), glm::vec3(scale));
 		m_renderer->SubmitInstance(transform, glm::vec4(r,g,b,a), h, sh);

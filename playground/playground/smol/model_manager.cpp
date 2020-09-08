@@ -106,7 +106,6 @@ namespace smol
 			const auto& mat = mesh.Material();
 			auto& uniforms = newMesh->GetMaterial().GetUniforms();
 			auto packedSpecular = glm::vec4(mat.SpecularColour(), mat.ShininessStrength());
-			uniforms.SetValue("MeshAmbient", glm::vec4(mat.AmbientColour(),1.0f));
 			uniforms.SetValue("MeshDiffuseOpacity", glm::vec4(mat.DiffuseColour(), mat.Opacity()));
 			uniforms.SetValue("MeshSpecular", packedSpecular);
 			uniforms.SetValue("MeshShininess", mat.Shininess());
