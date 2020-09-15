@@ -50,6 +50,7 @@ namespace smol
 		const FrameStats& GetStats() const { return m_frameStats; }
 		float& GetExposure() { return m_hdrExposure; }
 		float& GetShadowBias() { return m_shadowBias; }
+		float& GetCubeShadowBias() { return m_cubeShadowBias; }
 	private:
 		struct InstanceList
 		{
@@ -75,7 +76,8 @@ namespace smol
 		InstanceList m_transparentInstances;
 		InstanceList m_shadowCasterInstances;
 		glm::vec4 m_clearColour = { 0.0f,0.0f,0.0f,1.0f };
-		float m_shadowBias = 0.0008f;
+		float m_shadowBias = 0.01f;
+		float m_cubeShadowBias = 0.7f;
 		ShadowShaders m_shadowShaders;	// map of lighting shader handle index -> shadow shader
 		ShaderManager* m_shaders;
 		smol::TextureManager* m_textures;

@@ -16,6 +16,7 @@ layout(std140, binding = 0) uniform Globals
 	int LightCount;
 	float HDRExposure;
 	float ShadowBias;
+	float CubeShadowBias;
 };
 
 uniform mat4 ShadowLightSpaceMatrix;

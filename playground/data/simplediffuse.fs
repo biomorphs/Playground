@@ -33,6 +33,7 @@ float CalculateShadows(vec3 normal, vec4 lightSpacePos)
 		return 0.0;
 	}
 
+	// simple pcf
 	float currentDepth = projCoords.z;
 	float shadow = 0.0;
 	vec2 texelSize = 1.0 / textureSize(ShadowMapTexture, 0);
@@ -48,13 +49,35 @@ float CalculateShadows(vec3 normal, vec4 lightSpacePos)
 	return shadow;
 }
 
-float CalculateCubeShadows(vec3 pixelWorldSpace, vec3 lightPosition, float cubeDepthFarPlane)
+float CalculateCubeShadows(vec3 normal, vec3 pixelWorldSpace, vec3 lightPosition, float cubeDepthFarPlane)
 {
-	vec3 fragToLight = pixelWorldSpace - lightPosition; 
-    float closestDepth = texture(ShadowCubeMapTexture, fragToLight).r;
-	closestDepth *= cubeDepthFarPlane;
-	float currentDepth = length(fragToLight);  
-	float shadow = currentDepth - ShadowBias > closestDepth ? 1.0 : 0.0; 
+	vec3 fragToLight = pixelWorldSpace - lightPosition;  
+	vec3 sampleOffsetDirections[20] = vec3[]
+	(
+	   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+	   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+	   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+	   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+	   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+	);   
+
+	
+	float bias = max(0.004 * (1.0 - dot(normal, normalize(fragToLight))), CubeShadowBias);  
+
+	// pcf
+	float shadow = 0.0;
+	int samples  = 20;
+	float diskRadius = 0.05;
+	float currentDepth = length(fragToLight);
+	for(int i = 0; i < samples; ++i)
+	{
+		float closestDepth = texture(ShadowCubeMapTexture, fragToLight + sampleOffsetDirections[i] * diskRadius).r;
+		closestDepth *= cubeDepthFarPlane;   // undo mapping [0;1]
+		if(currentDepth - bias > closestDepth)
+			shadow += 1.0;
+	}
+	shadow /= float(samples);  
+
 	return shadow;
 }
  
@@ -96,7 +119,7 @@ void main()
 			lightDir = normalize(Lights[i].Position.xyz - vs_out_position);
 			if(Lights[i].ShadowParams.x != 0.0)
 			{
-				shadow = CalculateCubeShadows(vs_out_position, Lights[i].Position.xyz, Lights[i].ShadowParams.y);
+				shadow = CalculateCubeShadows(finalNormal,vs_out_position, Lights[i].Position.xyz, Lights[i].ShadowParams.y);
 			}
 		}
 

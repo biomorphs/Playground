@@ -39,6 +39,7 @@ namespace smol
 		int m_lightCount;
 		float m_hdrExposure;
 		float m_shadowBias;
+		float m_cubeShadowBias;
 	};
 
 	std::map<std::string, TextureHandle> g_defaultTextures;
@@ -247,23 +248,28 @@ namespace smol
 			globals.m_lights[l].m_colourAndAmbient = m_lights[l].m_colour;
 			globals.m_lights[l].m_position = m_lights[l].m_position;
 			globals.m_lights[l].m_attenuation = m_lights[l].m_attenuation;
+			globals.m_lights[l].m_shadowParams.y = m_lights[l].m_position.w == 0.0f ? 1000.0f : 500.0f;
 			if (shadowLight == nullptr && m_lights[l].m_position.w == 0.0f)
 			{
 				shadowLight = &m_lights[l];
 				globals.m_lights[l].m_shadowParams.x = 1.0f;
-				globals.m_lights[l].m_shadowParams.y = 1000.0f;
+				
 			}
 			else if (cubeShadowLight == nullptr && m_lights[l].m_position.w == 1.0f)
 			{
 				cubeShadowLight = &m_lights[l];
 				globals.m_lights[l].m_shadowParams.x = 1.0f;
-				globals.m_lights[l].m_shadowParams.y = 1000.0f;
+			}
+			else
+			{
+				globals.m_lights[l].m_shadowParams.y = 0.0f;
 			}
 		}
 		globals.m_lightCount = static_cast<int>(std::min(m_lights.size(), c_maxLights));
 		globals.m_cameraPosition = glm::vec4(m_camera.Position(), 0.0);
 		globals.m_hdrExposure = m_hdrExposure;
 		globals.m_shadowBias = m_shadowBias;
+		globals.m_cubeShadowBias = m_cubeShadowBias;
 		m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
 	}
 
@@ -485,8 +491,8 @@ namespace smol
 			SDE_PROF_EVENT("RenderShadowCubemap");
 			auto lightPos = glm::vec3(cubeShadowLight->m_position);
 			float aspect = (float)c_cubeShadowMapSize / (float)c_cubeShadowMapSize;
-			float near = 1.0f;
-			float far = 1000.0f;
+			float near = 0.1f;
+			float far = 500.0f;
 			glm::mat4 lightSpaceMatrix = glm::perspective(glm::radians(90.0f), aspect, near, far);
 			const glm::mat4 shadowTransforms[] = {
 				lightSpaceMatrix * glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)),
@@ -505,6 +511,7 @@ namespace smol
 				d.SetBlending(false);				// no blending, opaques only (maybe with discard)
 				d.SetScissorEnabled(false);			// (don't) scissor me timbers
 				uniforms.SetValue("ShadowLightSpaceMatrix", shadowTransforms[cubeFace]);
+				uniforms.SetValue("ShadowLightIndex", (int32_t)(cubeShadowLight - &m_lights[0]));
 				DrawInstances(d, m_shadowCasterInstances, &uniforms);
 			}
 		}
@@ -528,6 +535,7 @@ namespace smol
 				glm::mat4 lightView = glm::lookAt(glm::vec3(shadowLight->m_position), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 				glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 				lightMatUniforms.SetValue("ShadowLightSpaceMatrix", lightSpaceMatrix);
+				lightMatUniforms.SetValue("ShadowLightIndex", (int32_t)(shadowLight - &m_lights[0]));
 				DrawInstances(d, m_shadowCasterInstances, &lightMatUniforms);
 			}
 		}

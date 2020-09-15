@@ -222,6 +222,7 @@ bool Graphics::Tick()
 	sprintf_s(statText, "Total Verts: %zu", fs.m_totalVertices);	m_debugGui->Text(statText);
 	m_debugGui->DragFloat("Exposure", m_renderer->GetExposure(), 0.01f, 0.0f, 100.0f);
 	m_debugGui->DragFloat("Shadow Bias", m_renderer->GetShadowBias(), 0.00001f, 0.0000001f, 1.0f);
+	m_debugGui->DragFloat("Cube Shadow Bias", m_renderer->GetCubeShadowBias(), 0.1f, 0.1f, 5.0f);
 	m_debugGui->EndWindow();
 
 	// Process loaded data on main thread

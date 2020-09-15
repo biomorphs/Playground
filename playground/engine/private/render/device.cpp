@@ -302,6 +302,13 @@ namespace Render
 		SDE_RENDER_PROCESS_GL_ERRORS("glUniform1f");
 	}
 
+	void Device::SetUniformValue(uint32_t uniformHandle, int32_t val)
+	{
+		SDE_ASSERT(uniformHandle != -1);
+		glUniform1i(uniformHandle, val);
+		SDE_RENDER_PROCESS_GL_ERRORS("glUniform1i");
+	}
+
 	void Device::BindShaderProgram(const ShaderProgram& program)
 	{
 		glUseProgram(program.GetHandle());
