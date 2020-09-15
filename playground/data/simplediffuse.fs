@@ -17,23 +17,23 @@ uniform sampler2D DiffuseTexture;
 uniform sampler2D NormalsTexture;
 uniform sampler2D SpecularTexture;
 uniform sampler2D ShadowMapTexture;
+uniform samplerCube ShadowCubeMapTexture;
 
 float CalculateShadows(vec3 normal, vec4 lightSpacePos)
 {
 	// perform perspective divide
 	vec3 projCoords = vs_out_positionLightSpace.xyz / vs_out_positionLightSpace.w;
-	projCoords = projCoords * 0.5 + 0.5;	// transform from ndc space since depth map is 0-1
-	if(projCoords.z > 1.0)	// early out if out of range of shadow map 
-	{
-        return 0.0;
-	}
-	if(projCoords.x > 1.0f || projCoords.y > 1.0f || projCoords.x < 0.0f || projCoords.y < 0.0f)
+	
+	// transform from ndc space since depth map is 0-1
+	projCoords = projCoords * 0.5 + 0.5;	
+	
+	// early out if out of range of shadow map 
+	if(projCoords.z > 1.0 || projCoords.x > 1.0f || projCoords.y > 1.0f || projCoords.x < 0.0f || projCoords.y < 0.0f)
 	{
 		return 0.0;
 	}
 
 	float currentDepth = projCoords.z;
-	float bias = 0.0008;
 	float shadow = 0.0;
 	vec2 texelSize = 1.0 / textureSize(ShadowMapTexture, 0);
 	for(int x = -1; x <= 1; ++x)
@@ -41,10 +41,20 @@ float CalculateShadows(vec3 normal, vec4 lightSpacePos)
 		for(int y = -1; y <= 1; ++y)
 		{
 			float pcfDepth = texture(ShadowMapTexture, projCoords.xy + vec2(x, y) * texelSize).r; 
-			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+			shadow += currentDepth - ShadowBias > pcfDepth ? 1.0 : 0.0;        
 		}    
 	}
 	shadow /= 9.0;
+	return shadow;
+}
+
+float CalculateCubeShadows(vec3 pixelWorldSpace, vec3 lightPosition, float cubeDepthFarPlane)
+{
+	vec3 fragToLight = pixelWorldSpace - lightPosition; 
+    float closestDepth = texture(ShadowCubeMapTexture, fragToLight).r;
+	closestDepth *= cubeDepthFarPlane;
+	float currentDepth = length(fragToLight);  
+	float shadow = currentDepth - ShadowBias > closestDepth ? 1.0 : 0.0; 
 	return shadow;
 }
  
@@ -55,27 +65,27 @@ void main()
 	if(diffuseTex.a == 0.0 || MeshDiffuseOpacity.a == 0.0)
 		discard;
 
-	vec3 finalNormal = texture(NormalsTexture, vs_out_uv).rgb;
 	vec3 finalColour = vec3(0.0);
 	vec3 specularTex = texture(SpecularTexture, vs_out_uv).rgb;
 
 	// transform normal map to world space
+	vec3 finalNormal = texture(NormalsTexture, vs_out_uv).rgb;
 	finalNormal = finalNormal * 2.0 - 1.0;   
 	finalNormal = normalize(vs_out_tbnMatrix * finalNormal);
-
-	// shadows 
-	float shadowValue = CalculateShadows(finalNormal, vs_out_positionLightSpace);
 
 	for(int i=0;i<LightCount;++i)
 	{
 		float attenuation;
 		vec3 lightDir;
-		float shadow = shadowValue;
-
+		float shadow = 0.0;
 		if(Lights[i].Position.w == 0.0)		// directional light
 		{
 			attenuation = 1.0;
 			lightDir = normalize(Lights[i].Position.xyz);
+			if(Lights[i].ShadowParams.x != 0.0)
+			{
+				shadow = CalculateShadows(finalNormal, vs_out_positionLightSpace);
+			}
 		}
 		else	// point light
 		{
@@ -84,7 +94,10 @@ void main()
 								(Lights[i].Attenuation[1] * lightDistance) + 
 								(Lights[i].Attenuation[2] * (lightDistance * lightDistance)));
 			lightDir = normalize(Lights[i].Position.xyz - vs_out_position);
-			shadowValue = 0.0;	// point lights not affected by shadow
+			if(Lights[i].ShadowParams.x != 0.0)
+			{
+				shadow = CalculateCubeShadows(vs_out_position, Lights[i].Position.xyz, Lights[i].ShadowParams.y);
+			}
 		}
 
 		// diffuse light
@@ -101,7 +114,7 @@ void main()
 		vec3 specularColour = MeshSpecular.rgb * Lights[i].ColourAndAmbient.rgb;
 		vec3 specular = MeshSpecular.a * specFactor * specularColour * specularTex; 
 
-		vec3 diffuseSpec = (1.0-shadowValue) * (diffuse + specular);
+		vec3 diffuseSpec = (1.0-shadow) * (diffuse + specular);
 		finalColour += attenuation * (ambient + diffuseSpec);
 	}
 	

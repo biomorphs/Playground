@@ -21,22 +21,24 @@ namespace smol
 	const uint64_t c_maxInstances = 1024 * 128;
 	const uint64_t c_maxLights = 64;
 	const int c_shadowMapSize = 4096;
+	const int c_cubeShadowMapSize = 1024;
 
 	struct LightInfo
 	{
 		glm::vec4 m_colourAndAmbient;	// rgb=colour, a=ambient multiplier
 		glm::vec4 m_position;
 		glm::vec3 m_attenuation;		// const, linear, quad
+		glm::vec3 m_shadowParams;		// enabled, far plane, index?
 	};
 
 	struct GlobalUniforms
 	{
 		glm::mat4 m_viewProjMat;
-		glm::mat4 m_shadowLightMat;
 		glm::vec4 m_cameraPosition;		// world-space
 		LightInfo m_lights[c_maxLights];
 		int m_lightCount;
 		float m_hdrExposure;
+		float m_shadowBias;
 	};
 
 	std::map<std::string, TextureHandle> g_defaultTextures;
@@ -49,6 +51,7 @@ namespace smol
 		, m_windowSize(windowSize)
 		, m_mainFramebuffer(windowSize)
 		, m_shadowDepthBuffer(glm::ivec2(c_shadowMapSize, c_shadowMapSize))
+		, m_shadowCubeDepthBuffer(glm::ivec2(c_cubeShadowMapSize, c_cubeShadowMapSize))
 	{
 		g_defaultTextures["DiffuseTexture"] = m_textures->LoadTexture("white.bmp");
 		g_defaultTextures["NormalsTexture"] = m_textures->LoadTexture("default_normalmap.png");
@@ -73,6 +76,11 @@ namespace smol
 			if (!m_shadowDepthBuffer.Create())
 			{
 				SDE_LOG("Failed to create shadow depth buffer");
+			}
+			m_shadowCubeDepthBuffer.AddDepthCube();
+			if (!m_shadowCubeDepthBuffer.Create())
+			{
+				SDE_LOG("Failed to create shadow cube depth buffer");
 			}
 		}
 	}
@@ -226,19 +234,6 @@ namespace smol
 		}
 	}
 
-	const Light* Renderer::FindShadowCastingLight()
-	{
-		const Light* foundLight = nullptr;
-		for (const auto& l : m_lights)
-		{
-			if (l.m_position.w == 0)
-			{
-				return &l;
-			}
-		}
-		return nullptr;
-	}
-
 	void Renderer::UpdateGlobals(glm::mat4 projectionMat, glm::mat4 viewMat)
 	{
 		SDE_PROF_EVENT();
@@ -246,6 +241,7 @@ namespace smol
 		GlobalUniforms globals;
 		globals.m_viewProjMat = projectionMat * viewMat;
 		const Light* shadowLight = nullptr;
+		const Light* cubeShadowLight = nullptr;
 		for (int l = 0; l < m_lights.size() && l < c_maxLights; ++l)
 		{
 			globals.m_lights[l].m_colourAndAmbient = m_lights[l].m_colour;
@@ -254,21 +250,20 @@ namespace smol
 			if (shadowLight == nullptr && m_lights[l].m_position.w == 0.0f)
 			{
 				shadowLight = &m_lights[l];
+				globals.m_lights[l].m_shadowParams.x = 1.0f;
+				globals.m_lights[l].m_shadowParams.y = 1000.0f;
 			}
-		}
-		if (shadowLight)
-		{
-			static float c_nearPlane = 1.0f;
-			static float c_farPlane = 1000.0f;
-			static float c_orthoDims = 400.0f;
-			glm::mat4 lightProjection = glm::ortho(-c_orthoDims, c_orthoDims, -c_orthoDims, c_orthoDims, c_nearPlane, c_farPlane);
-			glm::mat4 lightView = glm::lookAt(glm::vec3(shadowLight->m_position), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			glm::mat4 lightSpaceMatrix = lightProjection * lightView;
-			globals.m_shadowLightMat = lightSpaceMatrix;
+			else if (cubeShadowLight == nullptr && m_lights[l].m_position.w == 1.0f)
+			{
+				cubeShadowLight = &m_lights[l];
+				globals.m_lights[l].m_shadowParams.x = 1.0f;
+				globals.m_lights[l].m_shadowParams.y = 1000.0f;
+			}
 		}
 		globals.m_lightCount = static_cast<int>(std::min(m_lights.size(), c_maxLights));
 		globals.m_cameraPosition = glm::vec4(m_camera.Position(), 0.0);
 		globals.m_hdrExposure = m_hdrExposure;
+		globals.m_shadowBias = m_shadowBias;
 		m_globalsUniformBuffer.SetData(0, sizeof(globals), &globals);
 	}
 
@@ -375,7 +370,7 @@ namespace smol
 		}
 	}
 
-	void Renderer::DrawInstances(Render::Device& d, const InstanceList& list, ShaderHandle shaderOverride)
+	void Renderer::DrawInstances(Render::Device& d, const InstanceList& list, Render::UniformBuffer* uniforms, ShaderHandle shaderOverride)
 	{
 		SDE_PROF_EVENT();
 		auto firstInstance = list.m_instances.begin();
@@ -401,6 +396,10 @@ namespace smol
 					d.BindShaderProgram(*theShader);
 					d.BindUniformBufferIndex(*theShader, "Globals", 0);
 					d.SetUniforms(*theShader, m_globalsUniformBuffer, 0);
+					if (uniforms != nullptr)
+					{
+						uniforms->Apply(d, *theShader);
+					}
 					lastShaderUsed = theShader;
 				}
 
@@ -415,12 +414,18 @@ namespace smol
 				d.BindInstanceBuffer(theMesh->GetVertexArray(), list.m_colours, instancingSlotIndex++, 4, 0);
 
 				// apply mesh material uniforms and samplers
+				uint32_t textureUnit = 0;
 				auto shadowSampler = theShader->GetUniformHandle("ShadowMapTexture");
 				if (shadowSampler != -1)
 				{
-					d.SetSampler(shadowSampler, m_shadowDepthBuffer.GetDepthStencil()->GetHandle(), 0);
+					d.SetSampler(shadowSampler, m_shadowDepthBuffer.GetDepthStencil()->GetHandle(), textureUnit++);
 				}
-				smol::ApplyMaterial(d, *theShader, theMesh->GetMaterial(), *m_textures, g_defaultTextures, 1);
+				auto shadowCubeSampler = theShader->GetUniformHandle("ShadowCubeMapTexture");
+				if (shadowCubeSampler != -1)
+				{
+					d.SetSampler(shadowCubeSampler, m_shadowCubeDepthBuffer.GetDepthStencil()->GetHandle(), textureUnit++);
+				}
+				textureUnit = smol::ApplyMaterial(d, *theShader, theMesh->GetMaterial(), *m_textures, g_defaultTextures, textureUnit++);
 
 				// draw the chunks
 				for (const auto& chunk : theMesh->GetChunks())
@@ -461,30 +466,89 @@ namespace smol
 		auto projectionMat = glm::perspectiveFov(glm::radians(70.0f), (float)m_windowSize.x, (float)m_windowSize.y, 0.1f, 1000.0f);
 		auto viewMat = glm::lookAt(m_camera.Position(), m_camera.Target(), m_camera.Up());
 		UpdateGlobals(projectionMat, viewMat);
+		const Light* shadowLight = nullptr;
+		const Light* cubeShadowLight = nullptr;
+		for (int l = 0; l < m_lights.size() && l < c_maxLights; ++l)
+		{
+			if (shadowLight == nullptr && m_lights[l].m_position.w == 0.0f)
+			{
+				shadowLight = &m_lights[l];
+			}
+			else if (cubeShadowLight == nullptr && m_lights[l].m_position.w == 1.0f)
+			{
+				cubeShadowLight = &m_lights[l];
+			}
+		}
+		if (cubeShadowLight)
+		{
+			Render::UniformBuffer uniforms;
+			SDE_PROF_EVENT("RenderShadowCubemap");
+			auto lightPos = glm::vec3(cubeShadowLight->m_position);
+			float aspect = (float)c_cubeShadowMapSize / (float)c_cubeShadowMapSize;
+			float near = 1.0f;
+			float far = 1000.0f;
+			glm::mat4 lightSpaceMatrix = glm::perspective(glm::radians(90.0f), aspect, near, far);
+			const glm::mat4 shadowTransforms[] = {
+				lightSpaceMatrix * glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)),
+				lightSpaceMatrix * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)),
+				lightSpaceMatrix * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)),
+				lightSpaceMatrix * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)),
+				lightSpaceMatrix * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)),
+				lightSpaceMatrix * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0,0.0f))
+			};
+			for (uint32_t cubeFace = 0; cubeFace < 6; ++cubeFace)
+			{
+				d.DrawToFramebuffer(m_shadowCubeDepthBuffer, cubeFace);
+				d.SetViewport(glm::ivec2(0, 0), m_shadowCubeDepthBuffer.Dimensions());
+				d.ClearFramebufferDepth(m_shadowCubeDepthBuffer, FLT_MAX);
+				d.SetBackfaceCulling(true, true);	// backface culling, ccw order
+				d.SetBlending(false);				// no blending, opaques only (maybe with discard)
+				d.SetScissorEnabled(false);			// (don't) scissor me timbers
+				uniforms.SetValue("ShadowLightSpaceMatrix", shadowTransforms[cubeFace]);
+				DrawInstances(d, m_shadowCasterInstances, &uniforms);
+			}
+		}
 
 		// shadow maps
-		d.DrawToFramebuffer(m_shadowDepthBuffer);
-		d.SetViewport(glm::ivec2(0, 0), m_shadowDepthBuffer.Dimensions());
-		d.ClearFramebufferDepth(m_shadowDepthBuffer, FLT_MAX);
-		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
-		d.SetBlending(false);				// no blending, opaques only (maybe with discard)
-		d.SetScissorEnabled(false);			// (don't) scissor me timbers
-		DrawInstances(d, m_shadowCasterInstances);
+		Render::UniformBuffer lightMatUniforms;
+		{
+			SDE_PROF_EVENT("RenderShadowmap");
+			d.DrawToFramebuffer(m_shadowDepthBuffer);
+			d.SetViewport(glm::ivec2(0, 0), m_shadowDepthBuffer.Dimensions());
+			d.ClearFramebufferDepth(m_shadowDepthBuffer, FLT_MAX);
+			d.SetBackfaceCulling(true, true);	// backface culling, ccw order
+			d.SetBlending(false);				// no blending, opaques only (maybe with discard)
+			d.SetScissorEnabled(false);			// (don't) scissor me timbers
+			if (shadowLight)
+			{
+				static float c_nearPlane = 1.0f;
+				static float c_farPlane = 1000.0f;
+				static float c_orthoDims = 400.0f;
+				glm::mat4 lightProjection = glm::ortho(-c_orthoDims, c_orthoDims, -c_orthoDims, c_orthoDims, c_nearPlane, c_farPlane);
+				glm::mat4 lightView = glm::lookAt(glm::vec3(shadowLight->m_position), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+				glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+				lightMatUniforms.SetValue("ShadowLightSpaceMatrix", lightSpaceMatrix);
+				DrawInstances(d, m_shadowCasterInstances, &lightMatUniforms);
+			}
+		}
 
 		// lighting to main frame buffer
-		d.DrawToFramebuffer(m_mainFramebuffer);
-		d.SetViewport(glm::ivec2(0,0), m_mainFramebuffer.Dimensions());
+		{
+			SDE_PROF_EVENT("RenderMainBuffer");
+			d.DrawToFramebuffer(m_mainFramebuffer);
+			d.SetViewport(glm::ivec2(0, 0), m_mainFramebuffer.Dimensions());
 
-		// render opaques
-		d.SetBackfaceCulling(true, true);	// backface culling, ccw order
-		d.SetBlending(false);				// no blending for opaques
-		d.SetScissorEnabled(false);			// (don't) scissor me timbers
-		DrawInstances(d, m_opaqueInstances);
+			// render opaques
+			d.SetBackfaceCulling(true, true);	// backface culling, ccw order
+			d.SetBlending(false);				// no blending for opaques
+			d.SetScissorEnabled(false);			// (don't) scissor me timbers
+			DrawInstances(d, m_opaqueInstances, &lightMatUniforms);
 
-		// render transparents
-		d.SetDepthState(true, false);		// enable z-test, disable write
-		d.SetBlending(true);
-		DrawInstances(d, m_transparentInstances);
+			// render transparents
+			d.SetDepthState(true, false);		// enable z-test, disable write
+			d.SetBlending(true);
+			DrawInstances(d, m_transparentInstances, &lightMatUniforms);
+		}
 
 		// blit main buffer to backbuffer
 		d.SetDepthState(false, false);

@@ -21,6 +21,7 @@ namespace Render
 		bool AddColourAttachment(ColourAttachmentFormat format = RGBA_U8);
 		bool AddDepthStencil();
 		bool AddDepth();	// no stencil
+		bool AddDepthCube();
 		bool Create();
 		void Destroy();
 

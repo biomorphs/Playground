@@ -5,6 +5,7 @@ Matt Hoyle
 
 #include "device.h"
 #include "window.h"
+#include "texture.h"
 #include "utils.h"
 #include "vertex_array.h"
 #include "shader_program.h"
@@ -106,6 +107,14 @@ namespace Render
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, fb.GetHandle());
 		SDE_RENDER_PROCESS_GL_ERRORS("glBindFramebuffer");
+	}
+
+	void Device::DrawToFramebuffer(const FrameBuffer& fb, uint32_t cubeFace)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, fb.GetHandle());
+		SDE_RENDER_PROCESS_GL_ERRORS("glBindFramebuffer");
+		glNamedFramebufferTextureLayer(fb.GetHandle(), GL_DEPTH_ATTACHMENT, fb.GetDepthStencil()->GetHandle(), 0, cubeFace);
+		SDE_RENDER_PROCESS_GL_ERRORS("glNamedFramebufferTextureLayer");
 	}
 
 	void Device::FlushContext()

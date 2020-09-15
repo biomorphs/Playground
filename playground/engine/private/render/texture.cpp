@@ -355,6 +355,76 @@ namespace Render
 		return true;
 	}
 
+	bool Texture::CreateCubemap(const TextureSource& src)
+	{
+		SDE_PROF_EVENT();
+		SDE_RENDER_ASSERT(m_handle == -1);
+
+		glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_handle);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glCreateTextures");
+
+		m_componentCount = SourceFormatToComponentCount(src.SourceFormat());
+		const bool shouldGenerateMips = src.MipCount() <= 1 && src.ShouldGenerateMips();
+		const uint32_t mipCount = shouldGenerateMips ? GetGeneratedMipCount(src) : src.MipCount();
+
+		glTextureParameteri(m_handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
+		if (mipCount > 1)
+		{
+			glTextureParameteri(m_handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		}
+		else
+		{
+			glTextureParameteri(m_handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		}
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
+
+		glTextureParameteri(m_handle, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTextureParameteri(m_handle, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTextureParameteri(m_handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(m_handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(m_handle, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureParameteri");
+
+		uint32_t glStorageFormat = SourceFormatToGLStorageFormat(src.SourceFormat());
+		SDE_RENDER_ASSERT(glStorageFormat != -1);
+		{
+			SDE_PROF_EVENT("AllocateStorage");
+			// This preallocates the entire mip-chain and all faces
+			glTextureStorage2D(m_handle, std::max(mipCount, 1u), glStorageFormat, src.Width(), src.Height());
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureStorage2D");
+		}
+
+		if (src.ContainsSourceData())
+		{
+			SDE_PROF_EVENT("CopyData");
+			uint32_t glInternalFormat = SourceFormatToGLInternalFormat(src.SourceFormat());
+			uint32_t glInternalType = SourceFormatToGLInternalType(src.SourceFormat());
+			SDE_RENDER_ASSERT(glInternalFormat != -1);
+			SDE_RENDER_ASSERT(glInternalType != -1);
+			for (uint32_t face = 0; face < 6; ++face)
+			{
+				for (uint32_t m = 0; m < src.MipCount(); ++m)
+				{
+					uint32_t w = 0, h = 0;
+					size_t size = 0;
+					const uint8_t* mipData = src.MipLevel(m, w, h, size);
+					SDE_ASSERT(mipData);
+
+					glTextureSubImage3D(m_handle, m, 0, 0, face, w, h, 1, glInternalFormat, glInternalType, mipData);
+					SDE_RENDER_PROCESS_GL_ERRORS_RET("glTextureSubImage3D");
+				}
+			}
+		}
+		if (shouldGenerateMips)
+		{
+			SDE_PROF_EVENT("GenerateMips");
+			glGenerateTextureMipmap(m_handle);
+			SDE_RENDER_PROCESS_GL_ERRORS_RET("glGenerateTextureMipmap");
+		}
+		return m_handle != 0;
+	}
+
 	bool Texture::Create(const TextureSource& src)
 	{
 		SDE_PROF_EVENT();

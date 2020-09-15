@@ -44,6 +44,7 @@ namespace Render
 		void ClearFramebufferColourDepth(const FrameBuffer& fb, const glm::vec4& colour, float depth);
 		void ClearFramebufferDepth(const FrameBuffer& fb, float depth);
 		void DrawToFramebuffer(const FrameBuffer& fb);
+		void DrawToFramebuffer(const FrameBuffer& fb, uint32_t cubeFace);
 		void DrawToBackbuffer();
 		void SetUniformValue(uint32_t uniformHandle, const glm::mat4& matrix);
 		void SetUniformValue(uint32_t uniformHandle, const glm::vec4& val);

@@ -12,13 +12,13 @@ local Sponza = Graphics.LoadModel("sponza.obj")
 local MonsterModel = Graphics.LoadModel("udim-monster.fbx")
 local LightModel = Graphics.LoadModel("sphere.fbx")
 local IslandModel = Graphics.LoadModel("islands_low.fbx")
-local Cottage = Graphics.LoadModel("container.fbx")
+local Container = Graphics.LoadModel("container.fbx")
 
 local Lights = {}
-local lightCount = 16
+local lightCount = 1
 local lightBoxMin = {-284,1,-125}
 local lightBoxMax = {256,228,113}
-local lightRadiusRange = {32,64}
+local lightRadiusRange = {64,128}
 local lightGravity = -4096.0
 local lightBounceMul = 0.9
 local lightFriction = 0.95
@@ -29,7 +29,7 @@ local lightYSpeed = 200
 local lightBrightness = 8.0
 local lightSphereSize = 1.0
 local SunMulti = 1
-local SunPosition = {-100,350,40}
+local SunPosition = {200,350,-40}
 local SunColour = {0.25, 0.611, 1.0}
 
 -- ~distance, const, linear, quad
@@ -193,7 +193,7 @@ function Playground:Tick()
 	local gap = width / numPerWidth
 	for z=1,numPerWidth do
 		for x=1,numPerWidth do
-			Graphics.DrawModel(-halfWidth + (x * gap),0.0,-halfWidth + (z*gap) - 14,1.0,1.0,1.0,1.0,1.0 * scale,Cottage,DiffuseShader)
+			Graphics.DrawModel(-halfWidth + (x * gap),0.0,-halfWidth + (z*gap) - 14,1.0,1.0,1.0,1.0,1.0 * scale,Container,DiffuseShader)
 		end
 	end
 end

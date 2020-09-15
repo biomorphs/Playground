@@ -42,6 +42,18 @@ namespace Render
 		}
 	}
 
+	bool FrameBuffer::AddDepthCube()
+	{
+		TextureSource ts(m_dimensions.x, m_dimensions.y, Render::TextureSource::Format::Depth32);
+		auto newTexture = std::make_unique<Render::Texture>();
+		if (newTexture->CreateCubemap(ts))
+		{
+			m_depthStencil = std::move(newTexture);
+			return true;
+		}
+		return true;
+	}
+
 	bool FrameBuffer::AddDepth()
 	{
 		TextureSource ts(m_dimensions.x, m_dimensions.y, Render::TextureSource::Format::Depth32);

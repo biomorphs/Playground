@@ -6,6 +6,7 @@
 #include "render/mesh.h"
 #include "render/mesh_builder.h"
 #include "render/texture.h"
+#include "core/profiler.h"
 #include "material_helpers.h"
 
 namespace smol
@@ -33,6 +34,7 @@ namespace smol
 
 	void RenderTargetBlitter::TargetToBackbuffer(Render::Device& d, const Render::FrameBuffer& src, Render::ShaderProgram& shader, glm::ivec2 dimensions)
 	{
+		SDE_PROF_EVENT();
 		if (src.GetHandle() == -1 || shader.GetHandle() == -1 || src.GetColourAttachmentCount() == 0)
 		{
 			return;
@@ -54,6 +56,7 @@ namespace smol
 
 	void RenderTargetBlitter::TargetToTarget(Render::Device& d, const Render::FrameBuffer& src, Render::FrameBuffer& target, Render::ShaderProgram& shader)
 	{
+		SDE_PROF_EVENT();
 		if (src.GetHandle() == -1 || target.GetHandle() == -1 || shader.GetHandle() == -1)
 		{
 			return;

@@ -49,6 +49,7 @@ namespace smol
 		};
 		const FrameStats& GetStats() const { return m_frameStats; }
 		float& GetExposure() { return m_hdrExposure; }
+		float& GetShadowBias() { return m_shadowBias; }
 	private:
 		struct InstanceList
 		{
@@ -64,9 +65,8 @@ namespace smol
 		void PrepareTransparentInstances(InstanceList& list);
 		void PrepareShadowInstances(InstanceList& list);
 		void PopulateInstanceBuffers(InstanceList& list);
-		void DrawInstances(Render::Device& d, const InstanceList& list, ShaderHandle shaderOverride = ShaderHandle::Invalid());
+		void DrawInstances(Render::Device& d, const InstanceList& list, Render::UniformBuffer* uniforms = nullptr, ShaderHandle shaderOverride = ShaderHandle::Invalid());
 		void UpdateGlobals(glm::mat4 projectionMat, glm::mat4 viewMat);
-		const Light* FindShadowCastingLight();
 
 		FrameStats m_frameStats;
 		float m_hdrExposure = 1.0f;
@@ -75,6 +75,7 @@ namespace smol
 		InstanceList m_transparentInstances;
 		InstanceList m_shadowCasterInstances;
 		glm::vec4 m_clearColour = { 0.0f,0.0f,0.0f,1.0f };
+		float m_shadowBias = 0.0008f;
 		ShadowShaders m_shadowShaders;	// map of lighting shader handle index -> shadow shader
 		ShaderManager* m_shaders;
 		smol::TextureManager* m_textures;
@@ -83,6 +84,7 @@ namespace smol
 		Render::RenderBuffer m_globalsUniformBuffer;
 		Render::FrameBuffer m_mainFramebuffer;
 		Render::FrameBuffer m_shadowDepthBuffer;
+		Render::FrameBuffer m_shadowCubeDepthBuffer;
 		Render::Camera m_camera;
 		glm::ivec2 m_windowSize;
 	};
