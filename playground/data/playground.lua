@@ -17,7 +17,7 @@ local Container = Graphics.LoadModel("container.fbx")
 local Lights = {}
 local lightCount = 1
 local lightBoxMin = {-284,1,-125}
-local lightBoxMax = {256,228,113}
+local lightBoxMax = {256,100,113}
 local lightRadiusRange = {96,128}
 local lightGravity = -4096.0
 local lightBounceMul = 0.9
@@ -28,7 +28,7 @@ local lightXZSpeed = 200
 local lightYSpeed = 200
 local lightBrightness = 8.0
 local lightSphereSize = 1.0
-local SunMulti = 0.4
+local SunMulti = 0.8
 local SunPosition = {200,350,-40}
 local SunColour = {0.25, 0.611, 1.0}
 
@@ -112,7 +112,7 @@ function DrawGrid(startX,endX,stepX,startZ,endZ,stepZ,yAxis)
 end
 
 function Playground:Tick()
-	local timeDelta = Playground.DeltaTime * 0.25
+	local timeDelta = Playground.DeltaTime * 0.2
 
 	Graphics.DrawModel(SunPosition[1],SunPosition[2],SunPosition[3],SunMulti * SunColour[1],SunMulti * SunColour[2], SunMulti * SunColour[3],1.0,20.0,LightModel,LightShader)
 	Graphics.DirectionalLight(SunPosition[1],SunPosition[2],SunPosition[3], SunMulti * SunColour[1], SunMulti * SunColour[2], SunMulti * SunColour[3], 0.1)
@@ -185,6 +185,18 @@ function Playground:Tick()
 	Graphics.DrawModel(0.0,1.5,0.0,1.0,1.0,1.0,1.0,0.4,IslandModel,DiffuseShader)
 	Graphics.DrawModel(-64.0,-0.5,0.0,1.0,1.0,1.0,1.0,8.0,MonsterModel,DiffuseShader)
 	Graphics.DrawModel(0.0,0.5,0.0,1.0,1.0,1.0,1.0,0.2,Sponza,DiffuseShader)
+
+	local attenua = Playground:GetAttenuation(40);
+	local brightness = 8
+	Graphics.PointLight(-123, 32, -40, 1.0 * brightness, 0.61 * brightness, 0.17 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
+	Graphics.PointLight(98, 32, -40, 1.0 * brightness, 0.61 * brightness, 0.17 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
+	Graphics.PointLight(-123.9, 32.18, 28, 1.0 * brightness, 0.61 * brightness, 0.17 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
+	Graphics.PointLight(98.9, 32.18, 28, 1.0 * brightness, 0.61 * brightness, 0.17 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
+
+	 Graphics.PointLight(-241.25, 33.5, -88.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
+	 Graphics.PointLight(-241.25, 33.5, 82.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
+	 Graphics.PointLight(226.25, 33.5, -88.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
+	 Graphics.PointLight(226.25, 33.5, 82.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
 
 	local width = 64
 	local numPerWidth = 8
