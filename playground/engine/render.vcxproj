@@ -9,8 +9,28 @@
   <Import Project="props/engine_lib_paths.props" />
   <Import Project="props/library_build.props" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)external\Optick_1.3.0\include;$(ProjectDir)..\external\glm;$(ProjectDir)..\external\glew-2.2.0\include\GL;$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)public\;$(ProjectDir)public\render\;$(ProjectDir)private\render\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)external\Optick_1.3.1\include;$(ProjectDir)..\external\glm;$(ProjectDir)..\external\glew-2.1.0\include\GL;$(ProjectDir)..\external\SDL2-2.0.12\include;$(ProjectDir)public\;$(ProjectDir)public\render\;$(ProjectDir)private\render\;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="private\render\utils.h" />
     <ClInclude Include="public\render\camera.h" />

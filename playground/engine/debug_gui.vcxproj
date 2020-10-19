@@ -9,8 +9,28 @@
   <Import Project="props/library_build.props" />
   <Import Project="props/shared_preprocessor.props" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)external\fork-awesome\;$(SolutionDir)external\Optick_1.3.0\include;$(ProjectDir)..\external\SDL2-2.0.1\include;$(ProjectDir)..\external\glew-2.2.0\include\GL;$(ProjectDir)..\external\imgui-1.69;$(ProjectDir)..\external\glm\;$(ProjectDir)public\;$(ProjectDir)public\debug_gui\;$(ProjectDir)private\debug_gui\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)external\fork-awesome\;$(SolutionDir)external\Optick_1.3.1\include;$(ProjectDir)..\external\SDL2-2.0.12\include;$(ProjectDir)..\external\glew-2.1.0\include\GL;$(ProjectDir)..\external\imgui-1.69;$(ProjectDir)..\external\glm\;$(ProjectDir)public\;$(ProjectDir)public\debug_gui\;$(ProjectDir)private\debug_gui\;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\external\imgui-1.69\imgui\examples\imgui_impl_opengl3.h" />
     <ClInclude Include="..\external\imgui-1.69\imgui\examples\imgui_impl_sdl.h" />

@@ -14,6 +14,11 @@ namespace DebugGuiScriptBinding
 		dbgui["EndWindow"] = [system]() {
 			system->EndWindow();
 		};
+		dbgui["DragFloat"] = [system](std::string label, float v, float step, float min, float max) -> float {
+			float fv = v;
+			system->DragFloat(label.c_str(), fv, step, min, max);
+			return fv;
+		};
 		dbgui["Text"] = [system](std::string txt) {
 			system->Text(txt.c_str());
 		};

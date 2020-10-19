@@ -29,8 +29,9 @@ local lightYSpeed = 200
 local lightBrightness = 8.0
 local lightSphereSize = 1.0
 local SunMulti = 0.8
-local SunPosition = {200,350,-40}
+local SunPosition = {200,800,-40}
 local SunColour = {0.25, 0.611, 1.0}
+local timeMulti = 0.2
 
 -- ~distance, const, linear, quad
 local lightAttenuationTable = {
@@ -112,7 +113,11 @@ function DrawGrid(startX,endX,stepX,startZ,endZ,stepZ,yAxis)
 end
 
 function Playground:Tick()
-	local timeDelta = Playground.DeltaTime * 0.2
+	local isOpen = true
+	DebugGui.BeginWindow(isOpen, "Script Stuff")
+	timeMulti = DebugGui.DragFloat("Time Multi", timeMulti, 0.002, 0.0, 10.0)
+	DebugGui.EndWindow()
+	local timeDelta = Playground.DeltaTime * timeMulti
 
 	Graphics.DrawModel(SunPosition[1],SunPosition[2],SunPosition[3],SunMulti * SunColour[1],SunMulti * SunColour[2], SunMulti * SunColour[3],1.0,20.0,LightModel,LightShader)
 	Graphics.DirectionalLight(SunPosition[1],SunPosition[2],SunPosition[3], SunMulti * SunColour[1], SunMulti * SunColour[2], SunMulti * SunColour[3], 0.1)
@@ -199,7 +204,7 @@ function Playground:Tick()
 	 Graphics.PointLight(226.25, 33.5, 82.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
 
 	local width = 64
-	local numPerWidth = 8
+	local numPerWidth = 4
 	local scale = 1
 	local halfWidth = width / 2.0
 	local gap = width / numPerWidth
