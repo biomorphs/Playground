@@ -220,6 +220,7 @@ bool Graphics::Tick()
 	sprintf_s(statText, "Batches Drawn: %zu", fs.m_batchesDrawn);	m_debugGui->Text(statText);
 	sprintf_s(statText, "Draw calls: %zu", fs.m_drawCalls);	m_debugGui->Text(statText);
 	sprintf_s(statText, "Total Verts: %zu", fs.m_totalVertices);	m_debugGui->Text(statText);
+	sprintf_s(statText, "FPS: %d", framesPerSecond);	m_debugGui->Text(statText);
 	m_debugGui->DragFloat("Exposure", m_renderer->GetExposure(), 0.01f, 0.0f, 100.0f);
 	m_debugGui->DragFloat("Shadow Bias", m_renderer->GetShadowBias(), 0.00001f, 0.0000001f, 1.0f);
 	m_debugGui->DragFloat("Cube Shadow Bias", m_renderer->GetCubeShadowBias(), 0.1f, 0.1f, 5.0f);

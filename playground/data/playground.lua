@@ -9,18 +9,18 @@ local LightShader = Graphics.LoadShader("light",  "basic.vs", "basic.fs")
 local DiffuseShader = Graphics.LoadShader("diffuse", "simplediffuse.vs", "simplediffuse.fs")
 local ShadowShader = Graphics.LoadShader("shadow", "simpleshadow.vs", "simpleshadow.fs");
 local Sponza = Graphics.LoadModel("sponza.obj")
-local MonsterModel = Graphics.LoadModel("udim-monster.fbx")
 local LightModel = Graphics.LoadModel("sphere.fbx")
 local IslandModel = Graphics.LoadModel("islands_low.fbx")
 local Container = Graphics.LoadModel("container.fbx")
 
 local Lights = {}
 local lightCount = 1
+local lightMaxCount = 32
 local lightBoxMin = {-284,1,-125}
 local lightBoxMax = {256,100,113}
 local lightRadiusRange = {96,128}
 local lightGravity = -4096.0
-local lightBounceMul = 0.9
+local lightBounceMul = 0.5
 local lightFriction = 0.95
 local lightHistoryMaxValues = 32
 local lightHistoryMaxDistance = 0.25		-- distance between history points
@@ -28,9 +28,10 @@ local lightXZSpeed = 200
 local lightYSpeed = 200
 local lightBrightness = 8.0
 local lightSphereSize = 1.0
-local SunMulti = 0.8
+local SunMulti = 0.2
 local SunPosition = {200,800,-40}
-local SunColour = {0.25, 0.611, 1.0}
+local SunColour = {0.55, 0.711, 1.0}
+local SunAmbient = 0.3
 local timeMulti = 0.2
 
 -- ~distance, const, linear, quad
@@ -95,7 +96,7 @@ end
 
 function Playground:Init()
 	local lightColourAccum = {0.0,0.0,0.0}
-	for i=1,lightCount do
+	for i=1,lightMaxCount do
 		Playground:InitLight(i)
 	end
 
@@ -116,13 +117,17 @@ function Playground:Tick()
 	local isOpen = true
 	DebugGui.BeginWindow(isOpen, "Script Stuff")
 	timeMulti = DebugGui.DragFloat("Time Multi", timeMulti, 0.002, 0.0, 10.0)
+	SunPosition[1] = DebugGui.DragFloat("Sun X", SunPosition[1], 0.25,-400,400)
+	SunPosition[2] = DebugGui.DragFloat("Sun Y", SunPosition[2], 0.25,-200,800)
+	SunPosition[3] = DebugGui.DragFloat("Sun Z", SunPosition[3], 0.25,-200,200)
+	lightCount = DebugGui.DragFloat("Light Count", lightCount, 1,1,lightMaxCount)
 	DebugGui.EndWindow()
 	local timeDelta = Playground.DeltaTime * timeMulti
 
 	Graphics.DrawModel(SunPosition[1],SunPosition[2],SunPosition[3],SunMulti * SunColour[1],SunMulti * SunColour[2], SunMulti * SunColour[3],1.0,20.0,LightModel,LightShader)
-	Graphics.DirectionalLight(SunPosition[1],SunPosition[2],SunPosition[3], SunMulti * SunColour[1], SunMulti * SunColour[2], SunMulti * SunColour[3], 0.1)
+	Graphics.DirectionalLight(SunPosition[1],SunPosition[2],SunPosition[3], SunMulti * SunColour[1], SunMulti * SunColour[2], SunMulti * SunColour[3], SunAmbient)
 
-	for i=1,#Lights do
+	for i=1,lightCount do
 		if(Playground:Vec3Length(Lights[i].Velocity) < 16.0) then
 			Lights[i].Velocity[1] = (math.random(-100,100) / 100.0)  * lightXZSpeed
 			Lights[i].Velocity[2] = (math.random(200,400) / 100.0)  * lightYSpeed
@@ -188,20 +193,19 @@ function Playground:Tick()
 	Graphics.DebugDrawAxis(0.0,32.0,0.0,8.0)
 
 	Graphics.DrawModel(0.0,1.5,0.0,1.0,1.0,1.0,1.0,0.4,IslandModel,DiffuseShader)
-	Graphics.DrawModel(-64.0,-0.5,0.0,1.0,1.0,1.0,1.0,8.0,MonsterModel,DiffuseShader)
 	Graphics.DrawModel(0.0,0.5,0.0,1.0,1.0,1.0,1.0,0.2,Sponza,DiffuseShader)
 
-	local attenua = Playground:GetAttenuation(40);
+	local attenua = Playground:GetAttenuation(32);
 	local brightness = 8
 	Graphics.PointLight(-123, 32, -40, 1.0 * brightness, 0.61 * brightness, 0.17 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
 	Graphics.PointLight(98, 32, -40, 1.0 * brightness, 0.61 * brightness, 0.17 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
 	Graphics.PointLight(-123.9, 32.18, 28, 1.0 * brightness, 0.61 * brightness, 0.17 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
 	Graphics.PointLight(98.9, 32.18, 28, 1.0 * brightness, 0.61 * brightness, 0.17 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
-
-	 Graphics.PointLight(-241.25, 33.5, -88.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
-	 Graphics.PointLight(-241.25, 33.5, 82.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
-	 Graphics.PointLight(226.25, 33.5, -88.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
-	 Graphics.PointLight(226.25, 33.5, 82.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
+	
+	Graphics.PointLight(-241.25, 33.5, -88.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
+	Graphics.PointLight(-241.25, 33.5, 82.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
+	Graphics.PointLight(226.25, 33.5, -88.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
+	Graphics.PointLight(226.25, 33.5, 82.3, 0.16 * brightness, 0.73 * brightness, 1.0 * brightness, 0.01, attenua[1], attenua[2], attenua[3])
 
 	local width = 64
 	local numPerWidth = 4

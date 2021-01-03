@@ -2,7 +2,7 @@
 
 Config = {
 	Render = {
-		Resolution = { 1600, 900 },
+		Resolution = { 2560, 1440 },
 		Fullscreen = false,
 		WindowTitle = "Playground!",
 	},
